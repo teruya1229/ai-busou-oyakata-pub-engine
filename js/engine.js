@@ -225,7 +225,18 @@
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const shortText = `【${toneData.xLead}】${leadTitle}\n${normalized.incident}\n学び: ${normalized.learning}`;
     const focusLine = normalized.inputSparse ? `要点: ${normalized.learningFocus}` : "";
-    const longText = `${leadTitle}\n現場のズレは、能力不足より「前提の未共有」で起きることが多い。${templates.characterProfile.protagonist.name}と${templates.characterProfile.partner.name}で整理した結論は「${normalized.learning}」。${focusLine}`.trim();
+    const source = `${normalized.theme} ${normalized.incident} ${normalized.learning}`;
+    let longBody = `現場のズレは、能力不足より「前提の未共有」で起きることが多い。${templates.characterProfile.protagonist.name}と${templates.characterProfile.partner.name}で整理した結論は「${normalized.learning}」。`;
+    if (source.indexOf("工具配置") >= 0 || source.indexOf("段取り見直し") >= 0) {
+      longBody = `工具配置を少し見直しただけで、現場の流れはしっかり変わる。今日の結論は「${normalized.learning}」。小さな改善を続けると、明日の余裕につながる。`;
+    } else if (
+      source.indexOf("読み合わせ") >= 0 ||
+      source.indexOf("日報") >= 0 ||
+      source.indexOf("過去ログ") >= 0
+    ) {
+      longBody = `昨日の記録を朝に読み返すだけで、同じつまずきを先回りしやすくなる。今日の学びは「${normalized.learning}」。振り返りを次の実務にそのままつなげたい。`;
+    }
+    const longText = `${leadTitle}\n${longBody}${focusLine ? ` ${focusLine}` : ""}`.trim();
 
     return [
       "短文版",
