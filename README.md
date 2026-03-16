@@ -32,7 +32,9 @@ ai-busou-oyakata-pub-engine/
 ## 評価用ファイル
 - 代表ケース: `samples/test-cases.js`
 - 評価基準: `docs/evaluation-guide.md`
+- 評価ログ: `docs/evaluation-log.md`
 - 今後の品質改善は `samples/test-cases.js` の代表ケースを基準に比較しながら進める
+- 品質改善の運用順は `samples/test-cases.js` -> `docs/evaluation-guide.md` -> `docs/evaluation-log.md`
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）
