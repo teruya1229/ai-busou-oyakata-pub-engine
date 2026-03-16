@@ -16,13 +16,27 @@
     return /[。！？!?]$/.test(text) ? text : text + "。";
   }
 
-  function ensureLearningText(text) {
+  function buildFallbackLearning(incident) {
+    const normalizedIncident = compactSpaces(incident);
+    if (normalizedIncident.indexOf("改善") >= 0) {
+      return "短文入力でも、改善点を一つ具体化して次の現場で試す。";
+    }
+    if (normalizedIncident.indexOf("確認") >= 0 || normalizedIncident.indexOf("漏れ") >= 0) {
+      return "確認漏れは、作業前の声かけ一つで減らせる。";
+    }
+    return "短い確認でも、先に共通認識を作るとズレが減る。";
+  }
+
+  function ensureLearningText(text, incident) {
     const trimmed = compactSpaces(text);
     if (!trimmed) {
-      return "短い確認でも、先に共通認識を作るとズレが減る。";
+      return buildFallbackLearning(incident);
+    }
+    if (trimmed.length < 6) {
+      return `${trimmed}を開始前チェックに落とし込み、次の現場でも再現する。`;
     }
     if (trimmed.length < 10) {
-      return ensurePeriod(trimmed) + " この学びを次の現場でも再現する。";
+      return ensurePeriod(trimmed) + " 次の現場でも同じ手順で再現する。";
     }
     return ensurePeriod(trimmed);
   }
@@ -33,7 +47,7 @@
       return "作業前の認識がそろわず、手戻りが出た。";
     }
     if (trimmed.length < 16) {
-      return ensurePeriod(trimmed) + " その結果、段取りに迷いが生まれた。";
+      return ensurePeriod(trimmed) + " その結果、作業の流れに迷いが生まれた。";
     }
     return ensurePeriod(trimmed);
   }
@@ -56,6 +70,10 @@
     const patterns = templates.comicPatterns;
     const names = Object.keys(patterns);
 
+    if (source.indexOf("確認漏れ") >= 0 || source.indexOf("漏れ") >= 0) {
+      return "誤解型";
+    }
+
     for (let i = 0; i < names.length; i += 1) {
       const name = names[i];
       const keywords = patterns[name].keywords;
@@ -65,16 +83,26 @@
         }
       }
     }
+
     return "気づき型";
   }
 
   function normalizeInput(input) {
     const tone = templates.toneTemplates[input.tone] ? input.tone : "ゆるい";
     const incident = ensureIncidentText(input.incident);
-    const learning = ensureLearningText(input.learning);
+    const learning = ensureLearningText(input.learning, incident);
     const theme = safeText(input.theme, "").trim() || "現場の小さな改善";
     const characters = normalizeCharacters(input.characters);
     const comicPattern = selectComicPattern(incident, learning);
+    const inputSparse =
+      !compactSpaces(input.theme) ||
+      !compactSpaces(input.characters) ||
+      compactSpaces(input.incident).length < 10 ||
+      compactSpaces(input.learning).length < 6;
+    const learningFocus =
+      comicPattern === "誤解型"
+        ? "短文・空欄入力でも、確認の要点を一つに絞って学びとして残す。"
+        : "入力が短くても、改善点を一つ具体化して次の現場につなげる。";
 
     return {
       theme,
@@ -83,6 +111,8 @@
       characters,
       tone,
       comicPattern,
+      inputSparse,
+      learningFocus,
     };
   }
 
@@ -140,7 +170,7 @@
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const toneData = templates.toneTemplates[normalized.tone];
     const pattern = templates.comicPatterns[normalized.comicPattern];
-    return [
+    const lines = [
       `# ${leadTitle}`,
       "",
       "## 導入",
@@ -162,7 +192,11 @@
       "",
       `登場人物: ${normalized.characters}`,
       `トーン: ${normalized.tone}`,
-    ].join("\n");
+    ];
+    if (normalized.inputSparse) {
+      lines.splice(lines.indexOf("## まとめ"), 0, `補足: ${normalized.learningFocus}`, "");
+    }
+    return lines.join("\n");
   }
 
   function buildXPost(input) {
@@ -170,7 +204,8 @@
     const toneData = templates.toneTemplates[normalized.tone];
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const shortText = `【${toneData.xLead}】${leadTitle}\n${normalized.incident}\n学び: ${normalized.learning}`;
-    const longText = `${leadTitle}\n現場のズレは、能力不足より「前提の未共有」で起きることが多い。${templates.characterProfile.protagonist.name}と${templates.characterProfile.partner.name}で整理した結論は「${normalized.learning}」。トーンは「${normalized.tone}」で共有。`;
+    const focusLine = normalized.inputSparse ? `要点: ${normalized.learningFocus}` : "";
+    const longText = `${leadTitle}\n現場のズレは、能力不足より「前提の未共有」で起きることが多い。${templates.characterProfile.protagonist.name}と${templates.characterProfile.partner.name}で整理した結論は「${normalized.learning}」。${focusLine}`.trim();
 
     return [
       "短文版",
@@ -185,11 +220,10 @@
   }
 
   function buildAllOutputs(input) {
-    const normalized = normalizeInput(input);
     return {
-      comic: buildComic(normalized),
-      note: buildNote(normalized),
-      xPost: buildXPost(normalized),
+      comic: buildComic(input),
+      note: buildNote(input),
+      xPost: buildXPost(input),
     };
   }
 
