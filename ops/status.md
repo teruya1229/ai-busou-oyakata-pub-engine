@@ -114,3 +114,13 @@
 - MVP本体は維持
 - pattern整合とX長文の自然さは概ね揃っている
 - 次フェーズへ進める前の最終確認段階
+
+## 今日やったこと（Kindle前段設計）
+- Kindle前段の章構成設計ドキュメント `docs/kindle-bridge-design.md` を追加
+- `README.md` に次フェーズ導線を追記
+- `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（Kindle前段設計後）
+- MVP本体は固定済み
+- 4コマ / note / X の一貫性確認まで完了
+- 次は Kindle章へつなぐ設計整理の段階
