@@ -235,6 +235,18 @@
       source.indexOf("過去ログ") >= 0
     ) {
       longBody = `昨日の記録を朝に読み返すだけで、同じつまずきを先回りしやすくなる。今日の学びは「${normalized.learning}」。振り返りを次の実務にそのままつなげたい。`;
+    } else if (
+      source.indexOf("搬入") >= 0 ||
+      source.indexOf("導線") >= 0 ||
+      source.indexOf("詰まり") >= 0
+    ) {
+      longBody = `搬入導線は、少し重なるだけでも現場のテンポを崩しやすい。今回の学びは「${normalized.learning}」。先に一枚図で共有しておくと、全体が落ち着いて進む。`;
+    } else if (
+      source.indexOf("高所") >= 0 ||
+      source.indexOf("足場") >= 0 ||
+      source.indexOf("焦って") >= 0
+    ) {
+      longBody = `高所作業では、急ぎたい場面ほど確認を先に置くのが効く。今日の結論は「${normalized.learning}」。一呼吸置くことで、結果的に安全と速度の両方を守れる。`;
     }
     const longText = `${leadTitle}\n${longBody}${focusLine ? ` ${focusLine}` : ""}`.trim();
 
