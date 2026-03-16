@@ -124,3 +124,14 @@
 - MVP本体は固定済み
 - 4コマ / note / X の一貫性確認まで完了
 - 次は Kindle章へつなぐ設計整理の段階
+
+## 今日やったこと（chapter mapping 試作）
+- `docs/chapter-mapping-examples.md` を追加
+- 代表ケースを使った「1エピソード -> 1節」「複数エピソード -> 1章」の試作を整理
+- `README.md` に次フェーズ導線を追記
+- `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（chapter mapping 試作後）
+- MVP本体は固定済み
+- Kindle前段設計は完了
+- 次は章への割り当てが実例ベースで自然かを検証する段階

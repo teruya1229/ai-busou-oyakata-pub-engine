@@ -39,6 +39,8 @@ ai-busou-oyakata-pub-engine/
 ## Kindle前段設計
 - 章構成設計ドキュメント: `docs/kindle-bridge-design.md`
 - MVP固定後は `docs/kindle-bridge-design.md` を基準に次フェーズへ進める
+- chapter mapping 試作: `docs/chapter-mapping-examples.md`
+- Kindle前段は `docs/kindle-bridge-design.md` と `docs/chapter-mapping-examples.md` を見ながら進める
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）
