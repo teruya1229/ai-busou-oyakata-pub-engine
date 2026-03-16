@@ -135,3 +135,13 @@
 - MVP本体は固定済み
 - Kindle前段設計は完了
 - 次は章への割り当てが実例ベースで自然かを検証する段階
+
+## 今日やったこと（Kindle章テンプレ固定）
+- Kindle章テンプレ固定ドキュメント `docs/kindle-chapter-template.md` を追加
+- `README.md` に次フェーズ導線を追記
+- `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（Kindle章テンプレ固定後）
+- MVP本体は固定済み
+- Kindle前段設計と chapter mapping 試作は完了
+- 次は章粒度と章テンプレを正式ルールとして固定する段階

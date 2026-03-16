@@ -41,6 +41,8 @@ ai-busou-oyakata-pub-engine/
 - MVP固定後は `docs/kindle-bridge-design.md` を基準に次フェーズへ進める
 - chapter mapping 試作: `docs/chapter-mapping-examples.md`
 - Kindle前段は `docs/kindle-bridge-design.md` と `docs/chapter-mapping-examples.md` を見ながら進める
+- Kindle章テンプレ固定: `docs/kindle-chapter-template.md`
+- 次フェーズは `docs/kindle-chapter-template.md` を基準に進める
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）
