@@ -74,6 +74,26 @@
       return "誤解型";
     }
 
+    // Priority rules for known weak cases:
+    // - TC-06: reflective context should stay awareness even if "ミス" appears.
+    if (
+      source.indexOf("読み合わせ") >= 0 ||
+      source.indexOf("過去ログ") >= 0 ||
+      source.indexOf("予兆") >= 0
+    ) {
+      return "気づき型";
+    }
+    // - TC-05/07: safety or congestion context should prefer close-call flow.
+    if (
+      source.indexOf("詰まり") >= 0 ||
+      source.indexOf("重なり") >= 0 ||
+      source.indexOf("搬入") >= 0 ||
+      source.indexOf("足場") >= 0 ||
+      source.indexOf("焦って") >= 0
+    ) {
+      return "ヒヤリ型";
+    }
+
     for (let i = 0; i < names.length; i += 1) {
       const name = names[i];
       const keywords = patterns[name].keywords;

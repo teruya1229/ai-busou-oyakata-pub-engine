@@ -81,3 +81,14 @@
 - MVP本体は維持
 - 弱点ケースを狙って改善する運用が回り始めている
 - 次回は抽出された少数ケースのみ最小修正する段階
+
+## 今日やったこと（優先3ケースのpattern整合）
+- `TC-06` `TC-07` `TC-05` の expectedPattern 寄せを最小差分で改善
+- `selectComicPattern()` の分岐順とキーワードを必要最小限で調整
+- `docs/evaluation-log.md` に再評価結果を追記
+- `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（pattern整合後）
+- MVP本体は維持
+- 優先弱点ケースだけを狙って修正する運用を継続
+- 今回は pattern整合にのみ集中する段階
