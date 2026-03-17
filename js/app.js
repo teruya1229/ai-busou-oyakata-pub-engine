@@ -76,15 +76,37 @@
       });
   }
 
+  function parseChapterBlocks(rawText) {
+    return (rawText || "")
+      .split("===")
+      .map(function (block) {
+        return block.trim();
+      })
+      .filter(Boolean);
+  }
+
+  function parseBookChapterInputs(rawText, baseInput) {
+    const chapterBlocks = parseChapterBlocks(rawText);
+    return chapterBlocks
+      .map(function (chapterBlock) {
+        return parseChapterEpisodeInputs(chapterBlock, baseInput);
+      })
+      .filter(function (chapterEpisodes) {
+        return Array.isArray(chapterEpisodes) && chapterEpisodes.length > 0;
+      });
+  }
+
   function renderKindleChapterPreviewFromMultiInput(baseInput) {
     if (!outputs.kindleChapter || !window.AIBusouKindleEngine || !chapterEpisodesField) {
       return;
     }
     const rawText = chapterEpisodesField.value || "";
-    const episodes = parseChapterEpisodeInputs(rawText, baseInput);
+    const chapterBlocks = parseChapterBlocks(rawText);
+    const firstChapterBlock = chapterBlocks[0] || "";
+    const episodes = parseChapterEpisodeInputs(firstChapterBlock, baseInput);
     if (!episodes.length) {
       outputs.kindleChapter.textContent =
-        "章確認用入力が空です。`---` 区切りで2件以上入力して「章素材を確認」を押してください。";
+        "章確認用入力が空です。章内は `---`、章区切りは `===` で入力して「章素材を確認」を押してください。";
       return;
     }
     outputs.kindleChapter.textContent = window.AIBusouKindleEngine.buildKindleChapterPreview(episodes);
@@ -95,13 +117,13 @@
       return;
     }
     const rawText = chapterEpisodesField.value || "";
-    const episodes = parseChapterEpisodeInputs(rawText, baseInput);
-    if (!episodes.length) {
+    const chapters = parseBookChapterInputs(rawText, baseInput);
+    if (!chapters.length) {
       outputs.kindleBook.textContent =
-        "章確認用入力が空です。`---` 区切りで2件以上入力して「本素材を確認」を押してください。";
+        "本確認用入力が空です。章内は `---`、章区切りは `===` で入力して「本素材を確認」を押してください。";
       return;
     }
-    outputs.kindleBook.textContent = window.AIBusouKindleEngine.buildKindleBookPreview([episodes]);
+    outputs.kindleBook.textContent = window.AIBusouKindleEngine.buildKindleBookPreview(chapters);
   }
 
   function clearOutputs() {
