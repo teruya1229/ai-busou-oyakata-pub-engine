@@ -438,6 +438,150 @@
     ].join("\n");
   }
 
+  function isBookMaterial(source) {
+    return !!(
+      source &&
+      typeof source === "object" &&
+      typeof source.bookTitle === "string" &&
+      Array.isArray(source.chapterMaterials)
+    );
+  }
+
+  function normalizeDraftBook(bookOrInputs, options) {
+    if (isBookMaterial(bookOrInputs)) {
+      return bookOrInputs;
+    }
+    if (Array.isArray(bookOrInputs)) {
+      return buildKindleBookMaterial(bookOrInputs, options || {});
+    }
+    if (bookOrInputs && Array.isArray(bookOrInputs.chapters)) {
+      return buildKindleBookMaterial(bookOrInputs.chapters, bookOrInputs.options || options || {});
+    }
+    if (bookOrInputs && Array.isArray(bookOrInputs.inputs)) {
+      return buildKindleBookMaterial(bookOrInputs.inputs, bookOrInputs.options || options || {});
+    }
+    if (!bookOrInputs) {
+      return buildKindleBookMaterial([], options || {});
+    }
+    return buildKindleBookMaterial([bookOrInputs], options || {});
+  }
+
+  function buildDraftTitle(bookMaterial, options) {
+    const optionTitle = compactSpaces(options && options.draftTitle);
+    if (optionTitle) {
+      return optionTitle;
+    }
+    const base = compactSpaces(bookMaterial && bookMaterial.bookTitle);
+    if (!base) {
+      return "AI武装親方｜本文骨子";
+    }
+    if (base.indexOf("本文骨子") >= 0) {
+      return base;
+    }
+    return base + "｜本文骨子";
+  }
+
+  function buildKeyMessage(bookMaterial, options) {
+    const optionMessage = compactSpaces(options && options.keyMessage);
+    if (optionMessage) {
+      return optionMessage;
+    }
+    const insights = (bookMaterial && bookMaterial.keyInsights) || [];
+    const first = compactSpaces(insights[0] || "");
+    const second = compactSpaces(insights[1] || "");
+    if (first && second) {
+      return first + " / " + second;
+    }
+    if (first) {
+      return first;
+    }
+    return "現場で再利用できる学びを、章単位で積み上げる。";
+  }
+
+  function buildChapterOutlineFromMaterial(chapter, index) {
+    const chapterTitle = compactSpaces(chapter && chapter.chapterTitle) || "第" + (index + 1).toString() + "章";
+    const chapterPurpose =
+      compactSpaces(chapter && chapter.chapterTheme) || "現場改善";
+    const openingHook = compactSpaces(chapter && chapter.chapterHook) || "導入フック: 章骨子を準備中。";
+    const sectionFlow = Array.isArray(chapter && chapter.chapterOutline)
+      ? chapter.chapterOutline.filter(function (line) {
+          return compactSpaces(line);
+        })
+      : [];
+    const takeaway = ensureActionEnding(
+      compactSpaces((chapter && chapter.chapterKeyTakeaways && chapter.chapterKeyTakeaways[0]) || "")
+    );
+
+    return {
+      chapterTitle: chapterTitle,
+      chapterPurpose: chapterPurpose + "を現場で再利用できる形に整理する。",
+      openingHook: openingHook,
+      sectionFlow: sectionFlow,
+      takeaway: takeaway,
+    };
+  }
+
+  function buildKindleDraftOutline(bookOrInputs, options) {
+    const material = normalizeDraftBook(bookOrInputs, options || {});
+    const chapterMaterials = Array.isArray(material.chapterMaterials) ? material.chapterMaterials : [];
+    const draftTheme = compactSpaces((options && options.draftTheme) || material.bookTheme) || "現場改善";
+    const draftTitle = buildDraftTitle(material, options || {});
+    const introOutline = compactSpaces((options && options.introOutline) || material.introductionOutline) ||
+      "はじめに: 本文骨子を準備中。";
+    const chapterOutlines = chapterMaterials.map(function (chapter, index) {
+      return buildChapterOutlineFromMaterial(chapter, index);
+    });
+    const closingOutline =
+      compactSpaces((options && options.closingOutline) || material.endingOutline) ||
+      "まとめ: 章ごとの学びを次の現場へ接続する。";
+    const keyMessage = buildKeyMessage(material, options || {});
+
+    return {
+      draftTitle: draftTitle,
+      draftTheme: draftTheme,
+      introOutline: introOutline,
+      chapterOutlines: chapterOutlines,
+      closingOutline: closingOutline,
+      keyMessage: keyMessage,
+      sourceSummary: material.sourceSummary || [],
+    };
+  }
+
+  function buildKindleDraftOutlinePreview(bookOrInputs, options) {
+    const outline = buildKindleDraftOutline(bookOrInputs, options);
+    const chapterLines = (outline.chapterOutlines || []).map(function (chapter, index) {
+      const sectionLines = (chapter.sectionFlow || []).map(function (flow, flowIndex) {
+        return "    " + (flowIndex + 1).toString() + ". " + flow;
+      });
+      return [
+        (index + 1).toString() + ". " + chapter.chapterTitle,
+        "  - 章の目的: " + chapter.chapterPurpose,
+        "  - 導入フック: " + chapter.openingHook,
+        "  - 節の流れ:",
+        sectionLines.join("\n") || "    （節の流れなし）",
+        "  - 章の締め: " + chapter.takeaway,
+      ].join("\n");
+    });
+
+    return [
+      "【Kindle本文骨子プレビュー】",
+      "仮タイトル: " + outline.draftTitle,
+      "テーマ: " + outline.draftTheme,
+      "",
+      "はじめにの骨子:",
+      outline.introOutline,
+      "",
+      "各章の骨子一覧:",
+      chapterLines.join("\n\n") || "（章骨子なし）",
+      "",
+      "まとめの骨子:",
+      outline.closingOutline,
+      "",
+      "この本で一番伝えたいこと:",
+      outline.keyMessage,
+    ].join("\n");
+  }
+
   window.AIBusouKindleEngine = {
     buildEpisodeModel: buildEpisodeModel,
     buildKindleSectionMaterial: buildKindleSectionMaterial,
@@ -446,5 +590,7 @@
     buildKindleChapterPreview: buildKindleChapterPreview,
     buildKindleBookMaterial: buildKindleBookMaterial,
     buildKindleBookPreview: buildKindleBookPreview,
+    buildKindleDraftOutline: buildKindleDraftOutline,
+    buildKindleDraftOutlinePreview: buildKindleDraftOutlinePreview,
   };
 })();
