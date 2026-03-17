@@ -6,6 +6,7 @@
     xPost: document.getElementById("x-output"),
     kindle: document.getElementById("kindle-output"),
     kindleChapter: document.getElementById("kindle-chapter-output"),
+    kindleBook: document.getElementById("kindle-book-output"),
   };
   const chapterEpisodesField = document.getElementById("chapter-episodes");
 
@@ -89,6 +90,20 @@
     outputs.kindleChapter.textContent = window.AIBusouKindleEngine.buildKindleChapterPreview(episodes);
   }
 
+  function renderKindleBookPreviewFromMultiInput(baseInput) {
+    if (!outputs.kindleBook || !window.AIBusouKindleEngine || !chapterEpisodesField) {
+      return;
+    }
+    const rawText = chapterEpisodesField.value || "";
+    const episodes = parseChapterEpisodeInputs(rawText, baseInput);
+    if (!episodes.length) {
+      outputs.kindleBook.textContent =
+        "章確認用入力が空です。`---` 区切りで2件以上入力して「本素材を確認」を押してください。";
+      return;
+    }
+    outputs.kindleBook.textContent = window.AIBusouKindleEngine.buildKindleBookPreview([episodes]);
+  }
+
   function clearOutputs() {
     const placeholder = "ここに生成結果が表示されます。";
     outputs.comic.textContent = placeholder;
@@ -99,6 +114,9 @@
     }
     if (outputs.kindleChapter) {
       outputs.kindleChapter.textContent = placeholder;
+    }
+    if (outputs.kindleBook) {
+      outputs.kindleBook.textContent = placeholder;
     }
   }
 
@@ -131,6 +149,11 @@
   document.getElementById("chapter-preview-btn").addEventListener("click", function () {
     const baseInput = getInputFromForm();
     renderKindleChapterPreviewFromMultiInput(baseInput);
+  });
+
+  document.getElementById("book-preview-btn").addEventListener("click", function () {
+    const baseInput = getInputFromForm();
+    renderKindleBookPreviewFromMultiInput(baseInput);
   });
 
   document.getElementById("reset-btn").addEventListener("click", function () {

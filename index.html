@@ -59,6 +59,7 @@
           <div class="actions">
             <button type="button" id="generate-btn">構成を生成</button>
             <button type="button" id="chapter-preview-btn" class="subtle">章素材を確認</button>
+            <button type="button" id="book-preview-btn" class="subtle">本素材を確認</button>
             <button type="button" id="example-btn" class="subtle">入力例を入れる</button>
             <button type="button" id="reset-btn" class="subtle">リセット</button>
           </div>
@@ -103,6 +104,14 @@
           <button type="button" data-copy-target="kindle-chapter-output" class="copy-btn">コピー</button>
         </div>
         <pre id="kindle-chapter-output" class="output-block">ここに生成結果が表示されます。</pre>
+      </section>
+
+      <section class="card">
+        <div class="result-head">
+          <h2>Kindle本素材プレビュー</h2>
+          <button type="button" data-copy-target="kindle-book-output" class="copy-btn">コピー</button>
+        </div>
+        <pre id="kindle-book-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
     </main>
 
