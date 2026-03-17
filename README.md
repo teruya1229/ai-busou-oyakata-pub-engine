@@ -47,6 +47,8 @@ ai-busou-oyakata-pub-engine/
 - 次フェーズは `docs/sample-kindle-chapter-outline.md` を見ながら原稿化ルールを詰める
 - Kindle原稿化ルール初版: `docs/kindle-drafting-rules-v1.md`
 - 次フェーズは `docs/kindle-drafting-rules-v1.md` を基準に進める
+- 1節分サンプル本文: `docs/sample-section-drafts.md`
+- 次フェーズは `docs/sample-section-drafts.md` を見ながら標準粒度を決める
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）
