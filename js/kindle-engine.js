@@ -296,11 +296,155 @@
     ].join("\n");
   }
 
+  function isChapterMaterial(source) {
+    return !!(
+      source &&
+      typeof source === "object" &&
+      typeof source.chapterTitle === "string" &&
+      Array.isArray(source.sectionMaterials)
+    );
+  }
+
+  function normalizeBookChapters(chaptersOrInputs, options) {
+    if (!Array.isArray(chaptersOrInputs)) {
+      return [];
+    }
+    return chaptersOrInputs
+      .map(function (item) {
+        if (isChapterMaterial(item)) {
+          return item;
+        }
+        if (Array.isArray(item)) {
+          return buildKindleChapterMaterial(item, options || {});
+        }
+        if (item && Array.isArray(item.inputs)) {
+          return buildKindleChapterMaterial(item.inputs, item.options || options || {});
+        }
+        return buildKindleChapterMaterial([item], options || {});
+      })
+      .filter(function (chapter) {
+        return isChapterMaterial(chapter);
+      })
+      .slice(0, 5);
+  }
+
+  function buildBookTheme(chapterMaterials, options) {
+    const optionTheme = compactSpaces(options && options.bookTheme);
+    if (optionTheme) {
+      return optionTheme;
+    }
+    if (!chapterMaterials.length) {
+      return "現場改善";
+    }
+    return compactSpaces(chapterMaterials[0].chapterTheme) || "現場改善";
+  }
+
+  function buildBookTitle(chapterMaterials, options) {
+    const optionTitle = compactSpaces(options && options.bookTitle);
+    if (optionTitle) {
+      return optionTitle;
+    }
+    const theme = buildBookTheme(chapterMaterials, options);
+    if (!theme) {
+      return "AI武装親方｜実践集";
+    }
+    if (theme.indexOf("AI武装親方｜") === 0) {
+      return theme + "実践集";
+    }
+    return "AI武装親方｜" + theme + "実践集";
+  }
+
+  function buildKindleBookMaterial(chaptersOrInputs, options) {
+    const chapterMaterials = normalizeBookChapters(chaptersOrInputs, options || {});
+    const bookTheme = buildBookTheme(chapterMaterials, options || {});
+    const bookTitle = buildBookTitle(chapterMaterials, options || {});
+
+    const introductionOutline =
+      uniqueNonEmpty(
+        chapterMaterials.map(function (chapter) {
+          return chapter.chapterHook;
+        })
+      )
+        .slice(0, 2)
+        .join(" / ") || "本書導入: 章素材を準備中。";
+
+    const chapterSummaries = chapterMaterials.map(function (chapter, index) {
+      const firstOutline = compactSpaces((chapter.chapterOutline || [])[0] || "");
+      const fallback = compactSpaces((chapter.chapterKeyTakeaways || [])[0] || "");
+      const summary = firstOutline || fallback || "要約準備中。";
+      return "第" + (index + 1).toString() + "章 " + chapter.chapterTitle + ": " + summary;
+    });
+
+    const keyInsights = uniqueNonEmpty(
+      chapterMaterials.reduce(function (acc, chapter) {
+        return acc.concat(chapter.chapterKeyTakeaways || []);
+      }, [])
+    ).slice(0, 8);
+
+    const endingOutline =
+      keyInsights.length > 0
+        ? "終わり方: 重要な学びを次の現場へ再利用し、再発防止と改善を継続する。"
+        : "終わり方: 章素材を統合し、次段で学びの再利用方針を確定する。";
+
+    return {
+      bookTitle: bookTitle,
+      bookTheme: bookTheme,
+      chapterMaterials: chapterMaterials,
+      introductionOutline: introductionOutline,
+      chapterSummaries: chapterSummaries,
+      keyInsights: keyInsights,
+      endingOutline: endingOutline,
+      sourceSummary: chapterMaterials.map(function (chapter, index) {
+        return {
+          chapterIndex: index + 1,
+          chapterTitle: chapter.chapterTitle,
+          sourceSummary: chapter.sourceSummary || [],
+        };
+      }),
+    };
+  }
+
+  function buildKindleBookPreview(chaptersOrInputs, options) {
+    const material = buildKindleBookMaterial(chaptersOrInputs, options);
+    const chapterTitles = material.chapterMaterials.map(function (chapter, index) {
+      return (index + 1).toString() + ". " + chapter.chapterTitle;
+    });
+    const summaryLines = (material.chapterSummaries || []).map(function (line, index) {
+      return (index + 1).toString() + ". " + line;
+    });
+    const insightLines = (material.keyInsights || []).map(function (line, index) {
+      return (index + 1).toString() + ". " + line;
+    });
+
+    return [
+      "【Kindle本素材プレビュー】",
+      "本タイトル: " + material.bookTitle,
+      "本テーマ: " + material.bookTheme,
+      "",
+      "章タイトル一覧:",
+      chapterTitles.join("\n") || "（章素材なし）",
+      "",
+      "導入概要:",
+      material.introductionOutline,
+      "",
+      "各章要約:",
+      summaryLines.join("\n") || "（要約なし）",
+      "",
+      "重要な学び:",
+      insightLines.join("\n") || "（学びなし）",
+      "",
+      "終わり方の骨子:",
+      material.endingOutline,
+    ].join("\n");
+  }
+
   window.AIBusouKindleEngine = {
     buildEpisodeModel: buildEpisodeModel,
     buildKindleSectionMaterial: buildKindleSectionMaterial,
     buildKindleSectionPreview: buildKindleSectionPreview,
     buildKindleChapterMaterial: buildKindleChapterMaterial,
     buildKindleChapterPreview: buildKindleChapterPreview,
+    buildKindleBookMaterial: buildKindleBookMaterial,
+    buildKindleBookPreview: buildKindleBookPreview,
   };
 })();
