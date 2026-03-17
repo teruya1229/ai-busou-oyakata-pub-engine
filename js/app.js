@@ -7,6 +7,7 @@
     kindle: document.getElementById("kindle-output"),
     kindleChapter: document.getElementById("kindle-chapter-output"),
   };
+  const chapterEpisodesField = document.getElementById("chapter-episodes");
 
   const exampleData = {
     theme: "段取り確認とAI活用",
@@ -56,6 +57,38 @@
     outputs.kindleChapter.textContent = window.AIBusouKindleEngine.buildKindleChapterPreview([input]);
   }
 
+  function parseChapterEpisodeInputs(rawText, baseInput) {
+    return (rawText || "")
+      .split("---")
+      .map(function (block) {
+        return block.trim();
+      })
+      .filter(Boolean)
+      .map(function (incidentText) {
+        return {
+          theme: baseInput.theme,
+          incident: incidentText,
+          learning: baseInput.learning,
+          characters: baseInput.characters,
+          tone: baseInput.tone,
+        };
+      });
+  }
+
+  function renderKindleChapterPreviewFromMultiInput(baseInput) {
+    if (!outputs.kindleChapter || !window.AIBusouKindleEngine || !chapterEpisodesField) {
+      return;
+    }
+    const rawText = chapterEpisodesField.value || "";
+    const episodes = parseChapterEpisodeInputs(rawText, baseInput);
+    if (!episodes.length) {
+      outputs.kindleChapter.textContent =
+        "章確認用入力が空です。`---` 区切りで2件以上入力して「章素材を確認」を押してください。";
+      return;
+    }
+    outputs.kindleChapter.textContent = window.AIBusouKindleEngine.buildKindleChapterPreview(episodes);
+  }
+
   function clearOutputs() {
     const placeholder = "ここに生成結果が表示されます。";
     outputs.comic.textContent = placeholder;
@@ -93,6 +126,11 @@
 
   document.getElementById("example-btn").addEventListener("click", function () {
     setFormValues(exampleData);
+  });
+
+  document.getElementById("chapter-preview-btn").addEventListener("click", function () {
+    const baseInput = getInputFromForm();
+    renderKindleChapterPreviewFromMultiInput(baseInput);
   });
 
   document.getElementById("reset-btn").addEventListener("click", function () {
