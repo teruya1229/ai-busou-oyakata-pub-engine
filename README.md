@@ -45,6 +45,8 @@ ai-busou-oyakata-pub-engine/
 - 次フェーズは `docs/kindle-chapter-template.md` を基準に進める
 - 1章分の実例原稿構成: `docs/sample-kindle-chapter-outline.md`
 - 次フェーズは `docs/sample-kindle-chapter-outline.md` を見ながら原稿化ルールを詰める
+- Kindle原稿化ルール初版: `docs/kindle-drafting-rules-v1.md`
+- 次フェーズは `docs/kindle-drafting-rules-v1.md` を基準に進める
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）
