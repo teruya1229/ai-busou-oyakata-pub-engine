@@ -63,6 +63,8 @@ ai-busou-oyakata-pub-engine/
 - 次フェーズは固定済みテンプレを前提に、量産試作または Kindle生成ルール整理へ進む
 - Kindle生成ルール整理: `docs/kindle-generation-rules-v1.md`
 - 次フェーズは `docs/kindle-generation-rules-v1.md` を基準に、量産試作または実装設計へ進む
+- Kindle実装設計: `docs/kindle-implementation-plan-v1.md`
+- 次フェーズは `docs/kindle-implementation-plan-v1.md` を基準に実装着手へ進む
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）
