@@ -232,3 +232,15 @@
 - MVP本体は固定済み
 - 1節の再試作で改善差は確認済み
 - 次は4節通した時に読み味と運用性が維持できるか確認する段階
+
+## 今日やったこと（最終固定判断）
+- `docs/sample-kindle-chapter-draft-v2.md` をレビューし、章テンプレと drafting rules の最終固定可否を整理
+- `docs/kindle-drafting-rules-v1.md` に最終固定判断の追記を反映
+- `docs/kindle-chapter-template.md` に1章4節（標準）と例外条件を明記
+- `README.md` に次フェーズ導線を追記
+- `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（最終固定判断後）
+- MVP本体は固定済み
+- 1節再試作と1章再試作まで完了
+- 次は固定済みルールを前提に量産試作または Kindle生成ルール整理へ進む段階

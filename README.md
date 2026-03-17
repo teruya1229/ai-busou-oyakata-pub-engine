@@ -59,6 +59,8 @@ ai-busou-oyakata-pub-engine/
 - 次フェーズは `docs/sample-section-draft-v2.md` を見ながら、1章再試作へ進むか判断する
 - 微修正後ルールでの1章再試作: `docs/sample-kindle-chapter-draft-v2.md`
 - 次フェーズは `docs/sample-kindle-chapter-draft-v2.md` を見ながら、章テンプレと drafting rules の最終固定を判断する
+- chapter draft v2 レビューを踏まえ、`docs/kindle-chapter-template.md` と `docs/kindle-drafting-rules-v1.md` の最終固定判断を実施
+- 次フェーズは固定済みテンプレを前提に、量産試作または Kindle生成ルール整理へ進む
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）
