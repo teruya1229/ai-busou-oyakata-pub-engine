@@ -68,6 +68,8 @@ ai-busou-oyakata-pub-engine/
 - Kindle節素材生成の初期実装: `js/kindle-engine.js`
 - `js/kindle-engine.js` は `buildEpisodeModel` と `buildKindleSectionMaterial` を担い、1エピソードから節素材オブジェクトを生成する
 - 今後は節素材生成を基点に、章素材生成へ段階拡張する
+- Kindle章素材プレビュー導線を追加し、単一入力を1節章として確認できる段階まで対応
+- 次フェーズは複数入力を束ねる章確認導線へ最小差分で拡張する
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）

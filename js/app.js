@@ -5,6 +5,7 @@
     note: document.getElementById("note-output"),
     xPost: document.getElementById("x-output"),
     kindle: document.getElementById("kindle-output"),
+    kindleChapter: document.getElementById("kindle-chapter-output"),
   };
 
   const exampleData = {
@@ -48,6 +49,13 @@
     outputs.kindle.textContent = window.AIBusouKindleEngine.buildKindleSectionPreview(input);
   }
 
+  function renderKindleChapterPreview(input) {
+    if (!outputs.kindleChapter || !window.AIBusouKindleEngine) {
+      return;
+    }
+    outputs.kindleChapter.textContent = window.AIBusouKindleEngine.buildKindleChapterPreview([input]);
+  }
+
   function clearOutputs() {
     const placeholder = "ここに生成結果が表示されます。";
     outputs.comic.textContent = placeholder;
@@ -55,6 +63,9 @@
     outputs.xPost.textContent = placeholder;
     if (outputs.kindle) {
       outputs.kindle.textContent = placeholder;
+    }
+    if (outputs.kindleChapter) {
+      outputs.kindleChapter.textContent = placeholder;
     }
   }
 
@@ -77,6 +88,7 @@
     const result = window.AIBusouEngine.buildAllOutputs(input);
     renderOutputs(result);
     renderKindlePreview(input);
+    renderKindleChapterPreview(input);
   });
 
   document.getElementById("example-btn").addEventListener("click", function () {

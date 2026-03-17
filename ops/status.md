@@ -277,3 +277,14 @@
 - MVP本体は維持
 - Kindle実装は節素材生成の最小単位から着手
 - 次は section material を chapter material へ束ねる段階
+
+## 今日やったこと（Kindle章素材プレビュー導線追加）
+- `index.html` に `Kindle章素材プレビュー` 出力ブロックを最小差分で追加
+- `js/app.js` から `buildKindleChapterPreview([input])` を呼び、既存導線を壊さず章素材を追加表示
+- `README.md` `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（章素材プレビュー導線追加後）
+- 1エピソード -> 1節素材 はUI確認可能
+- 単一入力 -> 1節章素材プレビュー もUI確認可能
+- 既存MVP本体と既存3出力導線は維持
+- 次は複数入力を束ねる章確認導線の検討段階
