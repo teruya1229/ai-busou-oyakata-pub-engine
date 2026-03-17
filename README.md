@@ -51,6 +51,8 @@ ai-busou-oyakata-pub-engine/
 - 次フェーズは `docs/sample-section-drafts.md` を見ながら標準粒度を決める
 - 標準粒度方針: `docs/kindle-granularity-policy-v1.md`
 - 次フェーズは `docs/kindle-granularity-policy-v1.md` を基準に本文試作を進める
+- 1章分本文試作 v1: `docs/sample-kindle-chapter-draft-v1.md`
+- 次フェーズは `docs/sample-kindle-chapter-draft-v1.md` を見ながら原稿化ルール見直しへ進む
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）
