@@ -7,6 +7,7 @@
     kindle: document.getElementById("kindle-output"),
     kindleChapter: document.getElementById("kindle-chapter-output"),
     kindleBook: document.getElementById("kindle-book-output"),
+    kindleDraftOutline: document.getElementById("kindle-draft-output"),
   };
   const chapterEpisodesField = document.getElementById("chapter-episodes");
 
@@ -126,6 +127,21 @@
     outputs.kindleBook.textContent = window.AIBusouKindleEngine.buildKindleBookPreview(chapters);
   }
 
+  function renderKindleDraftOutlinePreviewFromMultiInput(baseInput) {
+    if (!outputs.kindleDraftOutline || !window.AIBusouKindleEngine || !chapterEpisodesField) {
+      return;
+    }
+    const rawText = chapterEpisodesField.value || "";
+    const chapters = parseBookChapterInputs(rawText, baseInput);
+    if (!chapters.length) {
+      outputs.kindleDraftOutline.textContent =
+        "本文骨子確認用入力が空です。章内は `---`、章区切りは `===` で入力して「本文骨子を確認」を押してください。";
+      return;
+    }
+    outputs.kindleDraftOutline.textContent =
+      window.AIBusouKindleEngine.buildKindleDraftOutlinePreview(chapters);
+  }
+
   function clearOutputs() {
     const placeholder = "ここに生成結果が表示されます。";
     outputs.comic.textContent = placeholder;
@@ -139,6 +155,9 @@
     }
     if (outputs.kindleBook) {
       outputs.kindleBook.textContent = placeholder;
+    }
+    if (outputs.kindleDraftOutline) {
+      outputs.kindleDraftOutline.textContent = placeholder;
     }
   }
 
@@ -176,6 +195,11 @@
   document.getElementById("book-preview-btn").addEventListener("click", function () {
     const baseInput = getInputFromForm();
     renderKindleBookPreviewFromMultiInput(baseInput);
+  });
+
+  document.getElementById("draft-preview-btn").addEventListener("click", function () {
+    const baseInput = getInputFromForm();
+    renderKindleDraftOutlinePreviewFromMultiInput(baseInput);
   });
 
   document.getElementById("reset-btn").addEventListener("click", function () {

@@ -324,3 +324,16 @@
 - 複数エピソード -> 1章素材プレビュー はUI確認可能
 - 複数章 -> 1冊素材プレビュー も同一textareaの簡易入力で確認可能
 - 既存MVP本体と既存の単一入力/章確認/本確認導線は維持されている
+
+## 今日やったこと（本文骨子プレビューUI導線追加）
+- `index.html` に「本文骨子を確認」ボタンと `Kindle本文骨子プレビュー` 出力ブロックを最小追加
+- `js/app.js` で `chapter-episodes` の既存パースを再利用し、`buildKindleDraftOutlinePreview(chapters)` を呼ぶ最小導線を追加
+- reset時に `kindle-draft-output` を初期プレースホルダへ戻す処理を追加
+- `README.md` `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（本文骨子プレビューUI導線追加後）
+- 1エピソード -> 1節素材 はUI確認可能
+- 複数節 -> 1章素材 はUI確認可能
+- 複数章 -> 1冊素材 はUI確認可能
+- 1冊素材 -> 本文骨子 もUI確認可能
+- 既存MVP本体と既存出力導線は維持されている
