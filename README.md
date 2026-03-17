@@ -55,6 +55,8 @@ ai-busou-oyakata-pub-engine/
 - 次フェーズは `docs/sample-kindle-chapter-draft-v1.md` を見ながら原稿化ルール見直しへ進む
 - 章試作レビュー反映後の原稿化ルール: `docs/kindle-drafting-rules-v1.md`（段落数目安・節末要点スタイルを微修正）
 - 次フェーズは微修正後ルールで、1節または1章を再試作して読み味差を確認する
+- 微修正後ルールでの1節再試作: `docs/sample-section-draft-v2.md`
+- 次フェーズは `docs/sample-section-draft-v2.md` を見ながら、1章再試作へ進むか判断する
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）
