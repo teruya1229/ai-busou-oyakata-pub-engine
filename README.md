@@ -65,6 +65,9 @@ ai-busou-oyakata-pub-engine/
 - 次フェーズは `docs/kindle-generation-rules-v1.md` を基準に、量産試作または実装設計へ進む
 - Kindle実装設計: `docs/kindle-implementation-plan-v1.md`
 - 次フェーズは `docs/kindle-implementation-plan-v1.md` を基準に実装着手へ進む
+- Kindle節素材生成の初期実装: `js/kindle-engine.js`
+- `js/kindle-engine.js` は `buildEpisodeModel` と `buildKindleSectionMaterial` を担い、1エピソードから節素材オブジェクトを生成する
+- 今後は節素材生成を基点に、章素材生成へ段階拡張する
 
 ## 今後の拡張候補
 - 出力品質の調整（4コマテンプレ改善、note文体最適化、X投稿精度向上）

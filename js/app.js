@@ -4,6 +4,7 @@
     comic: document.getElementById("comic-output"),
     note: document.getElementById("note-output"),
     xPost: document.getElementById("x-output"),
+    kindle: document.getElementById("kindle-output"),
   };
 
   const exampleData = {
@@ -40,11 +41,21 @@
     outputs.xPost.textContent = result.xPost;
   }
 
+  function renderKindlePreview(input) {
+    if (!outputs.kindle || !window.AIBusouKindleEngine) {
+      return;
+    }
+    outputs.kindle.textContent = window.AIBusouKindleEngine.buildKindleSectionPreview(input);
+  }
+
   function clearOutputs() {
     const placeholder = "ここに生成結果が表示されます。";
     outputs.comic.textContent = placeholder;
     outputs.note.textContent = placeholder;
     outputs.xPost.textContent = placeholder;
+    if (outputs.kindle) {
+      outputs.kindle.textContent = placeholder;
+    }
   }
 
   function copyTextById(targetId) {
@@ -65,6 +76,7 @@
     const input = getInputFromForm();
     const result = window.AIBusouEngine.buildAllOutputs(input);
     renderOutputs(result);
+    renderKindlePreview(input);
   });
 
   document.getElementById("example-btn").addEventListener("click", function () {

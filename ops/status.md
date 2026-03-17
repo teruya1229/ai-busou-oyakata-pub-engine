@@ -266,3 +266,14 @@
 - MVP本体は固定済み
 - Kindle生成ルール整理まで完了
 - 次は実装に落とす責務分離とデータ構造整理を行う段階
+
+## 今日やったこと（Kindle節素材の最小実装）
+- `js/kindle-engine.js` を追加し、`buildEpisodeModel` と `buildKindleSectionMaterial` を実装
+- `buildKindleSectionPreview` を追加し、節素材の確認用テキストを生成可能にした
+- `index.html` / `js/app.js` に最小導線を追加し、既存出力を壊さず Kindle節素材プレビューを表示
+- `README.md` `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（Kindle節素材最小実装後）
+- MVP本体は維持
+- Kindle実装は節素材生成の最小単位から着手
+- 次は section material を chapter material へ束ねる段階
