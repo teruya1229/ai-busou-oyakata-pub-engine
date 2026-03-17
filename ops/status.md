@@ -221,3 +221,14 @@
 - MVP本体は固定済み
 - drafting rules v1 は微修正済み
 - 次は再試作した1節を見て、1章再試作へ進めるか判断する段階
+
+## 今日やったこと（1章再試作）
+- 微修正後ルールを基準に `docs/sample-kindle-chapter-draft-v2.md` を追加
+- 1章分（4節）を再試作し、`sample-kindle-chapter-draft-v1` と比較可能な形で整理
+- `README.md` に次フェーズ導線を追記
+- `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（1章再試作後）
+- MVP本体は固定済み
+- 1節の再試作で改善差は確認済み
+- 次は4節通した時に読み味と運用性が維持できるか確認する段階
