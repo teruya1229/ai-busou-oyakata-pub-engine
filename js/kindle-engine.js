@@ -582,6 +582,171 @@
     ].join("\n");
   }
 
+  function isDraftOutline(source) {
+    return !!(
+      source &&
+      typeof source === "object" &&
+      typeof source.draftTitle === "string" &&
+      typeof source.introOutline === "string" &&
+      Array.isArray(source.chapterOutlines)
+    );
+  }
+
+  function ensureSentenceEnding(text, fallback) {
+    const normalized = compactSpaces(text);
+    if (!normalized) {
+      return compactSpaces(fallback) || "";
+    }
+    if (/[。！？!?]$/.test(normalized)) {
+      return normalized;
+    }
+    return normalized + "。";
+  }
+
+  function removeLeadingLabel(text, label) {
+    const normalized = compactSpaces(text);
+    if (!normalized) {
+      return "";
+    }
+    const pattern = new RegExp("^" + label + "\\s*[:：]\\s*");
+    return normalized.replace(pattern, "");
+  }
+
+  function normalizeDraftSource(draftOrBookOrInputs, options) {
+    if (isDraftOutline(draftOrBookOrInputs)) {
+      return draftOrBookOrInputs;
+    }
+    return buildKindleDraftOutline(draftOrBookOrInputs, options || {});
+  }
+
+  function summarizeSectionFlowLine(line) {
+    const normalized = compactSpaces(line);
+    if (!normalized) {
+      return "";
+    }
+    const colonIndex = normalized.indexOf(":");
+    if (colonIndex < 0) {
+      return normalized;
+    }
+    return compactSpaces(normalized.slice(colonIndex + 1));
+  }
+
+  function buildIntroDraft(outline) {
+    const intro = ensureSentenceEnding(
+      compactSpaces(outline && outline.introOutline),
+      "はじめに: 本文たたき台を準備中。"
+    );
+    return intro + " 各章で現場に再利用できる進め方を、短い流れで具体化する。";
+  }
+
+  function buildChapterBodyDraft(sectionFlow) {
+    const flowList = Array.isArray(sectionFlow) ? sectionFlow : [];
+    if (!flowList.length) {
+      return "本文の流れは準備中。章の目的に沿って要点を順に具体化する。";
+    }
+
+    const sentences = flowList
+      .map(function (line, index) {
+        const summary = summarizeSectionFlowLine(line) || "要点を整理する";
+        if (index === 0) {
+          return ensureSentenceEnding("まず、" + summary, "まず、要点を整理する。");
+        }
+        if (index === flowList.length - 1) {
+          return ensureSentenceEnding("最後に、" + summary, "最後に、要点を整理する。");
+        }
+        return ensureSentenceEnding("次に、" + summary, "次に、要点を整理する。");
+      })
+      .filter(Boolean);
+
+    return sentences.join(" ");
+  }
+
+  function buildChapterDraftFromOutline(chapterOutline, index) {
+    const title =
+      compactSpaces(chapterOutline && chapterOutline.chapterTitle) || "第" + (index + 1).toString() + "章";
+    const purposeText =
+      compactSpaces(chapterOutline && chapterOutline.chapterPurpose) || "現場改善を再利用可能な形に整理する。";
+    const hookText = removeLeadingLabel(chapterOutline && chapterOutline.openingHook, "導入フック");
+    const openingHook = ensureSentenceEnding(hookText, "章の導入を準備中。");
+    const chapterPurpose = ensureSentenceEnding(purposeText, "現場改善を再利用可能な形に整理する。");
+    const takeaway = ensureActionEnding(compactSpaces(chapterOutline && chapterOutline.takeaway));
+    const bodyDraft = buildChapterBodyDraft(chapterOutline && chapterOutline.sectionFlow);
+
+    return {
+      chapterTitle: title,
+      chapterPurpose: chapterPurpose,
+      openingParagraph: openingHook + " この章では" + chapterPurpose.replace(/[。！？!?]+$/, "") + "。",
+      bodyDraft: bodyDraft,
+      closingParagraph: takeaway + " この学びを次の現場へ接続する。",
+      takeaway: takeaway,
+    };
+  }
+
+  function buildClosingDraft(outline) {
+    const closing = ensureSentenceEnding(
+      compactSpaces(outline && outline.closingOutline),
+      "まとめ: 章ごとのたたき台を統合し、次の現場で再利用する。"
+    );
+    return closing + " 本文化の際は、章ごとの流れを保ったまま具体例を補う。";
+  }
+
+  function buildKindleChapterDrafts(draftOrBookOrInputs, options) {
+    const outline = normalizeDraftSource(draftOrBookOrInputs, options || {});
+    const chapterOutlines = Array.isArray(outline && outline.chapterOutlines) ? outline.chapterOutlines : [];
+    const introDraft = compactSpaces(options && options.introDraft) || buildIntroDraft(outline);
+    const closingDraft = compactSpaces(options && options.closingDraft) || buildClosingDraft(outline);
+
+    return {
+      draftTitle: compactSpaces(outline && outline.draftTitle) || "AI武装親方｜章本文たたき台",
+      draftTheme: compactSpaces(outline && outline.draftTheme) || "現場改善",
+      introDraft: introDraft,
+      chapterDrafts: chapterOutlines.map(function (chapterOutline, index) {
+        return buildChapterDraftFromOutline(chapterOutline, index);
+      }),
+      closingDraft: closingDraft,
+      keyMessage:
+        compactSpaces((options && options.keyMessage) || (outline && outline.keyMessage)) ||
+        "現場で再利用できる学びを、章ごとに積み上げる。",
+      sourceSummary: (outline && outline.sourceSummary) || [],
+    };
+  }
+
+  function buildKindleChapterDraftsPreview(draftOrBookOrInputs, options) {
+    const drafts = buildKindleChapterDrafts(draftOrBookOrInputs, options);
+    const chapterLines = (drafts.chapterDrafts || []).map(function (chapter, index) {
+      return [
+        (index + 1).toString() + ". " + chapter.chapterTitle,
+        "  章の目的: " + chapter.chapterPurpose,
+        "  導入段落:",
+        "  " + chapter.openingParagraph,
+        "  本文たたき台:",
+        "  " + chapter.bodyDraft,
+        "  章末段落:",
+        "  " + chapter.closingParagraph,
+        "  要点:",
+        "  " + chapter.takeaway,
+      ].join("\n");
+    });
+
+    return [
+      "【Kindle章本文たたき台プレビュー】",
+      "仮タイトル: " + drafts.draftTitle,
+      "テーマ: " + drafts.draftTheme,
+      "",
+      "はじめにのたたき台:",
+      drafts.introDraft,
+      "",
+      "各章の本文たたき台:",
+      chapterLines.join("\n\n") || "（章本文たたき台なし）",
+      "",
+      "まとめのたたき台:",
+      drafts.closingDraft,
+      "",
+      "この本で一番伝えたいこと:",
+      drafts.keyMessage,
+    ].join("\n");
+  }
+
   window.AIBusouKindleEngine = {
     buildEpisodeModel: buildEpisodeModel,
     buildKindleSectionMaterial: buildKindleSectionMaterial,
@@ -592,5 +757,7 @@
     buildKindleBookPreview: buildKindleBookPreview,
     buildKindleDraftOutline: buildKindleDraftOutline,
     buildKindleDraftOutlinePreview: buildKindleDraftOutlinePreview,
+    buildKindleChapterDrafts: buildKindleChapterDrafts,
+    buildKindleChapterDraftsPreview: buildKindleChapterDraftsPreview,
   };
 })();
