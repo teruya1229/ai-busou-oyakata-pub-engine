@@ -1,7 +1,7 @@
 # handoff
 
 ## 次にやるべき1手
-- 全体原稿たたき台（full draft preview）を基点に、完成原稿寄りの整形へ進むか、全体原稿たたき台の見え方を最小調整するかを1つに絞って判断する。
+- 完成原稿寄り（manuscript preview）を基点に、見え方調整へ進むか、Kindle導線をMVP区切りとして整理するかを1つに絞って判断する。
 
 ## 判断基準
 - 1入力で3出力が破綻なく出ること
@@ -43,6 +43,8 @@
 - 章本文たたき台確認導線追加後も、既存の section / chapter / book / draft outline 導線が壊れていないこと
 - `chapter-episodes` を再利用し、`buildKindleFullDraftPreview(chapters)` で全体原稿たたき台確認ができること
 - 全体原稿たたき台確認導線追加後も、既存の section / chapter / book / draft outline / chapter drafts 導線が壊れていないこと
+- `chapter-episodes` を再利用し、`buildKindleManuscriptPreview(chapters)` で完成原稿寄り確認ができること
+- 完成原稿寄り確認導線追加後も、既存の section / chapter / book / draft outline / chapter drafts / full draft 導線が壊れていないこと
 
 ## 今回やらないこと
 - 永続化（保存/履歴）
@@ -92,6 +94,8 @@
 - 次フェーズで全体原稿たたき台生成に進む場合も、`introDraft / chapterDrafts / closingDraft` の既存構造再利用を優先する
 - 全体原稿たたき台確認でも新規入力UIは追加せず、既存の `chapter-episodes` のみを使う
 - 次フェーズで完成原稿寄りへ進む場合も、まずは `js/kindle-engine.js` への最小追加で整形責務を限定する
+- 完成原稿寄り確認でも新規入力UIは追加せず、既存の `chapter-episodes` のみを使う
+- 次フェーズで見え方調整する場合も、`js/kindle-engine.js` の最小調整に限定し既存UI導線は維持する
 
 ## 次の拡張候補
 - 現場ジャンル別テンプレ（内装/設備/外構など）
