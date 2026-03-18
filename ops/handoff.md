@@ -1,7 +1,7 @@
 # handoff
 
 ## 次にやるべき1手
-- 章本文たたき台（chapter drafts preview）を基点に、全体原稿たたき台生成へ進むか、章本文たたき台の見え方を最小調整するかを1つに絞って判断する。
+- 全体原稿たたき台（full draft preview）を基点に、完成原稿寄りの整形へ進むか、全体原稿たたき台の見え方を最小調整するかを1つに絞って判断する。
 
 ## 判断基準
 - 1入力で3出力が破綻なく出ること
@@ -41,6 +41,8 @@
 - 本文骨子確認導線追加後も、既存の 4コマ / note / X / Kindle節 / Kindle章 / Kindle本 の表示導線が壊れていないこと
 - `chapter-episodes` を再利用し、`buildKindleChapterDraftsPreview(chapters)` で章本文たたき台確認ができること
 - 章本文たたき台確認導線追加後も、既存の section / chapter / book / draft outline 導線が壊れていないこと
+- `chapter-episodes` を再利用し、`buildKindleFullDraftPreview(chapters)` で全体原稿たたき台確認ができること
+- 全体原稿たたき台確認導線追加後も、既存の section / chapter / book / draft outline / chapter drafts 導線が壊れていないこと
 
 ## 今回やらないこと
 - 永続化（保存/履歴）
@@ -88,6 +90,8 @@
 - 次フェーズで章本文生成に進む場合も、まずは `js/kindle-engine.js` への小さな追加で完結する範囲に限定する
 - 章本文たたき台確認でも新規入力UIは追加せず、既存の `chapter-episodes` のみを使う
 - 次フェーズで全体原稿たたき台生成に進む場合も、`introDraft / chapterDrafts / closingDraft` の既存構造再利用を優先する
+- 全体原稿たたき台確認でも新規入力UIは追加せず、既存の `chapter-episodes` のみを使う
+- 次フェーズで完成原稿寄りへ進む場合も、まずは `js/kindle-engine.js` への最小追加で整形責務を限定する
 
 ## 次の拡張候補
 - 現場ジャンル別テンプレ（内装/設備/外構など）
