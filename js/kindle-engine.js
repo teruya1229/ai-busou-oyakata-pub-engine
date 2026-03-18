@@ -747,6 +747,122 @@
     ].join("\n");
   }
 
+  function isChapterDrafts(source) {
+    return !!(
+      source &&
+      typeof source === "object" &&
+      typeof source.draftTitle === "string" &&
+      typeof source.introDraft === "string" &&
+      Array.isArray(source.chapterDrafts)
+    );
+  }
+
+  function buildChapterDraftText(chapter, index) {
+    const chapterTitle =
+      compactSpaces(chapter && chapter.chapterTitle) || "第" + (index + 1).toString() + "章";
+    const opening = ensureSentenceEnding(
+      compactSpaces(chapter && chapter.openingParagraph),
+      "導入段落を準備中。"
+    );
+    const body = ensureSentenceEnding(
+      compactSpaces(chapter && chapter.bodyDraft),
+      "本文たたき台を準備中。"
+    );
+    const closing = ensureSentenceEnding(
+      compactSpaces(chapter && chapter.closingParagraph),
+      "章末段落を準備中。"
+    );
+
+    return [
+      "【" + chapterTitle + "】",
+      opening,
+      body,
+      closing,
+    ].join("\n");
+  }
+
+  function normalizeFullDraftSource(chapterDraftsOrDraftOrBookOrInputs, options) {
+    if (isChapterDrafts(chapterDraftsOrDraftOrBookOrInputs)) {
+      return chapterDraftsOrDraftOrBookOrInputs;
+    }
+    return buildKindleChapterDrafts(chapterDraftsOrDraftOrBookOrInputs, options || {});
+  }
+
+  function buildFullDraftText(material) {
+    const chapters = Array.isArray(material && material.chapterDrafts) ? material.chapterDrafts : [];
+    const chapterTexts = chapters.map(function (chapter, index) {
+      return buildChapterDraftText(chapter, index);
+    });
+
+    return [
+      compactSpaces(material && material.draftTitle) || "AI武装親方｜全体原稿たたき台",
+      "",
+      "【はじめに】",
+      ensureSentenceEnding(compactSpaces(material && material.introDraft), "はじめにを準備中。"),
+      "",
+      chapterTexts.join("\n\n") || "【各章本文】\n章本文を準備中。",
+      "",
+      "【おわりに】",
+      ensureSentenceEnding(compactSpaces(material && material.closingDraft), "おわりにを準備中。"),
+    ].join("\n");
+  }
+
+  function buildKindleFullDraft(chapterDraftsOrDraftOrBookOrInputs, options) {
+    const normalized = normalizeFullDraftSource(chapterDraftsOrDraftOrBookOrInputs, options || {});
+    const chapterDrafts = Array.isArray(normalized && normalized.chapterDrafts) ? normalized.chapterDrafts : [];
+    const fullDraft = {
+      draftTitle: compactSpaces((options && options.draftTitle) || (normalized && normalized.draftTitle)) ||
+        "AI武装親方｜全体原稿たたき台",
+      draftTheme: compactSpaces((options && options.draftTheme) || (normalized && normalized.draftTheme)) ||
+        "現場改善",
+      introDraft: compactSpaces((options && options.introDraft) || (normalized && normalized.introDraft)) ||
+        "はじめにを準備中。",
+      chapterDrafts: chapterDrafts,
+      closingDraft: compactSpaces((options && options.closingDraft) || (normalized && normalized.closingDraft)) ||
+        "おわりにを準備中。",
+      keyMessage:
+        compactSpaces((options && options.keyMessage) || (normalized && normalized.keyMessage)) ||
+        "現場で再利用できる学びを、章ごとに積み上げる。",
+      sourceSummary: (normalized && normalized.sourceSummary) || [],
+    };
+
+    return {
+      draftTitle: fullDraft.draftTitle,
+      draftTheme: fullDraft.draftTheme,
+      introDraft: fullDraft.introDraft,
+      chapterDrafts: fullDraft.chapterDrafts,
+      closingDraft: fullDraft.closingDraft,
+      fullDraftText: buildFullDraftText(fullDraft),
+      keyMessage: fullDraft.keyMessage,
+      sourceSummary: fullDraft.sourceSummary,
+    };
+  }
+
+  function buildKindleFullDraftPreview(chapterDraftsOrDraftOrBookOrInputs, options) {
+    const draft = buildKindleFullDraft(chapterDraftsOrDraftOrBookOrInputs, options);
+    const chapterBlocks = (draft.chapterDrafts || []).map(function (chapter, index) {
+      return buildChapterDraftText(chapter, index);
+    });
+
+    return [
+      "【Kindle全体原稿たたき台プレビュー】",
+      "仮タイトル: " + draft.draftTitle,
+      "テーマ: " + draft.draftTheme,
+      "",
+      "はじめに:",
+      ensureSentenceEnding(draft.introDraft, "はじめにを準備中。"),
+      "",
+      "各章の本文:",
+      chapterBlocks.join("\n\n") || "（章本文なし）",
+      "",
+      "おわりに:",
+      ensureSentenceEnding(draft.closingDraft, "おわりにを準備中。"),
+      "",
+      "この本で一番伝えたいこと:",
+      draft.keyMessage,
+    ].join("\n");
+  }
+
   window.AIBusouKindleEngine = {
     buildEpisodeModel: buildEpisodeModel,
     buildKindleSectionMaterial: buildKindleSectionMaterial,
@@ -759,5 +875,7 @@
     buildKindleDraftOutlinePreview: buildKindleDraftOutlinePreview,
     buildKindleChapterDrafts: buildKindleChapterDrafts,
     buildKindleChapterDraftsPreview: buildKindleChapterDraftsPreview,
+    buildKindleFullDraft: buildKindleFullDraft,
+    buildKindleFullDraftPreview: buildKindleFullDraftPreview,
   };
 })();
