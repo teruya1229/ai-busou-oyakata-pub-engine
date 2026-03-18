@@ -382,3 +382,16 @@
 - 章本文たたき台 -> 全体原稿たたき台 はUI確認可能
 - 全体原稿たたき台 -> 完成原稿寄り整形 もUI確認可能
 - 既存MVP本体と既存出力導線は維持されている
+
+## 今日やったこと（Kindle導線MVPの到達点更新）
+- Kindle完成原稿寄りプレビューのUI導線追加までを反映し、進捗を最新化
+- section -> chapter -> book -> draft outline -> chapter drafts -> full draft -> manuscript の到達を明記
+- 上記の各段階がUIから確認可能な状態になったことを明記
+- 既存MVP本体（`engine.js` / `templates.js` / 既存3出力導線）が未破壊で維持されていることを明記
+
+## 現在の状態（Kindle導線MVP一区切り）
+- Kindle導線MVPは、`section -> chapter -> book -> draft outline -> chapter drafts -> full draft -> manuscript` まで到達済み
+- Kindle節素材 / Kindle章素材 / Kindle本素材 / Kindle本文骨子 / Kindle章本文たたき台 / Kindle全体原稿たたき台 / Kindle完成原稿寄り をUI確認可能
+- 入力は既存の `chapter-episodes` textarea を再利用し、`---`（章内）/ `===`（章区切り）の簡易仕様を維持
+- 既存の 4コマ / note / X 導線を含むMVP本体は未破壊で維持
+- 今回は manuscript preview のUI接続完了をもって、Kindle導線MVPとして一旦一区切りの判断が可能な段階
