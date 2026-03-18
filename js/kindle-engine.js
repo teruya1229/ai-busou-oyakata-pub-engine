@@ -863,6 +863,148 @@
     ].join("\n");
   }
 
+  function isFullDraft(source) {
+    return !!(
+      source &&
+      typeof source === "object" &&
+      typeof source.draftTitle === "string" &&
+      typeof source.introDraft === "string" &&
+      typeof source.closingDraft === "string" &&
+      Array.isArray(source.chapterDrafts)
+    );
+  }
+
+  function toManuscriptTitle(fullDraft) {
+    const title = compactSpaces(fullDraft && fullDraft.draftTitle);
+    if (!title) {
+      return "AI武装親方｜完成原稿寄り";
+    }
+    if (title.indexOf("全体原稿たたき台") >= 0) {
+      return title.replace("全体原稿たたき台", "完成原稿寄り");
+    }
+    return title + "｜完成原稿寄り";
+  }
+
+  function normalizeManuscriptSource(fullDraftOrInputs, options) {
+    if (isFullDraft(fullDraftOrInputs)) {
+      return fullDraftOrInputs;
+    }
+    return buildKindleFullDraft(fullDraftOrInputs, options || {});
+  }
+
+  function buildManuscriptChapter(chapterDraft, index) {
+    const title = compactSpaces(chapterDraft && chapterDraft.chapterTitle) || "第" + (index + 1).toString() + "章";
+    const opening = ensureSentenceEnding(
+      compactSpaces(chapterDraft && chapterDraft.openingParagraph),
+      "導入段落を準備中。"
+    );
+    const body = ensureSentenceEnding(
+      compactSpaces(chapterDraft && chapterDraft.bodyDraft),
+      "本文を準備中。"
+    );
+    const closing = ensureSentenceEnding(
+      compactSpaces(chapterDraft && chapterDraft.closingParagraph),
+      "章末段落を準備中。"
+    );
+    const takeaway = ensureActionEnding(compactSpaces(chapterDraft && chapterDraft.takeaway));
+    const chapterText = [opening, body, closing].join("\n\n");
+
+    return {
+      chapterTitle: title,
+      chapterText: chapterText,
+      takeaway: takeaway,
+    };
+  }
+
+  function buildManuscriptText(manuscript) {
+    const chapterBlocks = (manuscript.chapters || []).map(function (chapter, index) {
+      return [
+        "第" + (index + 1).toString() + "章 " + chapter.chapterTitle,
+        "",
+        chapter.chapterText,
+      ].join("\n");
+    });
+
+    return [
+      manuscript.manuscriptTitle,
+      "",
+      "はじめに",
+      manuscript.introduction,
+      "",
+      chapterBlocks.join("\n\n") || "各章\n本文を準備中。",
+      "",
+      "おわりに",
+      manuscript.conclusion,
+    ].join("\n");
+  }
+
+  function buildKindleManuscript(fullDraftOrInputs, options) {
+    const normalized = normalizeManuscriptSource(fullDraftOrInputs, options || {});
+    const chapterDrafts = Array.isArray(normalized && normalized.chapterDrafts) ? normalized.chapterDrafts : [];
+    const chapters = chapterDrafts.map(function (chapterDraft, index) {
+      return buildManuscriptChapter(chapterDraft, index);
+    });
+    const introduction = ensureSentenceEnding(
+      compactSpaces((options && options.introduction) || (normalized && normalized.introDraft)),
+      "はじめにを準備中。"
+    );
+    const conclusion = ensureSentenceEnding(
+      compactSpaces((options && options.conclusion) || (normalized && normalized.closingDraft)),
+      "おわりにを準備中。"
+    );
+    const manuscript = {
+      manuscriptTitle: compactSpaces((options && options.manuscriptTitle) || toManuscriptTitle(normalized)),
+      manuscriptTheme: compactSpaces((options && options.manuscriptTheme) || (normalized && normalized.draftTheme)) || "現場改善",
+      introduction: introduction,
+      chapters: chapters,
+      conclusion: conclusion,
+      keyMessage:
+        compactSpaces((options && options.keyMessage) || (normalized && normalized.keyMessage)) ||
+        "現場で再利用できる学びを、章ごとに積み上げる。",
+      sourceSummary: (normalized && normalized.sourceSummary) || [],
+    };
+
+    return {
+      manuscriptTitle: manuscript.manuscriptTitle,
+      manuscriptTheme: manuscript.manuscriptTheme,
+      introduction: manuscript.introduction,
+      chapters: manuscript.chapters,
+      conclusion: manuscript.conclusion,
+      manuscriptText: buildManuscriptText(manuscript),
+      keyMessage: manuscript.keyMessage,
+      sourceSummary: manuscript.sourceSummary,
+    };
+  }
+
+  function buildKindleManuscriptPreview(fullDraftOrInputs, options) {
+    const manuscript = buildKindleManuscript(fullDraftOrInputs, options);
+    const chapterBlocks = (manuscript.chapters || []).map(function (chapter, index) {
+      return [
+        (index + 1).toString() + ". " + chapter.chapterTitle,
+        chapter.chapterText,
+        "要点: " + chapter.takeaway,
+      ].join("\n");
+    });
+
+    return [
+      "【Kindle完成原稿寄りプレビュー】",
+      "仮タイトル: " + manuscript.manuscriptTitle,
+      "テーマ: " + manuscript.manuscriptTheme,
+      "",
+      "はじめに:",
+      manuscript.introduction,
+      "",
+      "各章の本文:",
+      chapterBlocks.join("\n\n") || "（章本文なし）",
+      "",
+      "おわりに:",
+      manuscript.conclusion,
+      "",
+      "この本で一番伝えたいこと:",
+      manuscript.keyMessage,
+    ].join("\n");
+  }
+
   window.AIBusouKindleEngine = {
     buildEpisodeModel: buildEpisodeModel,
     buildKindleSectionMaterial: buildKindleSectionMaterial,
@@ -877,5 +1019,7 @@
     buildKindleChapterDraftsPreview: buildKindleChapterDraftsPreview,
     buildKindleFullDraft: buildKindleFullDraft,
     buildKindleFullDraftPreview: buildKindleFullDraftPreview,
+    buildKindleManuscript: buildKindleManuscript,
+    buildKindleManuscriptPreview: buildKindleManuscriptPreview,
   };
 })();
