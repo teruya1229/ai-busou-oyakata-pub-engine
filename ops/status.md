@@ -516,3 +516,13 @@
 ## 現在の状態（ダミーAPIサーバ追加後）
 - `cd api && npm install && npm start` で起動し、フロント「4コマ画像を生成」から **疎通〜プレビュー確認**が可能
 - 本物画像生成は **`USE_DUMMY = false` + `generateImage()` 実装** が次段階
+
+## 今日やったこと（PHASE 2: OpenAI 画像生成接続）
+- **`api/package.json`** に **`openai`**・**`dotenv`** を追加
+- **`api/server.js`**: **`USE_DUMMY = false`**、`dotenv` で **`api/.env`** を読み込み、**`generateImage(prompt)`** で **`openai.images.generate`**（既定 **`gpt-image-1.5`**、**`OPENAI_IMAGE_MODEL`** で上書き可）→ **`data:image/png;base64,...`** を **`imageSrc`** で返却
+- **`api/.env.example`** をコミット用テンプレートとし、**`api/.env`** を **`.gitignore`** に追加（秘密をコミットしない）
+- **`README.md`**・**`ops/handoff.md`** を更新（フロント・`js/app.js` は未変更）
+
+## 現在の状態（OpenAI 接続後）
+- **`api/.env` に有効な `OPENAI_API_KEY`** があれば、フロント「4コマ画像を生成」から **本物プレビュー**まで可能
+- キー未設定時は **500** と日本語メッセージ。次段階は **プロンプト調整・品質・コスト/速度** の運用改善

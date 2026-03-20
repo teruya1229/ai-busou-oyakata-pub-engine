@@ -37,9 +37,11 @@ ai-busou-oyakata-pub-engine/
 - **レスポンス本文（成功）**: `{ "imageSrc": "data:image/png;base64,..." }`。**正式キーは `imageSrc`**。将来 **HTTPS の画像URL** を返す場合も **同じ `imageSrc` キー**で返せる（フロントのプレビューはそのまま利用可）。
 - 実装互換として **`dataUrl`** キーにも対応しているが、API新設時は **`imageSrc` を優先**すること。
 
-### 付属APIサーバ（`api/`・PHASE 1）
-- **`cd api && npm install && npm start`** で **Express** が **8787** 番で起動し、上記契約の **ダミー画像（data URL）** を返す。
-- 本物生成へ移るときは **`api/server.js`** の **`USE_DUMMY = false`** と **`generateImage(prompt)`** 内を差し替える。
+### 付属APIサーバ（`api/`・PHASE 2）
+- **`api/.env.example` を `api/.env` にコピー**し、**`OPENAI_API_KEY`** に有効なキーを設定する（**`api/.env` は Git に含めない**）。
+- **`cd api && npm install && npm start`** で **8787** 番が起動。**`USE_DUMMY=false`（既定）** で **OpenAI Images API**（既定モデル **`gpt-image-1.5`**、環境変数 **`OPENAI_IMAGE_MODEL`** で変更可）により **本物画像**を生成し、**`{ "imageSrc": "data:image/png;base64,..." }`** で返す。
+- 疎通のみ試す場合は **`api/server.js`** の **`USE_DUMMY`** を **`true`** にするとダミーPNGのみ返却（キー不要）。
+- サーバ側の認証は当面なし（OpenAI キーは **`api/.env`** のみ）。
 
 ## 評価用ファイル
 - 代表ケース: `samples/test-cases.js`

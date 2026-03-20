@@ -1,16 +1,26 @@
 /**
- * 4コマ漫画画像生成API（PHASE 1: ダミー data URL 返却）
- * USE_DUMMY を false にし、generateImage() 内を本物生成へ差し替え可能。
+ * 4コマ漫画画像生成API
+ * USE_DUMMY=true: ダミーPNG（疎通用）
+ * USE_DUMMY=false: OpenAI Images API（既定モデル gpt-image-1.5）
+ *
+ * 環境: api/.env に OPENAI_API_KEY（api/.env.example をコピー）
  *
  * 起動確認例:
  *   cd api && npm install && npm start
  *   curl -X POST http://127.0.0.1:8787/api/comic-image -H "Content-Type: application/json" -d "{\"prompt\":\"テスト\"}"
  */
 
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
+
 const express = require("express");
 const zlib = require("zlib");
+const OpenAI = require("openai");
 
-const USE_DUMMY = true;
+const USE_DUMMY = false;
+
+/** 第一候補。API側で未提供の場合は OPENAI_IMAGE_MODEL または gpt-image-1 等へ変更 */
+const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1.5";
 
 const PORT = 8787;
 
@@ -94,9 +104,59 @@ function makeDummyComicPlaceholderDataUrl() {
   return "data:image/png;base64," + png.toString("base64");
 }
 
-/** 将来: 本物API呼び出しへ差し替え。今は空実装。 */
+function isOpenAiKeyConfigured() {
+  const k = process.env.OPENAI_API_KEY;
+  if (!k || typeof k !== "string") {
+    return false;
+  }
+  const t = k.trim();
+  if (!t) {
+    return false;
+  }
+  if (t.indexOf("ここに") >= 0) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * OpenAI Images API → フロント契約どおり data:image/png;base64,... の1本
+ */
 async function generateImage(prompt) {
-  return "";
+  if (!isOpenAiKeyConfigured()) {
+    throw new Error(
+      "OPENAI_API_KEY が未設定です。api/.env.example を api/.env にコピーし、有効なキーを設定してください。",
+    );
+  }
+
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY.trim() });
+  const response = await openai.images.generate({
+    model: OPENAI_IMAGE_MODEL,
+    prompt: prompt,
+    n: 1,
+    size: "auto",
+    output_format: "png",
+  });
+
+  const item = response.data && response.data[0];
+  if (!item) {
+    throw new Error("画像データがありません");
+  }
+
+  let b64 = item.b64_json;
+  if (!b64 && item.url) {
+    const r = await fetch(item.url);
+    if (!r.ok) {
+      throw new Error("画像URLの取得に失敗しました");
+    }
+    const buf = Buffer.from(await r.arrayBuffer());
+    b64 = buf.toString("base64");
+  }
+  if (!b64) {
+    throw new Error("画像の取得に失敗しました");
+  }
+
+  return "data:image/png;base64," + b64;
 }
 
 function corsAllow(req, res, next) {
@@ -144,6 +204,11 @@ app.post("/api/comic-image", async function (req, res) {
 
     return res.json({ imageSrc: imageSrc });
   } catch (e) {
+    const msg = e && e.message ? String(e.message) : "";
+    if (msg.indexOf("OPENAI_API_KEY") >= 0) {
+      return res.status(500).json({ error: msg });
+    }
+    console.error(e);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
