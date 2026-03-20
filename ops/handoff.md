@@ -2,6 +2,7 @@
 
 ## UI文言（参考）
 
+- **最小入力**: フォーム先頭は **タイトルテーマ / 一番伝えたいこと / ズラしたくない結論** のみ。**現場メモ・学び・必須表現・登場人物・トーン・出力スタイル・note寄せ方・章/本確認用**は **`#detailed-input`** の `<details>` 内（初期は閉）。**リセット**で詳細は閉じる。**入力例**で詳細を開く
 - **出力スタイル**（`index.html`）: **指定なし**は従来どおり。**note向け / 4コマ向け / Kindle向け**は `js/app.js` の `getInputFromForm()` で `outputStyle` を渡し、`js/engine.js` の `normalizeInput` → `buildNote` / `buildComic` / `buildUnifiedComicImagePrompt` の寄せ方が変わる
 - **用途別コピー**: 入力フォーム直下の **用途別コピー（生成後）** から、**note本文 / 4コマ構成 / 4コマ統合プロンプト / Kindle節素材**を個別コピー。**スタイル向けにまとめてコピー**は `copyStyleBundle()`（`js/app.js`）で `outputStyle` に応じた連結。各出力ブロック横のボタン文言も用途が分かる表記に揃えている
 - **4コマ画像（有料API）**: 統合プロンプト欄の下に **最終確認**（入力要約・芯・出力スタイル・note寄せ方・4コマ構成・`getPromptTextForComicImageApi()` と同じ送信プロンプト）。ボタンは **この内容で4コマ画像を生成**。送信直前に **今回使った生成用プロンプト**欄へ同じ文字列を表示。`requestComicImage` / API 本文は未変更

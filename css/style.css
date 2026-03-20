@@ -37,6 +37,47 @@ p {
   margin: 0;
 }
 
+.input-mode-hint {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+.detailed-input {
+  margin: 12px 0 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fafafa;
+}
+
+.detailed-input summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  list-style: none;
+}
+
+.detailed-input summary::-webkit-details-marker {
+  display: none;
+}
+
+.detailed-input summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.detailed-input[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.detailed-input[open] summary {
+  margin-bottom: 8px;
+}
+
 .field {
   display: grid;
   gap: 6px;

@@ -15,6 +15,9 @@
 
       <section class="card">
         <h2>入力</h2>
+        <p class="input-mode-hint">
+          まずは<strong>最小入力</strong>（テーマ・一番伝えたいこと・結論）だけで「構成を生成」できます。現場メモやトーンなどは、必要なときだけ<strong>詳細入力</strong>を開いてください。
+        </p>
         <form id="input-form">
           <div class="field">
             <label for="theme">タイトルテーマ</label>
@@ -22,73 +25,76 @@
           </div>
 
           <div class="field">
-            <label for="incident">現場で起きたこと（素材メモ）</label>
-            <textarea id="incident" name="incident" rows="4" placeholder="ラフでOK（例: 朝礼後に段取りがずれた。手戻り。）"></textarea>
-          </div>
-
-          <div class="field">
-            <label for="learning">今回の学び（素材メモ）</label>
-            <textarea id="learning" name="learning" rows="3" placeholder="ラフでOK（例: 確認を一言にするとズレが減る）"></textarea>
-          </div>
-
-          <div class="field">
-            <label for="characters">登場人物</label>
-            <input id="characters" name="characters" type="text" placeholder="例: 照屋親方、コパイロット、若手職人" />
-          </div>
-
-          <div class="field">
-            <label for="tone">トーン</label>
-            <select id="tone" name="tone">
-              <option value="ゆるい">ゆるい</option>
-              <option value="少し真面目">少し真面目</option>
-              <option value="かなり真面目">かなり真面目</option>
-              <option value="コミカル">コミカル</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="output-style">出力スタイル</label>
-            <select id="output-style" name="outputStyle">
-              <option value="">（指定なし・従来どおり）</option>
-              <option value="note">note向け（短文余白）</option>
-              <option value="comic">4コマ向け（情景・短セリフ）</option>
-              <option value="kindle">Kindle向け（説明・構造）</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="note-preset">note本文の寄せ方</label>
-            <select id="note-preset" name="notePreset">
-              <option value="">標準（短文余白）</option>
-              <option value="strong">強め</option>
-              <option value="soft">やわらかめ</option>
-              <option value="biz">経営寄り</option>
-            </select>
-          </div>
-
-          <p style="margin: 16px 0 6px; font-size: 14px; color: #6b7280">芯の固定（任意・すべて空なら従来どおり）</p>
-          <div class="field">
             <label for="core-main">この話で一番伝えたいこと</label>
-            <textarea id="core-main" name="coreMain" rows="2" placeholder="未入力なら無視されます"></textarea>
-          </div>
-          <div class="field">
-            <label for="core-phrase">絶対に入れたい表現</label>
-            <textarea id="core-phrase" name="corePhrase" rows="2" placeholder="未入力なら無視されます"></textarea>
+            <textarea id="core-main" name="coreMain" rows="2" placeholder="最小入力の芯（例: 仲良くなったことと、口コミを書くことは別）"></textarea>
           </div>
           <div class="field">
             <label for="core-conclusion">絶対にズラしたくない結論</label>
-            <textarea id="core-conclusion" name="coreConclusion" rows="2" placeholder="未入力なら無視されます"></textarea>
+            <textarea id="core-conclusion" name="coreConclusion" rows="2" placeholder="最小入力の芯（例: 満足直後の導線を設計しないと口コミは増えない）"></textarea>
           </div>
 
-          <div class="field">
-            <label for="chapter-episodes">章/本確認用（複数入力）</label>
-            <textarea
-              id="chapter-episodes"
-              name="chapterEpisodes"
-              rows="6"
-              placeholder="章内エピソードは ---、章は === で区切って入力してください。&#10;例: 朝礼で段取りがずれた。&#10;---&#10;搬入導線が重なり、待ちが発生した。&#10;===&#10;職人同士の認識ズレで手戻りが起きた。&#10;---&#10;写真共有で再発を防げた。"
-            ></textarea>
-          </div>
+          <details id="detailed-input" class="detailed-input">
+            <summary>詳細入力（任意・開く）</summary>
+            <div class="field">
+              <label for="incident">現場で起きたこと（素材メモ）</label>
+              <textarea id="incident" name="incident" rows="4" placeholder="ラフでOK（例: 朝礼後に段取りがずれた。手戻り。）"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="learning">今回の学び（素材メモ）</label>
+              <textarea id="learning" name="learning" rows="3" placeholder="ラフでOK（例: 確認を一言にするとズレが減る）"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="core-phrase">絶対に入れたい表現</label>
+              <textarea id="core-phrase" name="corePhrase" rows="2" placeholder="未入力なら無視されます"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="characters">登場人物</label>
+              <input id="characters" name="characters" type="text" placeholder="例: 照屋親方、コパイロット、若手職人（空なら既定）" />
+            </div>
+
+            <div class="field">
+              <label for="tone">トーン</label>
+              <select id="tone" name="tone">
+                <option value="ゆるい">ゆるい</option>
+                <option value="少し真面目">少し真面目</option>
+                <option value="かなり真面目">かなり真面目</option>
+                <option value="コミカル">コミカル</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="output-style">出力スタイル</label>
+              <select id="output-style" name="outputStyle">
+                <option value="">（指定なし・従来どおり）</option>
+                <option value="note">note向け（短文余白）</option>
+                <option value="comic">4コマ向け（情景・短セリフ）</option>
+                <option value="kindle">Kindle向け（説明・構造）</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="note-preset">note本文の寄せ方</label>
+              <select id="note-preset" name="notePreset">
+                <option value="">標準（短文余白）</option>
+                <option value="strong">強め</option>
+                <option value="soft">やわらかめ</option>
+                <option value="biz">経営寄り</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="chapter-episodes">章/本確認用（複数入力）</label>
+              <textarea
+                id="chapter-episodes"
+                name="chapterEpisodes"
+                rows="6"
+                placeholder="章内エピソードは ---、章は === で区切って入力してください。&#10;例: 朝礼で段取りがずれた。&#10;---&#10;搬入導線が重なり、待ちが発生した。&#10;===&#10;職人同士の認識ズレで手戻りが起きた。&#10;---&#10;写真共有で再発を防げた。"
+              ></textarea>
+            </div>
+          </details>
 
           <div class="actions">
             <button type="button" id="generate-btn">構成を生成</button>

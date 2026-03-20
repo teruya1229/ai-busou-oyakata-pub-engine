@@ -25,6 +25,9 @@
 
   function buildFallbackLearning(incident) {
     const normalizedIncident = compactSpaces(incident);
+    if (normalizedIncident.indexOf("口コミ") >= 0 || normalizedIncident.indexOf("レビュー") >= 0) {
+      return "満足と口コミは別。導線が要る、という感覚を学びとして残す。";
+    }
     if (normalizedIncident.indexOf("改善") >= 0) {
       return "短文入力でも、改善点を一つ具体化して次の現場で試す。";
     }
@@ -32,6 +35,20 @@
       return "確認漏れは、作業前の声かけ一つで減らせる。";
     }
     return "短い確認でも、先に共通認識を作るとズレが減る。";
+  }
+
+  function deriveIncidentFromCore(theme, coreMain, coreConclusion) {
+    const bundle = compactSpaces(theme + " " + coreMain + " " + coreConclusion);
+    const lower = bundle.toLowerCase();
+    if (lower.indexOf("口コミ") >= 0 || lower.indexOf("レビュー") >= 0) {
+      return "関係は良くなった。喜んでもらえた。それでも口コミの導線は動かなかった。";
+    }
+    const stem = coreMain || coreConclusion || theme;
+    if (!stem) {
+      return "作業前の認識がそろわず、手戻りが出た。";
+    }
+    const clipped = stem.length > 96 ? stem.slice(0, 96) + "…" : stem;
+    return ensurePeriod(clipped + "——という文脈で、現場の断片が残った。");
   }
 
   function ensureLearningText(text, incident) {
@@ -145,14 +162,25 @@
 
   function normalizeInput(input) {
     const tone = templates.toneTemplates[input.tone] ? input.tone : "ゆるい";
-    const incident = ensureIncidentText(input.incident);
-    const learning = ensureLearningText(input.learning, incident);
     const theme = stripDuplicateTitlePrefix(safeText(input.theme, "").trim() || "現場の小さな改善");
-    const characters = normalizeCharacters(input.characters);
     const coreMain = trimOptional(input.coreMain);
     const corePhrase = trimOptional(input.corePhrase);
     const coreConclusion = trimOptional(input.coreConclusion);
     const hasCoreLocks = !!(coreMain || corePhrase || coreConclusion);
+
+    let incident = ensureIncidentText(input.incident);
+    if (!trimOptional(input.incident) && (coreMain || coreConclusion)) {
+      incident = deriveIncidentFromCore(theme, coreMain, coreConclusion);
+    }
+
+    let learning;
+    if (trimOptional(input.learning)) {
+      learning = ensureLearningText(input.learning, incident);
+    } else {
+      learning = ensureLearningText("", incident);
+    }
+
+    const characters = normalizeCharacters(input.characters);
     const patternSource = compactSpaces(incident + " " + coreMain + " " + corePhrase + " " + coreConclusion);
     const comicPattern = selectComicPattern(patternSource, learning);
     const inputSparse =

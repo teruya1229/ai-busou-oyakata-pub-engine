@@ -15,6 +15,7 @@
     kindleManuscript: document.getElementById("kindle-manuscript-output"),
   };
   const chapterEpisodesField = document.getElementById("chapter-episodes");
+  const detailedInputEl = document.getElementById("detailed-input");
   const comicGenPromptDraft = document.getElementById("comic-gen-prompt-draft");
   const comicUnifiedToDraftBtn = document.getElementById("comic-unified-to-draft-btn");
   const comicImageUrlInput = document.getElementById("comic-image-url");
@@ -788,6 +789,9 @@
 
   document.getElementById("example-btn").addEventListener("click", function () {
     setFormValues(exampleData);
+    if (detailedInputEl) {
+      detailedInputEl.setAttribute("open", "");
+    }
   });
 
   document.getElementById("chapter-preview-btn").addEventListener("click", function () {
@@ -822,6 +826,9 @@
 
   document.getElementById("reset-btn").addEventListener("click", function () {
     form.reset();
+    if (detailedInputEl) {
+      detailedInputEl.removeAttribute("open");
+    }
     clearOutputs();
     resetComicImagePreview();
   });

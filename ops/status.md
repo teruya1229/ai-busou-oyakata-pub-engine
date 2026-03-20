@@ -734,3 +734,13 @@
 
 ## 現在の状態（note素材再構成後）
 - note本文は**コピペ感のある羅列**になりにくく、**芯・結論**を軸にした短文余白スタイルは維持。4コマ・画像API・Kindle構造は原則未変更
+
+## 今日やったこと（2026-03-20：最小入力モード）
+- **`index.html`**: 冒頭に **テーマ・一番伝えたいこと・結論** のみ表示。現場メモ・学び・必須表現・トーン・出力スタイル・章素材は **`<details>` の詳細入力**に収容（初期は閉じる）
+- **`css/style.css`**: `.input-mode-hint` / `.detailed-input` を最小追加
+- **`js/app.js`**: リセットで詳細を閉じる。入力例で詳細を開く
+- **`js/engine.js`**: 現場メモ空＋芯ありのとき `deriveIncidentFromCore` で補完。学び空は incident 確定後に `ensureLearningText`。`buildFallbackLearning` に口コミ系の一行を追加
+- **`README.md`** `ops/handoff.md` を更新
+
+## 現在の状態（最小入力モード後）
+- **思いつき時は3項目だけ**で note・4コマ・Kindle節まで生成可能。詳細は従来どおり折りたたみ内で利用可能
