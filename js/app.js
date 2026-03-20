@@ -57,6 +57,7 @@
       learning: data.get("learning"),
       characters: data.get("characters"),
       tone: data.get("tone"),
+      outputStyle: data.get("outputStyle"),
       coreMain: data.get("coreMain"),
       corePhrase: data.get("corePhrase"),
       coreConclusion: data.get("coreConclusion"),
@@ -115,6 +116,10 @@
           learning: baseInput.learning,
           characters: baseInput.characters,
           tone: baseInput.tone,
+          outputStyle: baseInput.outputStyle,
+          coreMain: baseInput.coreMain,
+          corePhrase: baseInput.corePhrase,
+          coreConclusion: baseInput.coreConclusion,
         };
       });
   }

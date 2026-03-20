@@ -118,6 +118,14 @@
     return compactSpaces(value || "");
   }
 
+  function resolveOutputStyle(raw) {
+    const s = compactSpaces(raw || "");
+    if (s === "note" || s === "comic" || s === "kindle") {
+      return s;
+    }
+    return "";
+  }
+
   function stripDuplicateTitlePrefix(themeRaw) {
     let theme = (themeRaw || "").trim() || "現場の小さな改善";
     const prefix = templates.characterProfile.titlePrefix;
@@ -148,6 +156,7 @@
       comicPattern === "誤解型"
         ? "短文・空欄入力でも、確認の要点を一つに絞って学びとして残す。"
         : "入力が短くても、改善点を一つ具体化して次の現場につなげる。";
+    const outputStyle = resolveOutputStyle(input && input.outputStyle);
 
     return {
       theme,
@@ -162,6 +171,7 @@
       corePhrase,
       coreConclusion,
       hasCoreLocks,
+      outputStyle,
     };
   }
 
@@ -206,7 +216,76 @@
     };
   }
 
-  function comicPanel3Dialogue(toneData, protagonist, partner) {
+  function microComicSceneLines(pattern, reviewMode) {
+    if (reviewMode) {
+      return {
+        p2: "仲は良い。口コミは来ない。",
+        p3: "満足と行動は別。",
+        p4: "導線を置く。",
+      };
+    }
+    const m = {
+      誤解型: {
+        p2: "前提がズレる。",
+        p3: "言葉で揃える。",
+        p4: "確認で次へ。",
+      },
+      ヒヤリ型: {
+        p2: "油断で空気が張る。",
+        p3: "止めて見直す。",
+        p4: "急がないほうが早い。",
+      },
+      気づき型: {
+        p2: "小さなズレが効く。",
+        p3: "工夫でリズムが戻る。",
+        p4: "改善を積む。",
+      },
+    };
+    const row = m[pattern.name];
+    if (row) {
+      return row;
+    }
+    return {
+      p2: pattern.panel2,
+      p3: pattern.panel3,
+      p4: pattern.panel4,
+    };
+  }
+
+  function selectComicScenesForStyle(pattern, reviewMode, style) {
+    if (style === "kindle") {
+      if (reviewMode) {
+        return {
+          p2: "仲は良い。でも口コミやアンケートにはつながらない。",
+          p3: "満足と、行動は別だと気づく。",
+          p4: "満足直後に短い導線を置く。次の一歩に進む。",
+        };
+      }
+      return {
+        p2: pattern.panel2,
+        p3: pattern.panel3,
+        p4: pattern.panel4,
+      };
+    }
+    if (style === "note") {
+      return microComicSceneLines(pattern, reviewMode);
+    }
+    return shortComicSceneLines(pattern, reviewMode);
+  }
+
+  function comicPanel3Dialogue(toneData, protagonist, partner, style) {
+    if (style === "kindle") {
+      const oyk = compactSpaces(toneData.oykataLine + toneData.lineEnd);
+      const ptr = compactSpaces(toneData.copilotReaction);
+      const copLong = compactSpaces(toneData.copilotQuestion);
+      if (toneData.copilotRole === "lead") {
+        return [`${partner}: ${copLong}`, `${protagonist}: ${oyk}`];
+      }
+      if (toneData.copilotRole === "low") {
+        return [`${protagonist}: ${oyk}`, `${partner}: ${ptr}`];
+      }
+      return [`${protagonist}: ${oyk}`, `${partner}: ${ptr}`];
+    }
     const oyk = compactSpaces(toneData.oykataShort || toneData.oykataLine);
     const ptr = compactSpaces(toneData.partnerShort || toneData.copilotReaction);
     const copShort = compactSpaces(toneData.copilotShort || toneData.copilotQuestion);
@@ -219,9 +298,12 @@
     return [`${protagonist}: ${oyk}`, `${partner}: ${ptr}`];
   }
 
-  function comicPanel2PartnerLine(normalized, toneData, partner) {
+  function comicPanel2PartnerLine(normalized, toneData, partner, style) {
     if (normalized.corePhrase) {
       return `${partner}: 「${normalized.corePhrase}」`;
+    }
+    if (style === "kindle") {
+      return `${partner}: ${toneData.copilotQuestion}`;
     }
     return `${partner}: ${toneData.copilotShort || toneData.copilotQuestion}`;
   }
@@ -245,9 +327,10 @@
     const reviewMode = isReviewComicContext(normalized);
     const rawInc = trimOptional(input.incident);
     const incidentForComic = rawInc ? ensurePeriod(rawInc) : normalized.incident;
-    const scenes = shortComicSceneLines(pattern, reviewMode);
-    const panel3Conversation = comicPanel3Dialogue(toneData, protagonist, partner);
-    const panel2PartnerLine = comicPanel2PartnerLine(normalized, toneData, partner);
+    const st = normalized.outputStyle;
+    const scenes = selectComicScenesForStyle(pattern, reviewMode, st);
+    const panel3Conversation = comicPanel3Dialogue(toneData, protagonist, partner, st);
+    const panel2PartnerLine = comicPanel2PartnerLine(normalized, toneData, partner, st);
     const learningForPanel4 = normalized.coreConclusion || normalized.learning;
 
     const panel1Lines = [COMIC_PANEL_LABELS.p1];
@@ -361,7 +444,25 @@
       return buildPanelPrompt(meta.number, meta.name, lines, normalized, styleGuide);
     });
 
-    return ["【4コマ描画プロンプト】", "（既存の4コマ漫画構成を元に生成）", "", panelBlocks.join("\n\n")].join("\n");
+    const lines = ["【4コマ描画プロンプト】"];
+    if (normalized.outputStyle) {
+      lines.push(`出力スタイル: ${normalized.outputStyle}`);
+    }
+    lines.push("（既存の4コマ漫画構成を元に生成）", "", panelBlocks.join("\n\n"));
+    return lines.join("\n");
+  }
+
+  function unifiedStyleHintLine(style) {
+    if (style === "note") {
+      return "【出力スタイル】note向け: 本文優先。絵は短文の補助（情景は最小限でもよい）。";
+    }
+    if (style === "comic") {
+      return "【出力スタイル】4コマ向け: 情景と短いセリフの気配を優先。伝わる一行を最優先。";
+    }
+    if (style === "kindle") {
+      return "【出力スタイル】Kindle向け: 説明と流れを追える構図を優先（台詞は絵に書かない）。";
+    }
+    return "";
   }
 
   function buildUnifiedComicImagePrompt(input) {
@@ -393,10 +494,12 @@
         ? uip.panelArchetype.join("\n")
         : "";
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
+    const styleHint = unifiedStyleHintLine(normalized.outputStyle);
 
     return [
       "【4コマ統合画像プロンプト】",
       `【入力反映】${leadTitle}`,
+      styleHint,
       "これは1枚のポスター・1枚イラスト・全面一枚絵ではない。4コマ漫画（4-panel comic strip）を1枚のキャンバスにまとめた図として描く。",
       "レイアウト必須: 2行×2列（2x2）の等分パネル。各コマは白い枠線または薄い仕切り線で境界をはっきり分け、パネル同士が溶け合わないようにする。",
       "読み順の固定: 左上が1コマ目、右上が2コマ目、左下が3コマ目、右下が4コマ目（日本語の横書きZ字読み）。",
@@ -530,12 +633,7 @@
     return "起きやすいのは、小さなズレがじわじわ効率を下げることです。大きな問題ではなくても、前提のずれが積み上がると、現場のリズムが乱れます。";
   }
 
-  function buildNote(input) {
-    const normalized = normalizeInput(input);
-    const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
-    const toneData = templates.toneTemplates[normalized.tone];
-    const rawLearn = trimOptional(input.learning);
-    const learningLine = rawLearn ? ensurePeriod(rawLearn) : ensurePeriod(compactSpaces(normalized.learning));
+  function buildNoteShortSpaced(normalized, input, toneData, leadTitle, learningLine) {
     const parts = [
       `# ${leadTitle}`,
       "",
@@ -554,6 +652,76 @@
       body += "\n\n" + "入力が短くても、決めるのは一つで十分。";
     }
     return body;
+  }
+
+  function buildNoteKindleStructured(normalized, input, toneData, leadTitle, learningLine) {
+    const q = noteOpeningQuestionLine(normalized);
+    const introParts = [];
+    if (q) {
+      introParts.push(q);
+    }
+    if (normalized.coreMain) {
+      introParts.push(normalized.coreMain);
+    }
+    introParts.push(toneData.noteLead);
+    const intro = introParts.join("\n\n");
+
+    const story = buildNoteStoryAndPhrase(normalized, input);
+    const whyFull = buildNoteWhy(normalized);
+    const finalBlock = buildNoteFinalBlock(normalized);
+    let body = [
+      `# ${leadTitle}`,
+      "",
+      intro,
+      "",
+      "【実話】",
+      story,
+      "",
+      "【なぜそうなったか】",
+      whyFull,
+      "",
+      "【気づき】",
+      learningLine,
+      "",
+      "【まとめ】",
+      finalBlock,
+      "",
+      "（章や本の中では、起きた事実→背景の整理→学び→次の一歩の順で読めるように使える。）",
+    ].join("\n");
+    if (normalized.inputSparse) {
+      body += "\n\n" + "入力が短くても、決めるのは一つで十分。";
+    }
+    return body;
+  }
+
+  function buildNoteComicCompact(normalized, input, leadTitle, learningLine) {
+    const story = buildNoteStoryAndPhrase(normalized, input);
+    const parts = [`# ${leadTitle}`, ""];
+    if (normalized.coreMain) {
+      parts.push(normalized.coreMain, "");
+    }
+    parts.push(story, "", learningLine, "", buildNoteFinalBlock(normalized));
+    let body = parts.join("\n");
+    if (normalized.inputSparse) {
+      body += "\n\n" + "入力が短くても、決めるのは一つで十分。";
+    }
+    return body;
+  }
+
+  function buildNote(input) {
+    const normalized = normalizeInput(input);
+    const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
+    const toneData = templates.toneTemplates[normalized.tone];
+    const rawLearn = trimOptional(input.learning);
+    const learningLine = rawLearn ? ensurePeriod(rawLearn) : ensurePeriod(compactSpaces(normalized.learning));
+    const st = normalized.outputStyle;
+    if (st === "kindle") {
+      return buildNoteKindleStructured(normalized, input, toneData, leadTitle, learningLine);
+    }
+    if (st === "comic") {
+      return buildNoteComicCompact(normalized, input, leadTitle, learningLine);
+    }
+    return buildNoteShortSpaced(normalized, input, toneData, leadTitle, learningLine);
   }
 
   function buildXPost(input) {

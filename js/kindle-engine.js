@@ -49,6 +49,10 @@
       comicPattern: normalized.comicPattern,
       learningFocus: normalized.learningFocus,
       summaryLine: summaryLine,
+      outputStyle: normalized.outputStyle,
+      coreMain: normalized.coreMain,
+      corePhrase: normalized.corePhrase,
+      coreConclusion: normalized.coreConclusion,
     };
   }
 
@@ -115,6 +119,10 @@
       learning: model.lesson,
       characters: model.characters.join("、"),
       tone: model.tone,
+      outputStyle: model.outputStyle || "",
+      coreMain: model.coreMain || "",
+      corePhrase: model.corePhrase || "",
+      coreConclusion: model.coreConclusion || "",
     };
     const comicText = window.AIBusouEngine.buildComic(rawInput);
     const noteText = window.AIBusouEngine.buildNote(rawInput);

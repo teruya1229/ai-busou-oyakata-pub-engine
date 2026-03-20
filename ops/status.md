@@ -648,3 +648,12 @@
 
 ## 現在の状態（4コマ短文情景型）
 - 4コマは **説明の羅列より短文情景**を優先。note本文スタイルは変更なし。画像API・保存導線は未変更
+
+## 今日やったこと（出力スタイル切替: note / 4コマ / Kindle）
+- **追加**: `index.html` に **出力スタイル**（指定なし・note向け・4コマ向け・Kindle向け）。`js/app.js` の `getInputFromForm()` と章内エピソード分割時の入力に **`outputStyle` / 芯欄**を渡す
+- **`js/engine.js`**: `normalizeInput` に **`outputStyle`**（空は従来互換）。**note**: 短文余白は **指定なしと同じ**（`buildNoteShortSpaced`）。**4コマ向け**: `buildNoteComicCompact`、4コマは **短文情景＋短セリフ**（指定なしと同じ寄せ）。**Kindle向け**: `buildNoteKindleStructured`（【実話】等）、4コマは **パターン長文＋長めセリフ**、統合プロンプトに **スタイル一行**を追加
+- **`js/kindle-engine.js`**: `buildEpisodeModel` と **`buildKindleSectionMaterial`** の `rawInput` に **`outputStyle` / 芯3項目**を反映（節プレビューがフォームのスタイルに沿う）
+- `README.md` に1段落追記、`ops/handoff.md` 更新
+
+## 現在の状態（出力スタイル切替後）
+- 用途に応じて **note / 4コマ / 統合プロンプトの寄せ**を変えられる。**未指定は従来どおり**。画像API・保存導線は未変更
