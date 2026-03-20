@@ -18,6 +18,11 @@
 
 - **`buildKindleSectionPreview`**（`js/kindle-engine.js`）: **原稿下書き寄り**。note に **【実話】** がある場合は **■見出し付き**で本文を展開し、**outputStyle が Kindle向け**のときの意図が読み取りやすい。**※ 章組み用の短い見出しリスト**は従来の `bodyOutline` を末尾に残す（章プレビュー等の互換）
 
+## Kindle章素材プレビュー（複数入力・実装メモ）
+
+- **`buildKindleChapterMaterial`**（`js/kindle-engine.js`）: 複数節のとき **章テーマ**は各節タイトルのベース（`（` より前）を **・** で束ねる。戻り値に **`chapterIntroDraft` / `sectionBridges` / `chapterClosing` / `outputStyleAnyKindle`** を追加。節素材に **`outputStyle`** を1フィールド追加（既存互換のため任意）
+- **`buildKindleChapterPreview`**: 表示を **章ドラフト寄り**にし、**■ 章の導入 → 状況フックの抜粋 → 節の並びと接続（◇ ブリッジ）→ 章末** のあと、**章構成メモ（互換）**で従来の一覧を残す
+
 ## note記事本文（実装メモ）
 
 - 生成は `js/engine.js` の **`buildNote`**。見出しは **導入 / 現場で起きたこと / なぜそうなったか / 気づき / まとめ**（`## 学び` は廃止）

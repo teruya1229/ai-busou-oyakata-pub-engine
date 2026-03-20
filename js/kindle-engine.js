@@ -251,6 +251,7 @@
       bodyOutline: bodyOutline,
       keyPoint: keyPoint,
       noteFull: noteText,
+      outputStyle: model.outputStyle || "",
       sourceSummary: {
         comic: compactSpaces(comicText).slice(0, 160),
         note: compactSpaces(noteText).slice(0, 160),
@@ -302,6 +303,30 @@
     return result;
   }
 
+  function sectionTitleBase(section) {
+    const t = compactSpaces(section && section.sectionTitle) || "";
+    const i = t.indexOf("（");
+    return i >= 0 ? compactSpaces(t.slice(0, i)) : t;
+  }
+
+  function mergeChapterThemeBases(sectionMaterials) {
+    const bases = uniqueNonEmpty((sectionMaterials || []).map(sectionTitleBase));
+    if (!bases.length) {
+      return "現場改善";
+    }
+    if (bases.length === 1) {
+      return bases[0];
+    }
+    const short = bases.map(function (b) {
+      return b.length > 24 ? b.slice(0, 24) + "…" : b;
+    });
+    let merged = short.join("・");
+    if (merged.length > 72) {
+      merged = merged.slice(0, 70) + "…";
+    }
+    return merged;
+  }
+
   function buildChapterTheme(sectionMaterials, options) {
     const optionTheme = compactSpaces(options && options.chapterTheme);
     if (optionTheme) {
@@ -310,12 +335,15 @@
     if (!sectionMaterials.length) {
       return "現場改善";
     }
-    const firstTitle = compactSpaces(sectionMaterials[0].sectionTitle);
-    if (!firstTitle) {
-      return "現場改善";
+    if (sectionMaterials.length === 1) {
+      const firstTitle = compactSpaces(sectionMaterials[0].sectionTitle);
+      if (!firstTitle) {
+        return "現場改善";
+      }
+      const base = compactSpaces(firstTitle.split("（")[0]);
+      return base || "現場改善";
     }
-    const base = compactSpaces(firstTitle.split("（")[0]);
-    return base || "現場改善";
+    return mergeChapterThemeBases(sectionMaterials);
   }
 
   function buildChapterTitle(sectionMaterials, options) {
@@ -327,7 +355,65 @@
     if (theme.indexOf("AI武装親方｜") === 0) {
       return theme;
     }
+    if (sectionMaterials.length >= 2) {
+      return "AI武装親方｜" + theme + "（" + sectionMaterials.length + "本の話題）";
+    }
     return "AI武装親方｜" + theme;
+  }
+
+  function buildChapterIntroDraft(sectionMaterials) {
+    const n = sectionMaterials.length;
+    if (!n) {
+      return "章の導入を準備中。";
+    }
+    const bases = uniqueNonEmpty(sectionMaterials.map(sectionTitleBase));
+    const head = bases[0]
+      ? "「" + (bases[0].length > 36 ? bases[0].slice(0, 36) + "…" : bases[0]) + "」から始め、"
+      : "";
+    if (n === 1) {
+      return (
+        head +
+        "この章は1本の現場の話を、起きたことから学びの一行まで読みやすい順に整えた。"
+      );
+    }
+    return (
+      "この章では" +
+      n +
+      "本の現場の話を、同じリズム（起きたこと→ズレ→次の一手）で並べた。" +
+      head +
+      "節が切り替わっても読み疲れしないよう、見出しと要点の置き方を揃えている。"
+    );
+  }
+
+  function buildSectionBridges(sectionMaterials) {
+    const bridges = [];
+    const bases = sectionMaterials.map(sectionTitleBase);
+    for (let i = 0; i < bases.length - 1; i += 1) {
+      const next = compactSpaces(bases[i + 1]) || "次の話題";
+      const shown = next.length > 32 ? next.slice(0, 32) + "…" : next;
+      bridges.push(
+        "ここまでの話を踏まえて、次は「" + shown + "」へ視点を移す。"
+      );
+    }
+    return bridges;
+  }
+
+  function buildChapterClosing(sectionMaterials) {
+    const n = sectionMaterials.length;
+    if (!n) {
+      return "章の締めを準備中。";
+    }
+    const points = uniqueNonEmpty(
+      sectionMaterials.map(function (s) {
+        return compactSpaces(s.keyPoint);
+      })
+    );
+    const summary = points.length > 0 ? points.slice(0, 3).join(" ") : "現場のズレを言語化する。";
+    return (
+      "この章で拾った要点は、" +
+      summary +
+      " 次の章や別テーマへ進むときは、この章で強かった「ズレの型」をひとつだけ持ち越すと、下書きが書きやすい。"
+    );
   }
 
   function normalizeChapterSections(inputsOrSections) {
@@ -371,6 +457,13 @@
       })
     );
 
+    const chapterIntroDraft = buildChapterIntroDraft(sectionMaterials);
+    const sectionBridges = buildSectionBridges(sectionMaterials);
+    const chapterClosing = buildChapterClosing(sectionMaterials);
+    const outputStyleAnyKindle = sectionMaterials.some(function (section) {
+      return compactSpaces(section.outputStyle || "") === "kindle";
+    });
+
     return {
       chapterTitle: chapterTitle,
       chapterTheme: chapterTheme,
@@ -378,6 +471,10 @@
       chapterHook: chapterHook,
       chapterOutline: chapterOutline,
       chapterKeyTakeaways: chapterKeyTakeaways,
+      chapterIntroDraft: chapterIntroDraft,
+      sectionBridges: sectionBridges,
+      chapterClosing: chapterClosing,
+      outputStyleAnyKindle: outputStyleAnyKindle,
       sourceSummary: sectionMaterials.map(function (section, index) {
         return {
           sectionIndex: index + 1,
@@ -400,16 +497,56 @@
       return (index + 1).toString() + ". " + line;
     });
 
+    const styleHint = material.outputStyleAnyKindle
+      ? "（出力スタイル: Kindle向け。複数節を1章に束ねるときの導入・接続・章末つき）"
+      : "（出力スタイルが Kindle向けのとき、節の【実話】構造とあわせて章の流れがはっきりします）";
+
+    const sectionBlocks = material.sectionMaterials.map(function (section, index) {
+      const kp = compactSpaces(section.keyPoint);
+      const firstOutline = compactSpaces((section.bodyOutline || [])[0] || "");
+      const lines = [
+        "【第" + (index + 1).toString() + "節】 " + section.sectionTitle,
+        "要点: " + kp,
+      ];
+      if (firstOutline) {
+        lines.push("抜粋: " + firstOutline.slice(0, 140));
+      }
+      return lines.join("\n");
+    });
+
+    const blocksWithBridges = [];
+    const bridges = material.sectionBridges || [];
+    for (let i = 0; i < sectionBlocks.length; i += 1) {
+      blocksWithBridges.push(sectionBlocks[i]);
+      if (i < bridges.length) {
+        blocksWithBridges.push("────────");
+        blocksWithBridges.push("◇ " + bridges[i]);
+        blocksWithBridges.push("");
+      }
+    }
+
     return [
-      "【Kindle章素材プレビュー】",
-      "章タイトル: " + material.chapterTitle,
-      "章テーマ: " + material.chapterTheme,
+      "【Kindle章素材プレビュー】（章ドラフト寄り）",
+      styleHint,
       "",
+      "章タイトル: " + material.chapterTitle,
+      "章テーマ（束ねた見出し）: " + material.chapterTheme,
+      "",
+      "■ 章の導入",
+      material.chapterIntroDraft,
+      "",
+      "■ 状況フック（参考・各節の抜粋）",
+      material.chapterHook,
+      "",
+      "■ 節の並びと接続",
+      blocksWithBridges.join("\n").trim() || "（節素材なし）",
+      "",
+      "■ 章末の短いまとめ",
+      material.chapterClosing,
+      "",
+      "──── 章構成メモ（互換・目次向け） ────",
       "節タイトル一覧:",
       sectionTitles.join("\n") || "（節素材なし）",
-      "",
-      "章導入:",
-      material.chapterHook,
       "",
       "章アウトライン:",
       outlineLines.join("\n") || "（アウトラインなし）",

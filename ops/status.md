@@ -690,3 +690,11 @@
 
 ## 現在の状態（Kindle節プレビュー改善後）
 - **節素材**のまま **貼って編集しやすい**下書き表示に寄せた。`buildNote`・4コマ・画像APIは未変更
+
+## 今日やったこと（Kindle章・複数節の章らしさ）
+- **`js/kindle-engine.js`**: 複数節のとき **章テーマ**を各節タイトルのベースを「・」で束ね、**章タイトル**に **（N本の話題）** を付与。**`chapterIntroDraft` / `sectionBridges` / `chapterClosing` / `outputStyleAnyKindle`** を `buildKindleChapterMaterial` に追加。節素材に **`outputStyle`** を追加
+- **`buildKindleChapterPreview`**: **章ドラフト寄り**表示（章の導入・節間◇接続・章末・末尾に互換メモ）。Kindle 向けスタイルがあれば先頭説明を強調
+- `README.md` `ops/handoff.md` 更新（`index.html` / `app.js` / `engine.js` / `templates` は未変更）
+
+## 現在の状態（Kindle章プレビュー改善後）
+- **複数 note を1章に束ねる**とき、単なる一覧ではなく **導入・接続・締め**が付く。溜めた note を後から一冊化する流れに合わせやすい
