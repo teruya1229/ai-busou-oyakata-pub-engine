@@ -87,6 +87,7 @@
     }
     outputs.note.textContent = result.note;
     outputs.xPost.textContent = result.xPost;
+    updateComicImageReviewPanel();
   }
 
   function renderKindlePreview(input) {
@@ -247,6 +248,7 @@
     }
     comicGenPromptDraft.value = outputs.comicUnifiedPrompt.textContent || "";
     comicGenPromptDraft.focus();
+    updateComicImageReviewPanel();
   }
 
   function isAllowedComicImageSource(raw) {
@@ -316,6 +318,84 @@
       return draft.trim();
     }
     return getComicUnifiedPromptText().trim();
+  }
+
+  function formatOutputStyleLabel(v) {
+    const s = (v || "").trim();
+    if (!s) {
+      return "（指定なし・従来どおり）";
+    }
+    if (s === "note") {
+      return "note向け";
+    }
+    if (s === "comic") {
+      return "4コマ向け";
+    }
+    if (s === "kindle") {
+      return "Kindle向け";
+    }
+    return s;
+  }
+
+  function formatNotePresetLabel(v) {
+    const s = (v || "").trim();
+    if (!s) {
+      return "標準";
+    }
+    if (s === "strong") {
+      return "強め";
+    }
+    if (s === "soft") {
+      return "やわらかめ";
+    }
+    if (s === "biz") {
+      return "経営寄り";
+    }
+    return s;
+  }
+
+  function setReviewText(id, text) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = text;
+    }
+  }
+
+  function updateComicImageReviewPanel() {
+    const input = getInputFromForm();
+    setReviewText("comic-review-theme", (input.theme || "").trim() || "（未入力）");
+    setReviewText("comic-review-incident", (input.incident || "").trim() || "（未入力）");
+    setReviewText("comic-review-learning", (input.learning || "").trim() || "（未入力）");
+    setReviewText("comic-review-output-style", formatOutputStyleLabel(input.outputStyle));
+    setReviewText("comic-review-note-preset", formatNotePresetLabel(input.notePreset));
+
+    const cm = (input.coreMain || "").trim();
+    const cp = (input.corePhrase || "").trim();
+    const cc = (input.coreConclusion || "").trim();
+    const coreBlock = document.getElementById("comic-review-core-block");
+    if (coreBlock) {
+      coreBlock.style.display = cm || cp || cc ? "block" : "none";
+    }
+    setReviewText("comic-review-core-main", cm || "（なし）");
+    setReviewText("comic-review-core-phrase", cp || "（なし）");
+    setReviewText("comic-review-core-conclusion", cc || "（なし）");
+
+    const comicEl = document.getElementById("comic-output");
+    let comicText = "";
+    if (comicEl) {
+      comicText = (comicEl.textContent || "").trim();
+    }
+    if (!comicText || comicText === OUTPUT_PLACEHOLDER) {
+      comicText = "先に「構成を生成」してください。";
+    }
+    setReviewText("comic-review-comic", comicText);
+
+    const apiPrompt = getPromptTextForComicImageApi();
+    setReviewText(
+      "comic-review-api-prompt",
+      apiPrompt ||
+        "（プロンプトがありません。「構成を生成」するか、上の生成用テキスト欄に入力してください。）"
+    );
   }
 
   function normalizeComicImageApiPayload(json) {
@@ -397,6 +477,7 @@
   }
 
   async function generateComicImageFromPrompt() {
+    updateComicImageReviewPanel();
     const promptText = getPromptTextForComicImageApi();
     if (!promptText) {
       setComicImageApiStatus(
@@ -404,6 +485,10 @@
         "#b45309",
       );
       return;
+    }
+    const lastUsedEl = document.getElementById("comic-image-last-used-prompt");
+    if (lastUsedEl) {
+      lastUsedEl.textContent = promptText;
     }
     if (comicImageGenerateBtn) {
       comicImageGenerateBtn.disabled = true;
@@ -632,6 +717,11 @@
     if (outputs.kindleManuscript) {
       outputs.kindleManuscript.textContent = placeholder;
     }
+    const lastUsedClear = document.getElementById("comic-image-last-used-prompt");
+    if (lastUsedClear) {
+      lastUsedClear.textContent = "まだ生成していません。";
+    }
+    updateComicImageReviewPanel();
   }
 
   const COPY_BUNDLE_SEPARATOR = "\n\n---\n\n";
@@ -774,6 +864,19 @@
   if (comicImageGenerateBtn) {
     comicImageGenerateBtn.addEventListener("click", function () {
       generateComicImageFromPrompt();
+    });
+  }
+
+  const comicImageReviewRefreshBtn = document.getElementById("comic-image-review-refresh-btn");
+  if (comicImageReviewRefreshBtn) {
+    comicImageReviewRefreshBtn.addEventListener("click", function () {
+      updateComicImageReviewPanel();
+    });
+  }
+
+  if (comicGenPromptDraft) {
+    comicGenPromptDraft.addEventListener("input", function () {
+      updateComicImageReviewPanel();
     });
   }
 

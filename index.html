@@ -138,11 +138,12 @@
         <p style="margin: 0 0 12px; font-size: 14px; color: #6b7280; line-height: 1.55">
           <strong style="color: #374151">流れ</strong>
           ：<strong style="color: #374151">「生成用入力へ転記」は任意</strong>（プロンプトを編集したいとき用）。<strong style="color: #374151"
-            >生成用テキストが空のときは、統合プロンプトがそのまま「4コマ画像を生成」に使われます。</strong
+            >生成用テキストが空のときは、統合プロンプトがそのままAPIに送られます。</strong
           >
-          ① 同一オリジンなら「4コマ画像を生成」でプレビューまで進められます。② 外部の画像生成を使う場合は、生成用テキストからコピーして4コマ1枚を作り、③ 返った
+          ①「構成を生成」→ ② 下の<strong style="color: #374151">最終確認</strong>で入力・4コマ・送るプロンプトを確認 → ③
+          <strong style="color: #374151">この内容で4コマ画像を生成</strong>（有料）。④ 同一オリジンならプレビューまで進められます。外部ツールの場合は生成用テキストをコピーし、⑤ 返った
           <code style="font-size: 13px">URL</code> / <code style="font-size: 13px">data:image/...</code>
-          を下に貼り「4コマ画像を表示」。（※将来APIで③を自動化するため、同一ブロック内に置いています）
+          を下に貼り「4コマ画像を表示」。
         </p>
         <div class="result-head">
           <h2>4コマ統合画像プロンプト</h2>
@@ -155,7 +156,7 @@
         <div class="field" style="margin-top: 12px">
           <label for="comic-gen-prompt-draft">生成用テキスト（画像生成サービスへ貼り付け）</label>
           <p style="margin: 4px 0 8px; font-size: 14px; color: #6b7280; line-height: 1.5">
-            空欄のままなら、統合プロンプトがそのまま「4コマ画像を生成」に使われます。
+            空欄のままなら、統合プロンプトがそのまま「この内容で4コマ画像を生成」に渡されます。
           </p>
           <textarea
             id="comic-gen-prompt-draft"
@@ -165,14 +166,53 @@
             placeholder="「生成用入力へ転記」で取り込めます（任意）。編集してから外部ツールへコピーする場合もここを使います。"
           ></textarea>
         </div>
-        <div class="actions" style="margin-top: 8px">
-          <button type="button" id="comic-image-generate-btn">4コマ画像を生成</button>
+
+        <div id="comic-image-final-review" class="comic-review-block" style="margin-top: 16px">
+          <h3 style="margin: 0 0 8px; font-size: 1.05rem; color: #111827">4コマ画像生成の最終確認（有料APIの前）</h3>
+          <p class="copy-hint" style="margin-bottom: 10px">
+            誤生成を減らすため、送信前に入力・4コマ構成・<strong>実際にAPIへ送るプロンプト</strong>を確認してください。生成用テキスト欄が空なら、統合プロンプトがそのまま送られます。
+          </p>
+          <dl class="review-summary">
+            <dt>タイトルテーマ</dt>
+            <dd id="comic-review-theme">—</dd>
+            <dt>現場で起きたこと</dt>
+            <dd id="comic-review-incident">—</dd>
+            <dt>今回の学び</dt>
+            <dd id="comic-review-learning">—</dd>
+            <dt>出力スタイル</dt>
+            <dd id="comic-review-output-style">—</dd>
+            <dt>note本文の寄せ方</dt>
+            <dd id="comic-review-note-preset">—</dd>
+          </dl>
+          <div id="comic-review-core-block" style="display: none; margin-top: 10px">
+            <p style="margin: 0 0 6px; font-size: 14px; font-weight: 600; color: #374151">芯の固定</p>
+            <dl class="review-summary">
+              <dt>一番伝えたいこと</dt>
+              <dd id="comic-review-core-main">—</dd>
+              <dt>入れたい表現</dt>
+              <dd id="comic-review-core-phrase">—</dd>
+              <dt>ズラしたくない結論</dt>
+              <dd id="comic-review-core-conclusion">—</dd>
+            </dl>
+          </div>
+          <p style="margin: 12px 0 6px; font-size: 14px; font-weight: 600; color: #374151">4コマ構成</p>
+          <pre id="comic-review-comic" class="output-block" style="min-height: 80px">先に「構成を生成」してください。</pre>
+          <p style="margin: 12px 0 6px; font-size: 14px; font-weight: 600; color: #374151">APIに送る生成用プロンプト</p>
+          <pre id="comic-review-api-prompt" class="output-block" style="min-height: 80px">—</pre>
+          <div class="actions" style="margin-top: 8px">
+            <button type="button" id="comic-image-review-refresh-btn" class="subtle">確認内容を入力から更新</button>
+            <button type="button" id="comic-image-generate-btn">この内容で4コマ画像を生成</button>
+          </div>
         </div>
-        <p id="comic-image-api-status" style="margin: 6px 0 0; font-size: 14px; min-height: 1.2em; color: #6b7280"></p>
+
+        <p id="comic-image-api-status" style="margin: 10px 0 0; font-size: 14px; min-height: 1.2em; color: #6b7280"></p>
+
+        <p style="margin: 12px 0 6px; font-size: 14px; font-weight: 600; color: #374151">今回使った生成用プロンプト（直近の生成）</p>
+        <pre id="comic-image-last-used-prompt" class="output-block" style="min-height: 60px; font-size: 13px">まだ生成していません。</pre>
 
         <h2 style="margin: 18px 0 8px">4コマ漫画プレビュー</h2>
         <p style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          「4コマ画像を生成」で得た／または外部で得た4コマ1枚の画像URL、または <code style="font-size: 13px">data:image/...</code> を貼り、プレビューを確認します。
+          「この内容で4コマ画像を生成」で得た／または外部で得た4コマ1枚の画像URL、または <code style="font-size: 13px">data:image/...</code> を貼り、プレビューを確認します。
         </p>
         <div class="field">
           <label for="comic-image-url">生成結果（画像URL / data URL）</label>

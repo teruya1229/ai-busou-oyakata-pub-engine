@@ -106,6 +106,26 @@ button.copy-btn {
   font-size: 13px;
 }
 
+.comic-review-block .review-summary {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(120px, 140px) 1fr;
+  gap: 6px 12px;
+  font-size: 14px;
+  align-items: start;
+}
+
+.comic-review-block .review-summary dt {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.comic-review-block .review-summary dd {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .result-head {
   display: flex;
   justify-content: space-between;

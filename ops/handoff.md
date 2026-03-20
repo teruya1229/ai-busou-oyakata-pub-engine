@@ -4,6 +4,7 @@
 
 - **出力スタイル**（`index.html`）: **指定なし**は従来どおり。**note向け / 4コマ向け / Kindle向け**は `js/app.js` の `getInputFromForm()` で `outputStyle` を渡し、`js/engine.js` の `normalizeInput` → `buildNote` / `buildComic` / `buildUnifiedComicImagePrompt` の寄せ方が変わる
 - **用途別コピー**: 入力フォーム直下の **用途別コピー（生成後）** から、**note本文 / 4コマ構成 / 4コマ統合プロンプト / Kindle節素材**を個別コピー。**スタイル向けにまとめてコピー**は `copyStyleBundle()`（`js/app.js`）で `outputStyle` に応じた連結。各出力ブロック横のボタン文言も用途が分かる表記に揃えている
+- **4コマ画像（有料API）**: 統合プロンプト欄の下に **最終確認**（入力要約・芯・出力スタイル・note寄せ方・4コマ構成・`getPromptTextForComicImageApi()` と同じ送信プロンプト）。ボタンは **この内容で4コマ画像を生成**。送信直前に **今回使った生成用プロンプト**欄へ同じ文字列を表示。`requestComicImage` / API 本文は未変更
 - **note本文の寄せ方**（`notePreset`）: **出力スタイル（`outputStyle`）とは別**。`js/engine.js` の `normalizeInput` に `notePreset`（`strong` / `soft` / `biz`、未指定は標準）。`buildNote` 系の **導入・反転の接続・締め**と、口コミ系の **冒頭一文**、トーン導入の **短文サフィックス**だけを差し替え。4コマ・統合プロンプトは未変更
 - **「生成用入力へ転記」は任意**。`#comic-gen-prompt-draft` が**空**のときは、`js/app.js` の **`getPromptTextForComicImageApi()`** が **4コマ統合画像プロンプト**（`#comic-unified-prompt-output`）をそのまま **「4コマ画像を生成」** に渡す。**転記なしでAPIから画像まで進められる**（文言は `index.html` / `README.md` と整合）。
 

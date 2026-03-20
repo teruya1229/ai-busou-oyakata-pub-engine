@@ -673,3 +673,12 @@
 
 ## 現在の状態（noteプリセット後）
 - note本文だけ **雰囲気を寄せ分け**できる。**短文余白・`##` なし**は維持。4コマ・統合プロンプトの式はそのまま
+
+## 今日やったこと（4コマ画像生成の最終確認UI）
+- **`index.html`**: 統合プロンプト／生成用テキストの下に **最終確認**ブロック（入力・芯・スタイル・note寄せ方・4コマ構成・API送信プロンプト）。ボタン **この内容で4コマ画像を生成**。その下に **今回使った生成用プロンプト（直近）**
+- **`js/app.js`**: `updateComicImageReviewPanel()`（`renderOutputs` / `clearOutputs` / 転記 / 生成直前 / 生成用テキストの `input` / 確認更新ボタン）。`generateComicImageFromPrompt` 内で送信プロンプトを **last-used** に表示してから `requestComicImage`（処理は従来どおり）
+- **`css/style.css`**: `.comic-review-block .review-summary`（定義リストの2列）
+- `README.md` `ops/handoff.md` 更新
+
+## 現在の状態（4コマ最終確認UI後）
+- 有料API前に **送る内容を一覧**できる。`engine`・`api` の生成式は未変更
