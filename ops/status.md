@@ -395,3 +395,14 @@
 - 入力は既存の `chapter-episodes` textarea を再利用し、`---`（章内）/ `===`（章区切り）の簡易仕様を維持
 - 既存の 4コマ / note / X 導線を含むMVP本体は未破壊で維持
 - 今回は manuscript preview のUI接続完了をもって、Kindle導線MVPとして一旦一区切りの判断が可能な段階
+
+## 今日やったこと（manuscriptText整形の最小調整）
+- `js/kindle-engine.js` の manuscript 系のみを最小差分で調整
+- `manuscriptText` の改行整形を追加し、3連続以上の改行を2連続へ圧縮
+- 章タイトル前後と段落間の空行を安定化し、短い章本文でも見え方が崩れにくいように微調整
+- `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（整形微調整後）
+- Kindle導線MVPの段階構造とUI確認導線は維持
+- `manuscriptText` は改行過多や段落詰まりを抑えた表示に改善
+- 既存MVP本体（`engine.js` / `templates.js` / UI）には変更なし

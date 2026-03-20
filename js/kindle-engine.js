@@ -898,7 +898,7 @@
       compactSpaces(chapterDraft && chapterDraft.openingParagraph),
       "導入段落を準備中。"
     );
-    const body = ensureSentenceEnding(
+    let body = ensureSentenceEnding(
       compactSpaces(chapterDraft && chapterDraft.bodyDraft),
       "本文を準備中。"
     );
@@ -906,8 +906,11 @@
       compactSpaces(chapterDraft && chapterDraft.closingParagraph),
       "章末段落を準備中。"
     );
+    if (compactSpaces(body).length < 24) {
+      body = body + " 実務で使う場面を短く想定し、次の一手につなげる。";
+    }
     const takeaway = ensureActionEnding(compactSpaces(chapterDraft && chapterDraft.takeaway));
-    const chapterText = [opening, body, closing].join("\n\n");
+    const chapterText = normalizeManuscriptSpacing([opening, body, closing].join("\n\n"));
 
     return {
       chapterTitle: title,
@@ -916,16 +919,28 @@
     };
   }
 
+  function normalizeManuscriptSpacing(text) {
+    return (text || "")
+      .toString()
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
   function buildManuscriptText(manuscript) {
     const chapterBlocks = (manuscript.chapters || []).map(function (chapter, index) {
+      const chapterTitle = compactSpaces(chapter && chapter.chapterTitle) || "第" + (index + 1).toString() + "章";
+      const chapterText = normalizeManuscriptSpacing(chapter && chapter.chapterText);
       return [
-        "第" + (index + 1).toString() + "章 " + chapter.chapterTitle,
+        "第" + (index + 1).toString() + "章 " + chapterTitle,
         "",
-        chapter.chapterText,
+        chapterText || "本文を準備中。",
       ].join("\n");
     });
 
-    return [
+    return normalizeManuscriptSpacing([
       manuscript.manuscriptTitle,
       "",
       "はじめに",
@@ -935,7 +950,7 @@
       "",
       "おわりに",
       manuscript.conclusion,
-    ].join("\n");
+    ].join("\n"));
   }
 
   function buildKindleManuscript(fullDraftOrInputs, options) {

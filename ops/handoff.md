@@ -2,12 +2,12 @@
 
 ## 次にやるべき1手
 - 次の候補は2択に固定する。
-- 1) `js/kindle-engine.js` 内で `manuscriptText` の見え方（章区切り・文量）を最小調整する
-- 2) ここで Kindle導線MVPとして一区切りし、次テーマへ移る
+- 1) 今回の整形微調整結果を実運用入力で軽く確認し、必要なら `js/kindle-engine.js` の manuscript 系だけをもう1段だけ最小調整する
+- 2) ここで Kindle導線MVPを一区切りとして固定し、次テーマへ移る
 
 ## 判断基準
-- すぐ実運用テストへ進みたいなら、いったん Kindle導線MVPとして一区切りする
-- 読みやすさを少し上げたいなら、`js/kindle-engine.js` の `manuscriptText` に限定して最小調整する
+- すぐ次テーマへ進みたいなら、現状で一区切りにする
+- 実運用入力でまだ改行や文量の違和感が残るなら、manuscript 系のみ最小追補する
 - どちらを選ぶ場合も、既存MVP本体と既存UI導線を壊さないことを優先する
 
 ## 今回やらないこと
@@ -26,6 +26,7 @@
 - Kindle責務は `js/kindle-engine.js` に寄せる
 - UI変更は必要最小限を維持し、既存の `chapter-episodes` 再利用方針を崩さない
 - 大規模リファクタリングは行わない
+- 追加調整する場合も `buildKindleManuscript(...)` / `buildKindleManuscriptPreview(...)` 周辺の整形責務に限定する
 
 ## 次の拡張候補
 - 現場ジャンル別テンプレ（内装/設備/外構など）
