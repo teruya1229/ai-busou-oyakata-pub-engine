@@ -37,6 +37,10 @@ ai-busou-oyakata-pub-engine/
 - **レスポンス本文（成功）**: `{ "imageSrc": "data:image/png;base64,..." }`。**正式キーは `imageSrc`**。将来 **HTTPS の画像URL** を返す場合も **同じ `imageSrc` キー**で返せる（フロントのプレビューはそのまま利用可）。
 - 実装互換として **`dataUrl`** キーにも対応しているが、API新設時は **`imageSrc` を優先**すること。
 
+### 付属APIサーバ（`api/`・PHASE 1）
+- **`cd api && npm install && npm start`** で **Express** が **8787** 番で起動し、上記契約の **ダミー画像（data URL）** を返す。
+- 本物生成へ移るときは **`api/server.js`** の **`USE_DUMMY = false`** と **`generateImage(prompt)`** 内を差し替える。
+
 ## 評価用ファイル
 - 代表ケース: `samples/test-cases.js`
 - 評価基準: `docs/evaluation-guide.md`

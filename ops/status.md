@@ -504,3 +504,15 @@
 ## 現在の状態（API既定URL固定後）
 - 「4コマ画像を生成」は既定でローカル `8787` を叩く。**APIサーバ未起動時は fetch 失敗メッセージ**
 - 手入力プレビュー・4コマ / note / X / Kindle 導線は維持
+
+## 今日やったこと（PHASE 1: comic-image-api 最小サーバ）
+- **`api/server.js`** 新規: Express・ポート **8787**・**POST /api/comic-image**・**USE_DUMMY = true** 時は **縦4帯ダミーPNG の data URL** を **`imageSrc`** で返す
+- **`api/package.json`** 新規: 依存 **`express` のみ**、`npm start` → `node server.js`
+- **`USE_DUMMY = false`** 時は **`generateImage(prompt)`**（空実装）を呼び、戻り空なら **500 + { error }**
+- **prompt** 未指定・空は **400 + { "error": "prompt is required" }**
+- **CORS**: localhost / 127.0.0.1 / file / `Origin: null` を許可する最小設定
+- `README.md` `ops/handoff.md` を更新（フロント・`js/app.js` は未変更）
+
+## 現在の状態（ダミーAPIサーバ追加後）
+- `cd api && npm install && npm start` で起動し、フロント「4コマ画像を生成」から **疎通〜プレビュー確認**が可能
+- 本物画像生成は **`USE_DUMMY = false` + `generateImage()` 実装** が次段階

@@ -1,0 +1,12 @@
+{
+  "name": "comic-image-api",
+  "version": "1.0.0",
+  "description": "PHASE 1 dummy comic image API for ai-busou-oyakata-pub-engine",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

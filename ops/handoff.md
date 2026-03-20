@@ -26,19 +26,22 @@
 - **ops/status.md**: フロント既定 URL 固定済み。**次はバックエンド**：下記「次にやるべき1手」。
 
 ## 次にやるべき1手
-- **このURLで応答するAPI本体を用意する**（例: `POST http://127.0.0.1:8787/api/comic-image` が `{ "prompt": "..." }` を受け、`{ "imageSrc": "data:image/..." }` または将来は同キーで HTTPS URL を返す）。
-- **フロント側**は既定URL・req/res 形に沿って **ほぼ準備完了**（`applyComicImageResult` まで接続済み）。CORS は API 側または同一オリジン配信で調整。
+- **`api/server.js` 先頭の `USE_DUMMY` を `false` にし、`async function generateImage(prompt)` の中身を本物の画像生成呼び出しへ差し替える**（ダミーPNGではなく実運用の戻りを **data URL または `imageSrc` 用URL** で返す）。
+- PHASE 1 として **`api/` の Express サーバ**は既に **`POST /api/comic-image`** で **ダミー `{ imageSrc }`** を返せる。**フロントは変更不要**。
 
 ## その次の候補（1つに絞ってから着手）
-- **ローカル画像**：ファイル選択で `FileReader.readAsDataURL` → **`applyComicImageResult`**（fetch 不要な検証用）
+- **ローカル画像**（フロントのみ）：ファイル選択で `FileReader.readAsDataURL` → **`applyComicImageResult`**
 
 ## 判断基準
-- **API側の契約が固まった**なら、まず `COMIC_IMAGE_API_CONFIG.url` と **必要なヘッダ1〜2個**（例: `Authorization`）だけ足す。リトライや設定UIはまだ作らない
+- **画像はダミーで十分**なら `USE_DUMMY = true` のまま運用検証のみ。本物に移るときだけ `false` と `generateImage` を編集
+- **フロントから本番API**を直叩きする場合は `js/app.js` の `COMIC_IMAGE_API_CONFIG.url` と **必要なヘッダ**を最小追加（秘匿情報はコミットしない）
 - **file:// で開いてCORSで詰まる**なら、同一オリジンで `index.html` を配る、またはAPIでCORSを許可する（実装範囲はインフラ次第）
 - **共通**：4コマ / note / X / Kindle と `js/kindle-engine.js` を壊さない
 
 ## 注意点
-- `requestComicImage` は **JSON の `imageSrc` または `dataUrl`** のみ想定。別形が返るなら **ここだけ** 正規化を足す（分岐の森にしない）
+- **`api/server.js`** は依存 **`express` のみ**。ポート **8787** とパス **`/api/comic-image`** をフロント既定と揃えている
+- `generateImage` が例外や空を返すと **500** になる。外部APIは try/catch とタイムアウトを段階的に足す
+- フロントの `requestComicImage` は **JSON の `imageSrc` または `dataUrl`** を想定。APIレスポンス形を変えるなら **フロントの `normalizeComicImageApiPayload` だけ**検討
 - **`normalizeComicImageResult` の `javascript:` 拒否**は維持する
 - リセットは **`resetComicImagePreview`** が API ステータスと生成ボタン disabled も戻す
 
