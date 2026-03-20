@@ -1,5 +1,5 @@
 /**
- * 4コマ漫画画像生成API
+ * 4コマ漫画画像生成API + 同一オリジンでリポジトリ直下の静的フロントを配信
  * USE_DUMMY=true: ダミーPNG（疎通用）
  * USE_DUMMY=false: OpenAI Images API（既定モデル gpt-image-1.5）
  *   失敗時（キー未設定・課金上限・quota・認証・上流5xx 等）はダミーPNGへフォールバック（導線確認用。本番では厳格化可）
@@ -8,9 +8,11 @@
  *
  * 起動確認例:
  *   cd api && npm install && npm start
+ *   ブラウザで http://127.0.0.1:8787/ （フロント） / POST /api/comic-image は同一オリジン
  *   curl -X POST http://127.0.0.1:8787/api/comic-image -H "Content-Type: application/json" -d "{\"prompt\":\"テスト\"}"
  */
 
+const fs = require("fs");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
@@ -24,6 +26,9 @@ const USE_DUMMY = false;
 const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1.5";
 
 const PORT = 8787;
+
+/** リポジトリルート（api/ の1つ上）。index.html / css / js を配信し、api/ 配下は露出しない */
+const REPO_ROOT = path.join(__dirname, "..");
 
 function makeCrcTable() {
   const table = new Uint32Array(256);
@@ -255,6 +260,18 @@ app.post("/api/comic-image", async function (req, res) {
   }
 });
 
+app.get("/", function (req, res) {
+  res.sendFile(path.join(REPO_ROOT, "index.html"));
+});
+
+app.use("/css", express.static(path.join(REPO_ROOT, "css")));
+app.use("/js", express.static(path.join(REPO_ROOT, "js")));
+
+const assetsDir = path.join(REPO_ROOT, "assets");
+if (fs.existsSync(assetsDir)) {
+  app.use("/assets", express.static(assetsDir));
+}
+
 app.listen(PORT, function () {
-  console.log("comic-image-api listening on http://127.0.0.1:" + PORT);
+  console.log("listening http://127.0.0.1:" + PORT + "/ （静的フロント + POST /api/comic-image）");
 });

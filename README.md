@@ -10,7 +10,7 @@
 
 ## MVPの目的
 - まず動く最小構成を優先する
-- build不要の静的構成で、`index.html` を開くだけで使える状態にする
+- build不要の静的構成。`index.html` を直接開いてもよいが、**4コマ画像APIと同一オリジンで使う**なら下記「推奨起動」
 - 将来拡張しやすいように `js/app.js` `js/engine.js` `js/templates.js` に責務分離する
 
 ## ファイル構成
@@ -27,9 +27,14 @@ ai-busou-oyakata-pub-engine/
 ```
 
 ## 起動方法
-1. `index.html` をブラウザで開く
-2. 入力欄を埋めて「構成を生成」を押す
-3. 生成された3つの出力を必要に応じてコピーする
+
+### 推奨（4コマ画像APIと同一オリジン・CORS不要）
+1. `cd api` → `npm install` → `npm start`
+2. ブラウザで **`http://127.0.0.1:8787/`** を開く
+3. 入力欄を埋めて「構成を生成」を押す（「4コマ画像を生成」も同じオリジンで動作）
+
+### 静的ファイルのみ（APIなし）
+1. `index.html` をブラウザで開く（`file://`）。画像生成APIは別起動が必要で、オリジンが異なると失敗しやすい
 
 ## 4コマ画像生成API（推奨仕様・フロント既定）
 - **ローカル既定**: `http://127.0.0.1:8787/api/comic-image`（`js/app.js` の **`COMIC_IMAGE_API_CONFIG.url`**）。本番では例として **`https://your-domain.com/api/comic-image`** へ差し替え。
@@ -40,7 +45,8 @@ ai-busou-oyakata-pub-engine/
 
 ### 付属APIサーバ（`api/`・PHASE 2）
 - **`api/.env.example` を `api/.env` にコピー**し、**`OPENAI_API_KEY`** に有効なキーを設定する（**`api/.env` は Git に含めない**）。
-- **`cd api && npm install && npm start`** で **8787** 番が起動。**`USE_DUMMY=false`（既定）** で **OpenAI Images API**（既定モデル **`gpt-image-1.5`**、環境変数 **`OPENAI_IMAGE_MODEL`** で変更可）により **本物画像**を生成し、**`{ "imageSrc": "data:image/png;base64,..." }`** で返す。
+- **`cd api && npm install && npm start`** で **8787** 番が起動し、**`http://127.0.0.1:8787/`** で **リポジトリ直下のフロント**（`index.html` / `css/` / `js/`）も配信する。**`POST /api/comic-image`** と同一オリジンで、**`file://` 起因の CORS 問題を避けられる**。
+- **`USE_DUMMY=false`（既定）** で **OpenAI Images API**（既定モデル **`gpt-image-1.5`**、環境変数 **`OPENAI_IMAGE_MODEL`** で変更可）により **本物画像**を生成し、**`{ "imageSrc": "data:image/png;base64,..." }`** で返す。
 - **暫定仕様（導線確認優先）**: OpenAI が成功したときだけ **本物画像**。**課金上限（例: `billing_hard_limit_reached`）・quota 不足・認証エラー・上流5xx・キー未設定** などで失敗した場合は **API を 500 にせず**、既存の **ダミーPNG（data URL）** に **自動フォールバック**し、同じく **`imageSrc`** を返す。任意で **`"fallback": true`** が付くことがある（フロントは未使用で無視可）。
 - **本番運用**では、厳格にエラーを返したい場合は **`api/server.js`** のフォールバック分岐を止める・環境フラグ化するなどで **従来の 500 応答**に戻せる。
 - 疎通のみ試す場合は **`api/server.js`** の **`USE_DUMMY`** を **`true`** にするとダミーPNGのみ返却（キー不要）。

@@ -2,7 +2,7 @@
 
 ## 次にやるべき1手（生成後の改善フェーズ）
 
-- **本物画像での品質確認（最優先）**：課金・quota が通る状態で **「4コマ画像を生成」** を実行し、**2x2・読み順・枠・キャラのブレ**を目視確認する（フォールバック時はダミーPNGのため本物評価は限定的）
+- **同一オリジンで本物画像品質確認（最優先）**：`cd api && npm start` のあと **`http://127.0.0.1:8787/`** を開き、**「4コマ画像を生成」** で **2x2・読み順・枠・キャラのブレ**を目視確認（`file://` は使わない。フォールバック時はダミーPNGのため本物評価は限定的）
 - **4コマ感が弱い場合**：まず **`js/engine.js` の `buildUnifiedComicImagePrompt`** の共通指示を **最小差分で文言調整**（API・フロントは触らない方針のまま）
 - **補助的な調整**：必要なら **`api/server.js` の `generateImage` 内**で前置きを足す、`quality` / `size` / `output_format` や **`OPENAI_IMAGE_MODEL`** のトレードオフを記録
 
@@ -24,7 +24,7 @@
 
 | 観点 | 現状（コード上の事実） |
 |------|------------------------|
-| **URL** | 既定 **`http://127.0.0.1:8787/api/comic-image`**（`COMIC_IMAGE_API_CONFIG.url`）。本番は README 例のとおり差し替え |
+| **URL** | フロントは **`http://127.0.0.1:8787/`**（`api` サーバが静的配信）。API は既定 **`http://127.0.0.1:8787/api/comic-image`**（`COMIC_IMAGE_API_CONFIG.url`）。本番は README 例のとおり差し替え |
 | **HTTP method** | `POST` 固定 |
 | **request body** | `JSON.stringify({ prompt: promptText })` |
 | **認証** | フロントはなし。サーバは **`OPENAI_API_KEY`**（`api/.env`） |
