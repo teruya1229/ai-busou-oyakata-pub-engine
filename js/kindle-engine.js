@@ -54,7 +54,7 @@
 
   function extractNoteBodyOutline(noteText) {
     const lines = (noteText || "").split("\n");
-    const wantedHeaders = ["## 現場で起きたこと", "## なぜそれが起きたか", "## 学び", "## まとめ"];
+    const wantedHeaders = ["## 現場で起きたこと", "## なぜそうなったか", "## 気づき", "## まとめ"];
     const outline = [];
 
     wantedHeaders.forEach(function (header) {

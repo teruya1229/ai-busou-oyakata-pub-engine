@@ -49,7 +49,7 @@
       copilotRole: "high",
       copilotQuestion: "「それって、どこからズレたんでしょう？」",
       copilotReaction: "「なるほど、まずは一歩ずつですね」",
-      noteLead: "今日は少しゆるめに、でも実務に効く話を共有します。",
+      noteLead: "現場の話は、短くても背景は長いです。",
       xLead: "今日の現場メモ",
     },
     少し真面目: {
@@ -59,7 +59,7 @@
       copilotRole: "medium",
       copilotQuestion: "「確認の順番を決めると、ズレは減りますか？」",
       copilotReaction: "「手順を揃えるだけで結果が変わりますね」",
-      noteLead: "事実ベースで、再現しやすい学びとして整理します。",
+      noteLead: "事実は一つなのに、見え方は人によって違います。",
       xLead: "現場での気づき",
     },
     かなり真面目: {
@@ -69,7 +69,7 @@
       copilotRole: "low",
       copilotQuestion: "「再発防止として、最初に固定すべき手順は何ですか？」",
       copilotReaction: "「再発防止のため、事実と手順を整理しましょう」",
-      noteLead: "感覚ではなく、要因と手順に分けて記録します。",
+      noteLead: "再発を防ぐには、感覚ではなく手順まで落とす必要があります。",
       xLead: "再発防止メモ",
     },
     コミカル: {
@@ -79,7 +79,7 @@
       copilotRole: "lead",
       copilotQuestion: "「親方、ズレ検知センサーがピコピコしてます！」",
       copilotReaction: "「親方、今日の学びメーターが上がってます！」",
-      noteLead: "コミカルに見えて、中身は現場で使える話です。",
+      noteLead: "堅い話に見えて、最後は一歩だけ前に進む話です。",
       xLead: "本日の親方ログ",
     },
   };
@@ -115,7 +115,7 @@
     },
   };
 
-  const noteTemplateSections = ["タイトル", "導入", "現場で起きたこと", "なぜそれが起きたか", "学び", "まとめ"];
+  const noteTemplateSections = ["タイトル", "導入", "現場で起きたこと", "なぜそうなったか", "気づき", "まとめ"];
 
   const xPostTemplateSections = ["短文版", "やや長文版", "ハッシュタグ案"];
 

@@ -338,37 +338,63 @@
       .join("\n");
   }
 
+  function buildNoteIntro(normalized, toneData) {
+    const src = (normalized.theme + " " + normalized.incident).toLowerCase();
+    if (src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0) {
+      return [
+        "仲の良いお客様ほど、口コミを書かないことがあります。満足したことと、口コミを書くことは別だと、現場で感じることがあります。だからこそ、満足した直後の導線づくりが効いてきます。",
+        "",
+        `${normalized.theme}。こういう場面に、どこかで見覚えがあるかもしれません。`,
+      ].join("\n");
+    }
+    return `${toneData.noteLead}\n\n${normalized.theme}。こういうテーマで、現場では起きがちなことがあります。`;
+  }
+
+  function buildNoteWhy(normalized) {
+    const src = (normalized.theme + " " + normalized.incident).toLowerCase();
+    if (src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0) {
+      return "起きやすいのは、満足した瞬間は「お礼」で終わり、口コミが必要だという気持ちはまだ起きていないからです。だからこそ、タイミングと手間を減らす導線が効いてきます。";
+    }
+    const name = normalized.comicPattern;
+    if (name === "誤解型") {
+      return "起きやすいのは、言葉の当たり前が人それぞれだからです。伝えたつもりが伝わっておらず、作業の前提にズレが出ます。同じ現場でも見え方が分かれると、手戻りは一気に膨らみます。";
+    }
+    if (name === "ヒヤリ型") {
+      return "起きやすいのは、焦りや慣れです。一瞬の判断で手順を飛ばすと、空気が張りつめます。安全優先で止め、手順を再確認するほうが、結果的に早いです。";
+    }
+    return "起きやすいのは、小さなズレがじわじわ効率を下げることです。大きな問題ではなくても、前提のずれが積み上がると、現場のリズムが乱れます。";
+  }
+
+  function buildNoteClosing(normalized) {
+    let out = "ここから先は、自分の現場で一度だけ試せる行動に落としてみてください。";
+    if (normalized.inputSparse) {
+      out += " まずは一つだけ決めて試す。それで十分です。";
+    }
+    return out;
+  }
+
   function buildNote(input) {
     const normalized = normalizeInput(input);
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const toneData = templates.toneTemplates[normalized.tone];
-    const pattern = templates.comicPatterns[normalized.comicPattern];
     const lines = [
       `# ${leadTitle}`,
       "",
       "## 導入",
-      `${toneData.noteLead}`,
-      `${templates.characterProfile.protagonist.name}と${templates.characterProfile.partner.name}が、今日の現場で気づいたことを共有します。`,
+      buildNoteIntro(normalized, toneData),
       "",
       "## 現場で起きたこと",
       normalized.incident,
       "",
-      "## なぜそれが起きたか",
-      `${pattern.name}として現れた背景には、前提や確認粒度のばらつきがありました。`,
-      "作業の前提や順番が頭の中だけで共有され、言葉として揃っていなかったためです。",
+      "## なぜそうなったか",
+      buildNoteWhy(normalized),
       "",
-      "## 学び",
+      "## 気づき",
       normalized.learning,
       "",
       "## まとめ",
-      "大きな改善は、短い確認の積み重ねから始まります。AIと経験を併せて、次の一手を丁寧に選ぶことが大切です。",
-      "",
-      `登場人物: ${normalized.characters}`,
-      `トーン: ${normalized.tone}`,
+      buildNoteClosing(normalized),
     ];
-    if (normalized.inputSparse) {
-      lines.splice(lines.indexOf("## まとめ"), 0, `補足: ${normalized.learningFocus}`, "");
-    }
     return lines.join("\n");
   }
 
