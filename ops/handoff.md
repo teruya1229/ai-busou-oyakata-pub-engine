@@ -26,6 +26,7 @@
 ## Kindle本素材プレビュー（複数章・実装メモ）
 
 - **`buildKindleBookMaterial` / `buildKindleBookPreview`**（`js/kindle-engine.js`）: 複数章のとき **本テーマ**は各章の `chapterTheme` を束ね、**本タイトル**に **（全N章・目次構成案）** を付与。**`bookConcept` / `bookTitleSubtitle`（キーワード推定）・`tocFormatted`・`chapterOrderNote`・`bookClosingPitch`** を追加。プレビューは **本の目次・企画たたき台**を先頭に、従来の **章・学びの詳細（互換）**を末尾に
+- **販売用タイトル候補**: **`inferBookSpineParts`** で章テーマからキーワード軸（顧客と導線／価格と客層／契約と相性）を抽出。**`buildSellableTitleVariants`** が **メイン4案（実話／設計／職人向け実用／シリーズ）**と **サブ4案**を生成し、`sellableMainTitleLines` / `sellableSubtitleLines` として `buildKindleBookMaterial` に載せ、プレビューでは **・** 箇条書きで比較表示
 
 ## 語尾補正（`ensureActionEnding`・実装メモ）
 

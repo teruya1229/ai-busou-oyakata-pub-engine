@@ -493,7 +493,7 @@
     );
   }
 
-  function inferBookSubtitleSpine(chapterMaterials) {
+  function inferBookSpineParts(chapterMaterials) {
     const blob = (chapterMaterials || [])
       .map(function (ch) {
         return compactSpaces(ch && ch.chapterTheme) + " " + compactSpaces(ch && ch.chapterTitle);
@@ -509,7 +509,11 @@
     if (/契約|定期|相性/.test(blob)) {
       parts.push("契約と相性");
     }
-    const uniq = uniqueNonEmpty(parts);
+    return uniqueNonEmpty(parts);
+  }
+
+  function inferBookSubtitleSpine(chapterMaterials) {
+    const uniq = inferBookSpineParts(chapterMaterials);
     if (uniq.length >= 2) {
       return "職人の実話から学ぶ" + uniq.join("・") + "の設計";
     }
@@ -517,6 +521,34 @@
       return "現場の実話から「" + uniq[0] + "」を組み立てる";
     }
     return "";
+  }
+
+  function buildSellableTitleVariants(chapterMaterials, bookTheme, bookTitleSubtitle) {
+    const n = (chapterMaterials || []).length;
+    if (!n) {
+      return { mainLines: [], subLines: [] };
+    }
+    const parts = inferBookSpineParts(chapterMaterials);
+    const themeFallback = compactSpaces(bookTheme) || "現場の学び";
+    const spine = parts.length ? parts.join("・") : themeFallback;
+    const spineShort = spine.length > 52 ? spine.slice(0, 50) + "…" : spine;
+    const chSuffix = n >= 2 ? "（全" + n + "章）" : "";
+
+    const mainLines = [];
+    mainLines.push("【実話寄り】職人の実話から学ぶ" + spine + chSuffix);
+    mainLines.push("【設計寄り】消耗しない仕事の選び方──" + spineShort + chSuffix);
+    mainLines.push("【職人向け実用寄り】現場ですぐ使える" + spine + "の決め方" + chSuffix);
+    mainLines.push("【AI武装親方シリーズ寄り】AI武装親方｜現場で学んだ" + spine + chSuffix);
+
+    const subLines = [];
+    if (compactSpaces(bookTitleSubtitle)) {
+      subLines.push("【実話寄り】（キーワード推定）" + bookTitleSubtitle);
+    }
+    subLines.push("【設計寄り】紹介が生まれる客層設計──現場のズレを仕組みにする");
+    subLines.push("【職人向け実用寄り】現場メモから1冊へ──学びをそのまま原稿にする");
+    subLines.push("【AI武装親方シリーズ寄り】照屋親方とコパイロットの現場仕事帖");
+
+    return { mainLines: mainLines, subLines: subLines };
   }
 
   function buildChapterOrderNote(chapterMaterials) {
@@ -805,6 +837,7 @@
 
     const bookConcept = buildBookConcept(chapterMaterials);
     const bookTitleSubtitle = inferBookSubtitleSpine(chapterMaterials);
+    const sellableTitles = buildSellableTitleVariants(chapterMaterials, bookTheme, bookTitleSubtitle);
     const chapterOrderNote = buildChapterOrderNote(chapterMaterials);
     const tocFormatted = buildBookTocFormatted(chapterMaterials);
     const bookClosingPitch = buildBookClosingPitch(chapterMaterials, keyInsights);
@@ -819,6 +852,8 @@
       endingOutline: endingOutline,
       bookConcept: bookConcept,
       bookTitleSubtitle: bookTitleSubtitle,
+      sellableMainTitleLines: sellableTitles.mainLines,
+      sellableSubtitleLines: sellableTitles.subLines,
       chapterOrderNote: chapterOrderNote,
       tocFormatted: tocFormatted,
       bookClosingPitch: bookClosingPitch,
@@ -844,19 +879,40 @@
       return (index + 1).toString() + ". " + line;
     });
 
-    const subtitleBlock =
-      compactSpaces(material.bookTitleSubtitle) !== ""
-        ? ["■ 本タイトル候補（サブ）", material.bookTitleSubtitle, ""]
+    const sellableMainBlock =
+      (material.sellableMainTitleLines || []).length > 0
+        ? [
+            "■ 販売用タイトル候補（メイン・切り口別・比較）",
+            material.sellableMainTitleLines
+              .map(function (line) {
+                return "・" + line;
+              })
+              .join("\n"),
+            "",
+          ]
+        : [];
+    const sellableSubBlock =
+      (material.sellableSubtitleLines || []).length > 0
+        ? [
+            "■ 販売用サブタイトル候補（切り口別・比較）",
+            material.sellableSubtitleLines
+              .map(function (line) {
+                return "・" + line;
+              })
+              .join("\n"),
+            "",
+          ]
         : [];
 
     return [
       "【Kindle本素材プレビュー】（本の目次・企画たたき台）",
       "",
-      "■ 本タイトル候補（メイン）",
+      "■ 本タイトル候補（メイン・既定の構成案）",
       material.bookTitle,
       "",
     ]
-      .concat(subtitleBlock)
+      .concat(sellableMainBlock)
+      .concat(sellableSubBlock)
       .concat([
         "■ 本のコンセプト",
         material.bookConcept,
