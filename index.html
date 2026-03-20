@@ -96,24 +96,28 @@
 
       <section class="card">
         <h2>4コマ漫画プレビュー</h2>
+        <p style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
+          外部で生成した4コマ1枚画像のURL、または <code style="font-size: 13px">data:image/...</code> を貼り付けて確認できます。
+        </p>
         <div class="field">
-          <label for="comic-image-url">4コマ漫画画像（URL または data URL）</label>
-          <input
+          <label for="comic-image-url">4コマ漫画画像URL</label>
+          <textarea
             id="comic-image-url"
-            type="text"
+            rows="4"
             autocomplete="off"
-            placeholder="https://... または data:image/png;base64,..."
-          />
+            spellcheck="false"
+            placeholder="https://...&#10;または&#10;data:image/png;base64,..."
+          ></textarea>
         </div>
         <div class="actions">
-          <button type="button" id="comic-image-apply-btn">プレビューに反映</button>
+          <button type="button" id="comic-image-apply-btn">4コマ画像を表示</button>
         </div>
         <p id="comic-image-preview-status" class="output-block" style="min-height: auto; margin-top: 8px; font-size: 14px; color: #6b7280">
-          画像URLまたは data URL を入力し、「プレビューに反映」を押してください。
+          URL または data URL を入力し、「4コマ画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。
         </p>
         <div
           id="comic-image-preview-wrap"
-          style="margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; padding: 12px; text-align: center"
+          style="display: none; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; padding: 12px; text-align: center"
         >
           <img
             id="comic-image-preview"

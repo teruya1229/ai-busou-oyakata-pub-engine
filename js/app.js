@@ -17,10 +17,12 @@
   const chapterEpisodesField = document.getElementById("chapter-episodes");
   const comicImageUrlInput = document.getElementById("comic-image-url");
   const comicImageApplyBtn = document.getElementById("comic-image-apply-btn");
+  const comicImagePreviewWrap = document.getElementById("comic-image-preview-wrap");
   const comicImagePreview = document.getElementById("comic-image-preview");
   const comicImagePreviewStatus = document.getElementById("comic-image-preview-status");
 
-  const COMIC_PREVIEW_STATUS_IDLE = "画像URLまたは data URL を入力し、「プレビューに反映」を押してください。";
+  const COMIC_PREVIEW_STATUS_IDLE =
+    "URL または data URL を入力し、「4コマ画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。";
   const COMIC_PREVIEW_STATUS_LOADING = "読み込み中…";
 
   const exampleData = {
@@ -232,8 +234,8 @@
       comicImagePreview.onload = null;
       comicImagePreview.onerror = null;
       comicImagePreview.removeAttribute("src");
-      hideComicImagePreview();
     }
+    hideComicImagePreview();
     if (comicImagePreviewStatus) {
       comicImagePreviewStatus.textContent = COMIC_PREVIEW_STATUS_IDLE;
       comicImagePreviewStatus.style.color = "#6b7280";
@@ -244,6 +246,9 @@
     if (comicImagePreview) {
       comicImagePreview.style.display = "none";
     }
+    if (comicImagePreviewWrap) {
+      comicImagePreviewWrap.style.display = "none";
+    }
   }
 
   function applyComicImagePreview() {
@@ -252,12 +257,7 @@
     }
     const trimmed = (comicImageUrlInput.value || "").trim();
     if (!trimmed) {
-      comicImagePreviewStatus.textContent = "URL または data URL を入力してください。";
-      comicImagePreviewStatus.style.color = "#b45309";
-      comicImagePreview.onload = null;
-      comicImagePreview.onerror = null;
-      comicImagePreview.removeAttribute("src");
-      hideComicImagePreview();
+      resetComicImagePreview();
       return;
     }
     if (!isAllowedComicImageSource(trimmed)) {
@@ -277,6 +277,9 @@
       comicImagePreview.onload = null;
       comicImagePreview.onerror = null;
       comicImagePreview.style.display = "block";
+      if (comicImagePreviewWrap) {
+        comicImagePreviewWrap.style.display = "block";
+      }
       comicImagePreviewStatus.textContent = "画像を表示しています。";
       comicImagePreviewStatus.style.color = "#6b7280";
     };
@@ -392,6 +395,15 @@
   if (comicImageApplyBtn) {
     comicImageApplyBtn.addEventListener("click", function () {
       applyComicImagePreview();
+    });
+  }
+
+  if (comicImageUrlInput) {
+    comicImageUrlInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        applyComicImagePreview();
+      }
     });
   }
 
