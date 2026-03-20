@@ -33,9 +33,9 @@
   const COMIC_IMAGE_DUMMY_1PX_PNG =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6X9Z8kAAAAASUVORK5CYII=";
 
-  /* 仮・画像生成API URL（1箇所で差し替え）。空なら「4コマ画像を生成」は案内のみ。例: http://127.0.0.1:8787/api/comic-image */
+  /* 画像生成API（1箇所で差し替え）。ローカル既定。本番例: https://your-domain.com/api/comic-image */
   const COMIC_IMAGE_API_CONFIG = {
-    url: "",
+    url: "http://127.0.0.1:8787/api/comic-image",
   };
 
   const exampleData = {

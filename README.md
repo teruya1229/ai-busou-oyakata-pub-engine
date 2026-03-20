@@ -30,9 +30,12 @@ ai-busou-oyakata-pub-engine/
 2. 入力欄を埋めて「構成を生成」を押す
 3. 生成された3つの出力を必要に応じてコピーする
 
-## 4コマ画像生成API（仮・最小接続）
-- `js/app.js` の **`COMIC_IMAGE_API_CONFIG.url`** に POST 先を入れると「4コマ画像を生成」から `fetch` します（空のままでは案内メッセージのみ）。
-- 想定レスポンス: JSON の **`imageSrc`** または **`dataUrl`** に **data URL 1本**（推奨）。リクエスト本文は **`{ "prompt": "統合プロンプト文字列" }`**。
+## 4コマ画像生成API（推奨仕様・フロント既定）
+- **ローカル既定**: `http://127.0.0.1:8787/api/comic-image`（`js/app.js` の **`COMIC_IMAGE_API_CONFIG.url`**）。本番では例として **`https://your-domain.com/api/comic-image`** へ差し替え。
+- **HTTP**: `POST`。**認証**: 初期はなし（将来は同じ `COMIC_IMAGE_API_CONFIG` と `fetch` の `headers` に最小で足す想定）。
+- **リクエスト本文**: `{ "prompt": "4コマ漫画を描いてください。1コマ目: ..." }` のように **プロンプト文字列**を `prompt` に入れる。
+- **レスポンス本文（成功）**: `{ "imageSrc": "data:image/png;base64,..." }`。**正式キーは `imageSrc`**。将来 **HTTPS の画像URL** を返す場合も **同じ `imageSrc` キー**で返せる（フロントのプレビューはそのまま利用可）。
+- 実装互換として **`dataUrl`** キーにも対応しているが、API新設時は **`imageSrc` を優先**すること。
 
 ## 評価用ファイル
 - 代表ケース: `samples/test-cases.js`

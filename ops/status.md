@@ -494,3 +494,13 @@
 
 ## 現在の状態（確認整理後・コード無変更）
 - 実装ロジックはそのまま。接続前に決めるべき事項と差し替えポイントは **`ops/handoff.md` の「実API接続・仕様確認チェックリスト」** を参照
+
+## 今日やったこと（推奨API仕様への既定値・文書整合）
+- `COMIC_IMAGE_API_CONFIG.url` を **`http://127.0.0.1:8787/api/comic-image`** に固定（本番URL例はコメント・README に最小記載）
+- `requestComicImage` / `normalizeComicImageApiPayload` は **POST・`{ prompt }`・`{ imageSrc }`** と既に整合のため未変更
+- `README.md` に推奨仕様（認証なし・正式キー `imageSrc`・将来HTTPS URLも同キー）を明記
+- `ops/handoff.md` を更新（次の1手＝**このURLで応答するAPI本体**、フロントはほぼ準備完了）
+
+## 現在の状態（API既定URL固定後）
+- 「4コマ画像を生成」は既定でローカル `8787` を叩く。**APIサーバ未起動時は fetch 失敗メッセージ**
+- 手入力プレビュー・4コマ / note / X / Kindle 導線は維持

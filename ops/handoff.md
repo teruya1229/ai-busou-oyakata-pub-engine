@@ -6,7 +6,7 @@
 
 | 観点 | 現状（コード上の事実） | 確定時に決めること |
 |------|------------------------|----------------------|
-| **URL** | `COMIC_IMAGE_API_CONFIG.url`（空＝未接続） | 本番/検証の絶対URL。パスにバージョン（`/v1/...`）を含めるか |
+| **URL** | 既定 **`http://127.0.0.1:8787/api/comic-image`**（`COMIC_IMAGE_API_CONFIG.url`）。本番は README 例のとおり差し替え | 運用ドメイン確定後に `url` のみ更新 |
 | **HTTP method** | `POST` 固定（`requestComicImage`） | `GET` 等なら `fetch` の `method` を変更 |
 | **request body** | `JSON.stringify({ prompt: promptText })` | キー名が `text` / `input` / `messages` 等なら **この1行** を合わせる |
 | **認証** | `Content-Type: application/json` のみ | `Authorization` / `x-api-key` 等が要るなら **`fetch` の `headers`** に追加。**シークレットはリポジトリに載せない**（.env・別設定・手入力など運用で決める） |
@@ -16,18 +16,21 @@
 
 ### コード内の差し替えポイント（ファイル: `js/app.js`）
 
-1. **`COMIC_IMAGE_API_CONFIG`** … 現状は `{ url: "" }` のみ。認証用の **ヘッダテンプレ** を足すならここに寄せるのが自然。
+1. **`COMIC_IMAGE_API_CONFIG`** … 既定でローカル URL 済み。認証用の **ヘッダテンプレ** を足すならここに寄せるのが自然。
 2. **`requestComicImage`** … `method` / `headers` / `body`（JSON形）の **3点** がAPI契約の本体。
 3. **`normalizeComicImageApiPayload`** … レスポンスの **キー名・ネスト** をここだけで吸収し、その先は既存の **`applyComicImageResult`** に任せる。
 
 ### README / ops にある「仮仕様」の要約
 
-- **README**: POST 先は `COMIC_IMAGE_API_CONFIG.url`。req は **`{ "prompt": "統合プロンプト文字列" }`**。res は **`imageSrc` または `dataUrl`** に **data URL 1本を推奨**（HTTPS画像URLもプレビュー許容）。
-- **ops/status.md**: 上記に加え、生成用テキスト優先・未設定時は案内表示・認証ヘッダ未実装である旨の記録あり。**正式なベンダ仕様書は未記載**（プロジェクト内に固定エンドポイントの正はまだない）。
+- **README**: POST。req **`{ "prompt": "..." }`**。res 成功時 **`{ "imageSrc": "data:image/png;base64,..." }`**（正式キー。**HTTPS画像URL** も将来同じ `imageSrc` で返却可能）。初期認証なし。互換で `dataUrl` も解釈可。
+- **ops/status.md**: フロント既定 URL 固定済み。**次はバックエンド**：下記「次にやるべき1手」。
 
-## 次にやるべき1手（どれか1つだけに絞る）
-- **仕様固定**：実運用の画像生成APIの **URL・認証・レスポンス形（`imageSrc` / `dataUrl` 以外があるか）** を1枚のメモに固定し、`COMIC_IMAGE_API_CONFIG` をその前提に合わせて最小修正する
-- または **ローカル画像**：ファイル選択で `FileReader.readAsDataURL` → 既存 **`applyComicImageResult`** への導線だけ追加する（fetch は触らない）
+## 次にやるべき1手
+- **このURLで応答するAPI本体を用意する**（例: `POST http://127.0.0.1:8787/api/comic-image` が `{ "prompt": "..." }` を受け、`{ "imageSrc": "data:image/..." }` または将来は同キーで HTTPS URL を返す）。
+- **フロント側**は既定URL・req/res 形に沿って **ほぼ準備完了**（`applyComicImageResult` まで接続済み）。CORS は API 側または同一オリジン配信で調整。
+
+## その次の候補（1つに絞ってから着手）
+- **ローカル画像**：ファイル選択で `FileReader.readAsDataURL` → **`applyComicImageResult`**（fetch 不要な検証用）
 
 ## 判断基準
 - **API側の契約が固まった**なら、まず `COMIC_IMAGE_API_CONFIG.url` と **必要なヘッダ1〜2個**（例: `Authorization`）だけ足す。リトライや設定UIはまだ作らない
