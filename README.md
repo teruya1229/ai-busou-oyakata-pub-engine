@@ -30,6 +30,10 @@ ai-busou-oyakata-pub-engine/
 2. 入力欄を埋めて「構成を生成」を押す
 3. 生成された3つの出力を必要に応じてコピーする
 
+## 4コマ画像生成API（仮・最小接続）
+- `js/app.js` の **`COMIC_IMAGE_API_CONFIG.url`** に POST 先を入れると「4コマ画像を生成」から `fetch` します（空のままでは案内メッセージのみ）。
+- 想定レスポンス: JSON の **`imageSrc`** または **`dataUrl`** に **data URL 1本**（推奨）。リクエスト本文は **`{ "prompt": "統合プロンプト文字列" }`**。
+
 ## 評価用ファイル
 - 代表ケース: `samples/test-cases.js`
 - 評価基準: `docs/evaluation-guide.md`

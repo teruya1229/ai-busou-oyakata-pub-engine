@@ -22,6 +22,8 @@
   const comicImagePreviewWrap = document.getElementById("comic-image-preview-wrap");
   const comicImagePreview = document.getElementById("comic-image-preview");
   const comicImagePreviewStatus = document.getElementById("comic-image-preview-status");
+  const comicImageApiStatus = document.getElementById("comic-image-api-status");
+  const comicImageGenerateBtn = document.getElementById("comic-image-generate-btn");
 
   const COMIC_PREVIEW_STATUS_IDLE =
     "URL または data URL を入力し、「4コマ画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。";
@@ -30,6 +32,11 @@
   /* 将来APIの戻り（data URL 1本）を試す用: 1×1 PNG */
   const COMIC_IMAGE_DUMMY_1PX_PNG =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6X9Z8kAAAAASUVORK5CYII=";
+
+  /* 仮・画像生成API URL（1箇所で差し替え）。空なら「4コマ画像を生成」は案内のみ。例: http://127.0.0.1:8787/api/comic-image */
+  const COMIC_IMAGE_API_CONFIG = {
+    url: "",
+  };
 
   const exampleData = {
     theme: "段取り確認とAI活用",
@@ -267,11 +274,144 @@
     if (typeof raw === "object" && raw !== null && typeof raw.imageSrc === "string") {
       return normalizeComicImageResult(raw.imageSrc);
     }
+    if (typeof raw === "object" && raw !== null && typeof raw.dataUrl === "string") {
+      return normalizeComicImageResult(raw.dataUrl);
+    }
     return {
       ok: false,
       imageSrc: "",
-      reason: "文字列、または { imageSrc: string } のみ対応しています。",
+      reason: "文字列、{ imageSrc }、{ dataUrl } のみ対応しています。",
     };
+  }
+
+  function getComicUnifiedPromptText() {
+    if (!outputs.comicUnifiedPrompt) {
+      return "";
+    }
+    const t = (outputs.comicUnifiedPrompt.textContent || "").trim();
+    if (!t || t === OUTPUT_PLACEHOLDER || t.indexOf("4コマ統合画像プロンプトを生成できませんでした") >= 0) {
+      return "";
+    }
+    return outputs.comicUnifiedPrompt.textContent || "";
+  }
+
+  function getPromptTextForComicImageApi() {
+    const draft = (comicGenPromptDraft && comicGenPromptDraft.value) || "";
+    if (draft.trim()) {
+      return draft.trim();
+    }
+    return getComicUnifiedPromptText().trim();
+  }
+
+  function normalizeComicImageApiPayload(json) {
+    if (!json || typeof json !== "object") {
+      return null;
+    }
+    const a = json.imageSrc;
+    const b = json.dataUrl;
+    if (typeof a === "string" && a.trim()) {
+      return normalizeComicImageResult(a.trim());
+    }
+    if (typeof b === "string" && b.trim()) {
+      return normalizeComicImageResult(b.trim());
+    }
+    return null;
+  }
+
+  function setComicImageApiStatus(message, color) {
+    if (!comicImageApiStatus) {
+      return;
+    }
+    comicImageApiStatus.textContent = message || "";
+    comicImageApiStatus.style.color = color || "#6b7280";
+  }
+
+  function clearComicImageApiStatus() {
+    setComicImageApiStatus("", "#6b7280");
+  }
+
+  async function requestComicImage(promptText) {
+    const url = (COMIC_IMAGE_API_CONFIG.url || "").trim();
+    if (!url) {
+      return {
+        ok: false,
+        reason:
+          "画像生成APIのURLが未設定です。js/app.js の COMIC_IMAGE_API_CONFIG.url に仮または本番のエンドポイントを設定してください。",
+      };
+    }
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: promptText }),
+    });
+    let json = null;
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    if (ct.indexOf("application/json") >= 0) {
+      try {
+        json = await res.json();
+      } catch (e) {
+        return { ok: false, reason: "APIの応答をJSONとして解釈できませんでした。" };
+      }
+    } else {
+      try {
+        const raw = (await res.text()).trim();
+        if (raw) {
+          json = JSON.parse(raw);
+        }
+      } catch (e) {
+        return {
+          ok: false,
+          reason: "APIがJSON以外を返しました（HTTP " + res.status + "）。",
+        };
+      }
+    }
+    if (!res.ok) {
+      return {
+        ok: false,
+        reason: "APIエラー（HTTP " + res.status + "）。応答内容を確認してください。",
+      };
+    }
+    const normalized = normalizeComicImageApiPayload(json);
+    if (!normalized || !normalized.ok) {
+      return {
+        ok: false,
+        reason: "APIのJSONに imageSrc または dataUrl（data URL 推奨）がありません。",
+      };
+    }
+    return { ok: true, imageSrc: normalized.imageSrc };
+  }
+
+  async function generateComicImageFromPrompt() {
+    const promptText = getPromptTextForComicImageApi();
+    if (!promptText) {
+      setComicImageApiStatus(
+        "プロンプトがありません。「構成を生成」するか「生成用入力へ転記」し、生成用テキスト欄に内容がある状態にしてください。",
+        "#b45309",
+      );
+      return;
+    }
+    if (comicImageGenerateBtn) {
+      comicImageGenerateBtn.disabled = true;
+    }
+    setComicImageApiStatus("画像を生成しています…", "#6b7280");
+    try {
+      const result = await requestComicImage(promptText);
+      if (!result.ok) {
+        setComicImageApiStatus(result.reason || "画像の取得に失敗しました。", "#b91c1c");
+        return;
+      }
+      clearComicImageApiStatus();
+      applyComicImageResult(result.imageSrc);
+    } catch (e) {
+      setComicImageApiStatus(
+        "通信に失敗しました（ネットワーク・CORS・URL）。ローカルで file:// から開いている場合は同一オリジンまたはCORS設定を確認してください。",
+        "#b91c1c",
+      );
+    } finally {
+      if (comicImageGenerateBtn) {
+        comicImageGenerateBtn.disabled = false;
+      }
+    }
   }
 
   /* 正規化 → #comic-image-url へ代入 → applyComicImagePreview */
@@ -313,6 +453,10 @@
     if (comicImagePreviewStatus) {
       comicImagePreviewStatus.textContent = COMIC_PREVIEW_STATUS_IDLE;
       comicImagePreviewStatus.style.color = "#6b7280";
+    }
+    clearComicImageApiStatus();
+    if (comicImageGenerateBtn) {
+      comicImageGenerateBtn.disabled = false;
     }
   }
 
@@ -489,7 +633,16 @@
     normalizeComicImageResult: normalizeComicImageResult,
     applyComicImageResult: applyComicImageResult,
     DUMMY_1PX_PNG_DATA_URL: COMIC_IMAGE_DUMMY_1PX_PNG,
+    COMIC_IMAGE_API_CONFIG: COMIC_IMAGE_API_CONFIG,
+    requestComicImage: requestComicImage,
+    generateComicImageFromPrompt: generateComicImageFromPrompt,
   };
+
+  if (comicImageGenerateBtn) {
+    comicImageGenerateBtn.addEventListener("click", function () {
+      generateComicImageFromPrompt();
+    });
+  }
 
   if (comicImageUrlInput) {
     comicImageUrlInput.addEventListener("keydown", function (e) {

@@ -473,3 +473,17 @@
 ## 現在の状態（薄いアダプター追加後）
 - 手入力プレビューはそのまま。API返却は **正規化→`comic-image-url` へ代入→既存 `applyComicImagePreview`** の経路で接続可能
 - 本格 HTTP クライアント・認証・サービス選定は未着手
+
+## 今日やったこと（2026-03-20：最小 fetch による4コマ画像生成接続）
+- `js/app.js` に **`COMIC_IMAGE_API_CONFIG`**（仮URL・1箇所管理）と **`requestComicImage` / `generateComicImageFromPrompt`** を追加
+- POST JSON **`{ prompt }`**、応答 JSON の **`imageSrc` または `dataUrl`** を **`applyComicImageResult`** へ流す（data URL 推奨）
+- `index.html` に **「4コマ画像を生成」** と API 用の短い状態表示行を追加
+- **`getPromptTextForComicImageApi`** は生成用テキスト欄を優先し、空なら統合プロンプト（`pre`）を利用
+- API URL 未設定・通信失敗・JSON不正時は **日本語の短文** で `comic-image-api-status` に表示
+- **`normalizeComicImageResult`** に **`{ dataUrl }`** を追加。`AIBusouComicImageAdapter` に `requestComicImage` / `generateComicImageFromPrompt` / `COMIC_IMAGE_API_CONFIG` を公開
+- `README.md` に仮APIの設定欄と想定ペイロードを最小追記
+- `ops/handoff.md` を更新（`js/engine.js` `js/kindle-engine.js` は未変更）
+
+## 現在の状態（最小 fetch 接続後）
+- 手入力・転記・テスト用 data URL 反映は維持。実サーバを **`COMIC_IMAGE_API_CONFIG.url`** に載せれば **統合プロンプト系文字列 → API → プレビュー** が1本で試せる
+- 認証ヘッダ・複数ベンダ対応・本番運用設計は未着手

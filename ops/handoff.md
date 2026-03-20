@@ -1,30 +1,29 @@
 # handoff
 
-## 次にやるべき1手（どちらか一方だけ）
-- **A)** 選んだ画像生成APIの **fetch（または公式SDKの1呼び出し）** だけを `js/app.js` に足し、レスポンスから **data URL 1本**（推奨）を組み立てたうえで `AIBusouComicImageAdapter.applyComicImageResult(...)` を呼ぶ
-- **B)** URL / data URL に加え、**ローカル画像（ファイル選択 or ドラッグ）** を `FileReader` で `data:` にし、同じアダプターまたは既存欄へ流す最小導線を足す
+## 次にやるべき1手（どれか1つだけに絞る）
+- **仕様固定**：実運用の画像生成APIの **URL・認証・レスポンス形（`imageSrc` / `dataUrl` 以外があるか）** を1枚のメモに固定し、`COMIC_IMAGE_API_CONFIG` をその前提に合わせて最小修正する
+- または **ローカル画像**：ファイル選択で `FileReader.readAsDataURL` → 既存 **`applyComicImageResult`** への導線だけ追加する（fetch は触らない）
 
 ## 判断基準
-- **ホスト制約・CORS・トークン** が既に決まっているなら A を先に。まだサービス未定なら B でオフライン確認を厚くするのが安全
-- APIが **バイナリBlob** しか返さない場合は、`FileReader.readAsDataURL` などで **最終的に data URL 1本** に寄せてから `applyComicImageResult` へ渡す（正規化はアダプター外でも可）
-- **共通**：4コマ / note / X / Kindle と `js/kindle-engine.js` を壊さない。`javascript:` 等は引き続き拒否
+- **API側の契約が固まった**なら、まず `COMIC_IMAGE_API_CONFIG.url` と **必要なヘッダ1〜2個**（例: `Authorization`）だけ足す。リトライや設定UIはまだ作らない
+- **file:// で開いてCORSで詰まる**なら、同一オリジンで `index.html` を配る、またはAPIでCORSを許可する（実装範囲はインフラ次第）
+- **共通**：4コマ / note / X / Kindle と `js/kindle-engine.js` を壊さない
 
 ## 注意点
-- 既存の手入力・「4コマ画像を表示」・リセットは維持すること
-- `normalizeComicImageResult` の分岐を増やしすぎない（まず **string / { imageSrc }** で足りる見込み）
-- 本格のリトライ・キュー・設定画面は「今回やらない」に戻す
+- `requestComicImage` は **JSON の `imageSrc` または `dataUrl`** のみ想定。別形が返るなら **ここだけ** 正規化を足す（分岐の森にしない）
+- **`normalizeComicImageResult` の `javascript:` 拒否**は維持する
+- リセットは **`resetComicImagePreview`** が API ステータスと生成ボタン disabled も戻す
 
 ## 今回やらないこと
-- 永続化（保存/履歴）
-- APIの選定・認証基盤・エラー設計の一式
-- Kindle用出力の変更
-- 複数画面化・大規模抽象化
+- 永続化・生成履歴の本実装
+- 複数APIプロバイダの抽象層
+- Kindle / note / X の変更
 
 ## 実装方針
-- ルールベースMVPを維持し、Kindleは `js/kindle-engine.js` に寄せる
-- UIは「追加ボタン・1行説明」程度に抑え、フレームワーク化しない
+- ルールベースMVPを維持し、Kindleは `js/kindle-engine.js`
+- 画像まわりは `js/app.js` の **定数＋数関数** に留める
 
 ## 次の拡張候補
-- APIキーを `prompt` ではなく入力欄1つに置く（最小）
-- 429/5xx のユーザー向け一言メッセージ
-- 生成履歴（将来）
+- APIキー用の入力欄1つ（localStorage は慎重に）
+- 429/5xx のユーザー向け一言
+- 生成結果のコピーボタン（data URL 用・注意書き付き）
