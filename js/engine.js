@@ -1,6 +1,13 @@
 (function () {
   const templates = window.AIBusouTemplates;
 
+  const COMIC_PANEL_LABELS = {
+    p1: "1コマ目（状況）",
+    p2: "2コマ目（違和感）",
+    p3: "3コマ目（気づき）",
+    p4: "4コマ目（前進）",
+  };
+
   function safeText(value, fallback) {
     return (value || "").toString().trim() || fallback;
   }
@@ -158,6 +165,76 @@
     };
   }
 
+  function isReviewComicContext(normalized) {
+    const src = (normalized.theme + " " + normalized.incident).toLowerCase();
+    return src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0;
+  }
+
+  function shortComicSceneLines(pattern, reviewMode) {
+    if (reviewMode) {
+      return {
+        p2: "仲は良い。でも口コミは来ない。",
+        p3: "満足と、行動は別。気づく。",
+        p4: "満足直後に、導線を置く。一歩前へ。",
+      };
+    }
+    const m = {
+      誤解型: {
+        p2: "伝わってない。前提がズレる。",
+        p3: "言葉で起点を揃える。",
+        p4: "小さな確認で、次の一歩へ。",
+      },
+      ヒヤリ型: {
+        p2: "一瞬の油断で、空気が張る。",
+        p3: "止めて、手順を見直す。",
+        p4: "急がないほうが、結果的に早い。",
+      },
+      気づき型: {
+        p2: "小さなズレが、じわじわ効く。",
+        p3: "小さな工夫で、リズムが戻る。",
+        p4: "改善を積む。明日の余裕が増える。",
+      },
+    };
+    const row = m[pattern.name];
+    if (row) {
+      return row;
+    }
+    return {
+      p2: pattern.panel2,
+      p3: pattern.panel3,
+      p4: pattern.panel4,
+    };
+  }
+
+  function comicPanel3Dialogue(toneData, protagonist, partner) {
+    const oyk = compactSpaces(toneData.oykataShort || toneData.oykataLine);
+    const ptr = compactSpaces(toneData.partnerShort || toneData.copilotReaction);
+    const copShort = compactSpaces(toneData.copilotShort || toneData.copilotQuestion);
+    if (toneData.copilotRole === "lead") {
+      return [`${partner}: ${copShort}`, `${protagonist}: ${oyk}`];
+    }
+    if (toneData.copilotRole === "low") {
+      return [`${protagonist}: ${oyk}`, `${partner}: ${ptr}`];
+    }
+    return [`${protagonist}: ${oyk}`, `${partner}: ${ptr}`];
+  }
+
+  function comicPanel2PartnerLine(normalized, toneData, partner) {
+    if (normalized.corePhrase) {
+      return `${partner}: 「${normalized.corePhrase}」`;
+    }
+    return `${partner}: ${toneData.copilotShort || toneData.copilotQuestion}`;
+  }
+
+  function getComicPanelMetaForExtraction() {
+    return [
+      { number: 1, start: COMIC_PANEL_LABELS.p1, next: COMIC_PANEL_LABELS.p2, name: "状況" },
+      { number: 2, start: COMIC_PANEL_LABELS.p2, next: COMIC_PANEL_LABELS.p3, name: "違和感" },
+      { number: 3, start: COMIC_PANEL_LABELS.p3, next: COMIC_PANEL_LABELS.p4, name: "気づき" },
+      { number: 4, start: COMIC_PANEL_LABELS.p4, next: "", name: "前進" },
+    ];
+  }
+
   function buildComic(input) {
     const normalized = normalizeInput(input);
     const toneData = templates.toneTemplates[normalized.tone];
@@ -165,56 +242,42 @@
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const protagonist = templates.characterProfile.protagonist.name;
     const partner = templates.characterProfile.partner.name;
-    const copilotRole = toneData.copilotRole;
-
-    let panel3Conversation = [
-      `${protagonist}: ${toneData.oykataLine}${toneData.lineEnd}`,
-      `${partner}: ${toneData.copilotReaction}`,
-    ];
-    if (copilotRole === "low") {
-      panel3Conversation = [
-        `${protagonist}: ${toneData.oykataLine}${toneData.lineEnd}`,
-        `${partner}: 「要点を記録し、次回の確認項目に反映します」`,
-      ];
-    } else if (copilotRole === "lead") {
-      panel3Conversation = [
-        `${partner}: ${toneData.copilotQuestion}`,
-        `${protagonist}: ${toneData.oykataLine}${toneData.lineEnd}`,
-      ];
-    }
-
+    const reviewMode = isReviewComicContext(normalized);
+    const rawInc = trimOptional(input.incident);
+    const incidentForComic = rawInc ? ensurePeriod(rawInc) : normalized.incident;
+    const scenes = shortComicSceneLines(pattern, reviewMode);
+    const panel3Conversation = comicPanel3Dialogue(toneData, protagonist, partner);
+    const panel2PartnerLine = comicPanel2PartnerLine(normalized, toneData, partner);
     const learningForPanel4 = normalized.coreConclusion || normalized.learning;
-    const panel1Head = [`1コマ目（導入）`];
-    if (normalized.coreMain) {
-      panel1Head.push(normalized.coreMain);
+
+    const panel1Lines = [COMIC_PANEL_LABELS.p1];
+    if (normalized.coreMain && !reviewMode) {
+      panel1Lines.push(normalized.coreMain);
     }
-    panel1Head.push(
-      `${toneData.narratorLead}`,
-      `${protagonist}と${partner}が現場を見回す。`,
-      `状況: ${normalized.incident}`,
-    );
-    const panel2PartnerLine = normalized.corePhrase
-      ? `${partner}: 「${normalized.corePhrase}」`
-      : `${partner}: ${toneData.copilotQuestion}`;
+    panel1Lines.push(`状況: ${incidentForComic}`);
+
+    const panel3Lines = [COMIC_PANEL_LABELS.p3];
+    if (reviewMode && normalized.coreMain) {
+      panel3Lines.push(normalized.coreMain);
+    }
+    panel3Lines.push(scenes.p3);
+    panel3Lines.push(panel3Conversation[0]);
+    panel3Lines.push(panel3Conversation[1]);
 
     return [
       `【タイトル】${leadTitle}`,
-      `【型】${pattern.name}`,
       "",
-      panel1Head.join("\n"),
+      panel1Lines.join("\n"),
       "",
-      "2コマ目（問題発生）",
-      pattern.panel2,
+      COMIC_PANEL_LABELS.p2,
+      scenes.p2,
       panel2PartnerLine,
       "",
-      "3コマ目（気づき）",
-      pattern.panel3,
-      panel3Conversation[0],
-      panel3Conversation[1],
+      panel3Lines.join("\n"),
       "",
-      "4コマ目（学び）",
+      COMIC_PANEL_LABELS.p4,
       `学び: ${learningForPanel4}`,
-      pattern.panel4,
+      scenes.p4,
     ].join("\n");
   }
 
@@ -263,16 +326,16 @@
     });
 
     const expressionByPanel = {
-      1: "導入の観察表情、落ち着いた雰囲気",
-      2: "戸惑いと緊張が少し出る表情",
+      1: "状況を受け止める表情、落ち着いた雰囲気",
+      2: "違和感が少し出る表情",
       3: "気づきが生まれる真剣な表情",
-      4: "納得して前向きな表情",
+      4: "納得して前を向く表情",
     };
     const compositionByPanel = {
-      1: "中景、2人を中心にした導入カット",
-      2: "やや寄り、問題点が分かる構図",
+      1: "中景、状況が伝わるカット",
+      2: "やや寄り、ズレや違和感が分かる構図",
       3: "会話が読み取りやすい対話構図",
-      4: "引き気味、学びで締める安定構図",
+      4: "引き気味、前進で締める安定構図",
     };
 
     return [
@@ -291,12 +354,7 @@
     const normalized = normalizeInput(input);
     const comicText = buildComic(input);
     const styleGuide = templates.characterProfile.comicStyle.join("、");
-    const panelMeta = [
-      { number: 1, start: "1コマ目（導入）", next: "2コマ目（問題発生）", name: "導入" },
-      { number: 2, start: "2コマ目（問題発生）", next: "3コマ目（気づき）", name: "問題発生" },
-      { number: 3, start: "3コマ目（気づき）", next: "4コマ目（学び）", name: "気づき" },
-      { number: 4, start: "4コマ目（学び）", next: "", name: "学び" },
-    ];
+    const panelMeta = getComicPanelMetaForExtraction();
 
     const panelBlocks = panelMeta.map(function (meta) {
       const lines = extractComicPanelBlock(comicText, meta.start, meta.next);
@@ -312,12 +370,7 @@
     const styleGuide = templates.characterProfile.comicStyle.join("、");
     const protagonist = templates.characterProfile.protagonist.name;
     const partner = templates.characterProfile.partner.name;
-    const panelMeta = [
-      { number: 1, start: "1コマ目（導入）", next: "2コマ目（問題発生）", name: "導入" },
-      { number: 2, start: "2コマ目（問題発生）", next: "3コマ目（気づき）", name: "問題発生" },
-      { number: 3, start: "3コマ目（気づき）", next: "4コマ目（学び）", name: "気づき" },
-      { number: 4, start: "4コマ目（学び）", next: "", name: "学び" },
-    ];
+    const panelMeta = getComicPanelMetaForExtraction();
 
     const panelSummaries = panelMeta.map(function (meta) {
       const lines = extractComicPanelBlock(comicText, meta.start, meta.next);
@@ -347,7 +400,7 @@
       "これは1枚のポスター・1枚イラスト・全面一枚絵ではない。4コマ漫画（4-panel comic strip）を1枚のキャンバスにまとめた図として描く。",
       "レイアウト必須: 2行×2列（2x2）の等分パネル。各コマは白い枠線または薄い仕切り線で境界をはっきり分け、パネル同士が溶け合わないようにする。",
       "読み順の固定: 左上が1コマ目、右上が2コマ目、左下が3コマ目、右下が4コマ目（日本語の横書きZ字読み）。",
-      "ストーリー性: 各コマは起承転結の流れ（導入→問題→気づき→学び）を担い、4コマ全体で一つの短い出来事として完結する。",
+      "ストーリー性: 各コマは起承転結の流れ（状況→違和感→気づき→前進）を担い、4コマ全体で一つの短い出来事として完結する。",
       uip ? `【シリーズテーマ】${uip.seriesTheme}` : "",
       uip ? `【トーン】${uip.businessTone}` : "",
       `キャラクター一貫性: 同じ主人公「${protagonist}」と同じ相棒ロボ「${partner}」を全コマで同じ外見・服装・体型として描く。`,
