@@ -2,6 +2,7 @@
  * 4コマ漫画画像生成API
  * USE_DUMMY=true: ダミーPNG（疎通用）
  * USE_DUMMY=false: OpenAI Images API（既定モデル gpt-image-1.5）
+ *   失敗時（キー未設定・課金上限・quota・認証・上流5xx 等）はダミーPNGへフォールバック（導線確認用。本番では厳格化可）
  *
  * 環境: api/.env に OPENAI_API_KEY（api/.env.example をコピー）
  *
@@ -119,8 +120,33 @@ function isOpenAiKeyConfigured() {
   return true;
 }
 
+function shortOpenAiErrorMessage(err) {
+  if (!err) {
+    return "不明なエラー";
+  }
+  const nested = err.error;
+  const code =
+    (nested && (nested.code || nested.type)) ||
+    err.code ||
+    (err.response && err.response.data && err.response.data.error && err.response.data.error.code);
+  const msg = err.message || (nested && nested.message) || "";
+  const status = err.status || err.statusCode;
+  const parts = [];
+  if (code) {
+    parts.push(String(code));
+  }
+  if (msg) {
+    parts.push(msg);
+  }
+  if (status) {
+    parts.push("HTTP " + status);
+  }
+  return parts.filter(Boolean).join(" / ") || String(err);
+}
+
 /**
  * OpenAI Images API → フロント契約どおり data:image/png;base64,... の1本
+ * 失敗時は throw（呼び出し側でダミーへフォールバック）
  */
 async function generateImage(prompt) {
   if (!isOpenAiKeyConfigured()) {
@@ -193,21 +219,37 @@ app.post("/api/comic-image", async function (req, res) {
     }
 
     let imageSrc = "";
+    let usedFallback = false;
+
     if (USE_DUMMY) {
       imageSrc = makeDummyComicPlaceholderDataUrl();
     } else {
-      imageSrc = await generateImage(prompt.trim());
+      try {
+        imageSrc = await generateImage(prompt.trim());
+      } catch (e) {
+        const msg = e && e.message ? String(e.message) : "";
+        if (msg.indexOf("OPENAI_API_KEY") >= 0) {
+          console.warn(
+            "[comic-image] OPENAI利用不可（キー未設定）→ ダミーへフォールバック",
+          );
+        } else {
+          console.warn("[comic-image] OpenAI失敗: " + shortOpenAiErrorMessage(e));
+          console.warn("[comic-image] ダミー画像へフォールバック");
+        }
+        imageSrc = makeDummyComicPlaceholderDataUrl();
+        usedFallback = true;
+      }
       if (!imageSrc) {
         return res.status(500).json({ error: "Internal server error" });
       }
     }
 
-    return res.json({ imageSrc: imageSrc });
-  } catch (e) {
-    const msg = e && e.message ? String(e.message) : "";
-    if (msg.indexOf("OPENAI_API_KEY") >= 0) {
-      return res.status(500).json({ error: msg });
+    const payload = { imageSrc: imageSrc };
+    if (usedFallback) {
+      payload.fallback = true;
     }
+    return res.json(payload);
+  } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Internal server error" });
   }

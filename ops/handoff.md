@@ -2,6 +2,7 @@
 
 ## 次にやるべき1手（生成後の改善フェーズ）
 
+- **課金・quota 解消後の本物確認**：`billing_hard_limit_reached` / `insufficient_quota` 等を解消し、**本物の `imageSrc`** でプレビュー・品質を確認する（フォールバック時はダミーPNGのため見た目検証は限定的）
 - **プロンプト調整**：統合プロンプトをそのまま渡すか、4コマ向けの前置きを `api/server.js` の `generateImage` 内だけで足すかを試す
 - **生成品質の改善**：`quality` / `size` / `output_format`（OpenAI 公式パラメータ）を **`generateImage` 内のみ** 最小で試す
 - **コストと速度の調整**：モデル（`OPENAI_IMAGE_MODEL`）・解像度・生成枚数（`n`）のトレードオフを記録し、運用に合わせて固定
@@ -18,7 +19,7 @@
 
 - **`OPENAI_API_KEY` はリポジトリにコミットしない**（`api/.env` は Git 無視、`api/.env.example` のみテンプレ）
 - **`USE_DUMMY = true`** に戻すと **キーなしでダミー画像**のみ返却（疎通確認用）
-- OpenAI の **429 / 課金**は **サーバログ**とフロントの **500** のみ。リトライや詳細メッセージは段階的に足す
+- **`USE_DUMMY = false`（既定）** かつ OpenAI が失敗した場合は **500 ではなくダミー画像へフォールバック**（`imageSrc` は常に data URL）。サーバログに **OpenAI失敗 / ダミーへフォールバック**（キー未設定時は1行）。任意 **`fallback: true`**。本番で厳格エラーに戻す場合は **`api/server.js`** の該当分岐を変更
 
 ## 実API接続・仕様確認チェックリスト（差し替え指針）
 

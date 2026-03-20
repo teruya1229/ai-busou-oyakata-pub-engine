@@ -40,6 +40,8 @@ ai-busou-oyakata-pub-engine/
 ### 付属APIサーバ（`api/`・PHASE 2）
 - **`api/.env.example` を `api/.env` にコピー**し、**`OPENAI_API_KEY`** に有効なキーを設定する（**`api/.env` は Git に含めない**）。
 - **`cd api && npm install && npm start`** で **8787** 番が起動。**`USE_DUMMY=false`（既定）** で **OpenAI Images API**（既定モデル **`gpt-image-1.5`**、環境変数 **`OPENAI_IMAGE_MODEL`** で変更可）により **本物画像**を生成し、**`{ "imageSrc": "data:image/png;base64,..." }`** で返す。
+- **暫定仕様（導線確認優先）**: OpenAI が成功したときだけ **本物画像**。**課金上限（例: `billing_hard_limit_reached`）・quota 不足・認証エラー・上流5xx・キー未設定** などで失敗した場合は **API を 500 にせず**、既存の **ダミーPNG（data URL）** に **自動フォールバック**し、同じく **`imageSrc`** を返す。任意で **`"fallback": true`** が付くことがある（フロントは未使用で無視可）。
+- **本番運用**では、厳格にエラーを返したい場合は **`api/server.js`** のフォールバック分岐を止める・環境フラグ化するなどで **従来の 500 応答**に戻せる。
 - 疎通のみ試す場合は **`api/server.js`** の **`USE_DUMMY`** を **`true`** にするとダミーPNGのみ返却（キー不要）。
 - サーバ側の認証は当面なし（OpenAI キーは **`api/.env`** のみ）。
 
