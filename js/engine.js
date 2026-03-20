@@ -126,6 +126,14 @@
     return "";
   }
 
+  function resolveNotePreset(raw) {
+    const s = compactSpaces(raw || "");
+    if (s === "strong" || s === "soft" || s === "biz") {
+      return s;
+    }
+    return "";
+  }
+
   function stripDuplicateTitlePrefix(themeRaw) {
     let theme = (themeRaw || "").trim() || "現場の小さな改善";
     const prefix = templates.characterProfile.titlePrefix;
@@ -157,6 +165,7 @@
         ? "短文・空欄入力でも、確認の要点を一つに絞って学びとして残す。"
         : "入力が短くても、改善点を一つ具体化して次の現場につなげる。";
     const outputStyle = resolveOutputStyle(input && input.outputStyle);
+    const notePreset = resolveNotePreset(input && input.notePreset);
 
     return {
       theme,
@@ -172,6 +181,7 @@
       coreConclusion,
       hasCoreLocks,
       outputStyle,
+      notePreset,
     };
   }
 
@@ -548,13 +558,41 @@
   function noteOpeningQuestionLine(normalized) {
     const src = (normalized.theme + " " + normalized.incident).toLowerCase();
     if (src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0) {
+      const p = normalized.notePreset || "";
+      if (p === "strong") {
+        return "満足のあとに口コミが増えないのなら、満足が足りないとは限らない。行動の設計がないだけだ。";
+      }
+      if (p === "soft") {
+        return "満足のあとに口コミが増えないのは、なぜなんだろう。";
+      }
+      if (p === "biz") {
+        return "満足のあとに口コミが増えないとき、まず見るのは「導線」と「客層の行動」のズレだ。";
+      }
       return "満足のあとに口コミが増えないとしたら、それは本当に「満足していなかった」からだろうか。";
     }
     return "";
   }
 
+  function noteLeadWithPreset(toneData, preset) {
+    const base = toneData.noteLead;
+    if (!preset) {
+      return base;
+    }
+    if (preset === "strong") {
+      return base + " 今日は、前提を言い切る。";
+    }
+    if (preset === "soft") {
+      return base + " 今日は、ちょっとだけ静かに。";
+    }
+    if (preset === "biz") {
+      return base + " 現場の話は、導線と仕組みに変換できる。";
+    }
+    return base;
+  }
+
   function buildNoteOpeningBlock(normalized, toneData) {
     const q = noteOpeningQuestionLine(normalized);
+    const lead = noteLeadWithPreset(toneData, normalized.notePreset);
     if (normalized.coreMain) {
       if (q) {
         return q + "\n\n" + normalized.coreMain;
@@ -564,7 +602,7 @@
     if (q) {
       return q;
     }
-    return toneData.noteLead;
+    return lead;
   }
 
   function storyAsShortParagraphs(incident) {
@@ -600,18 +638,56 @@
   function buildNoteTurnAndWhy(normalized) {
     const why = buildNoteWhy(normalized);
     const first = compactSpaces(why.split("。")[0] || "");
+    const p = normalized.notePreset || "";
     if (!first) {
+      if (p === "strong") {
+        return "それでも、現場の前提は人それぞれだった。";
+      }
+      if (p === "soft") {
+        return "ただ、現場の前提は人それぞれだった。";
+      }
+      if (p === "biz") {
+        return "ただ、現場の前提は人それぞれだった。手順と期待のズレが効いてくる。";
+      }
       return "ただ、現場の前提は人それぞれだった。";
     }
-    return "でも、" + first + "。";
+    let connector = "でも、";
+    if (p === "strong") {
+      connector = "だが、";
+    } else if (p === "soft") {
+      connector = "けれど、";
+    } else if (p === "biz") {
+      connector = "でも、";
+    }
+    return connector + first + "。";
   }
 
   function buildNoteFinalBlock(normalized) {
     const src = (normalized.theme + " " + normalized.incident).toLowerCase();
     const reviewish = src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0;
-    const tail = reviewish
-      ? "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？"
-      : "次の一歩、一つだけ試す。\n\nそれで十分です。";
+    const p = normalized.notePreset || "";
+    let tail;
+    if (reviewish) {
+      if (p === "strong") {
+        tail =
+          "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
+      } else if (p === "soft") {
+        tail = "結果が見えるのは、ズレが見えたことの前進かもしれない。\n\n次の一枚、どう設計する？";
+      } else if (p === "biz") {
+        tail =
+          "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、導線と導入の設計をどうする？";
+      } else {
+        tail = "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？";
+      }
+    } else if (p === "strong") {
+      tail = "次の一歩は、一つに絞る。\n\nそれで十分です。";
+    } else if (p === "soft") {
+      tail = "次の一歩、一つだけ試してみる。\n\nそれで十分です。";
+    } else if (p === "biz") {
+      tail = "次の一歩は、短い手順の言語化を現場に置く。\n\nそれで十分です。";
+    } else {
+      tail = "次の一歩、一つだけ試す。\n\nそれで十分です。";
+    }
     if (normalized.coreConclusion) {
       return normalized.coreConclusion + "\n\n" + tail;
     }
@@ -663,7 +739,7 @@
     if (normalized.coreMain) {
       introParts.push(normalized.coreMain);
     }
-    introParts.push(toneData.noteLead);
+    introParts.push(noteLeadWithPreset(toneData, normalized.notePreset));
     const intro = introParts.join("\n\n");
 
     const story = buildNoteStoryAndPhrase(normalized, input);

@@ -665,3 +665,11 @@
 
 ## 現在の状態（用途別コピー後）
 - **どれをコピーすればよいか**を、入力直下と各カードの両方から把握しやすくした。生成ロジック（`engine` / `kindle-engine`）は未変更
+
+## 今日やったこと（note本文の微調整プリセット）
+- **追加**: `index.html` に **note本文の寄せ方**（標準・強め・やわらかめ・経営寄り）。`js/app.js` の `getInputFromForm()` と章内エピソード用入力に **`notePreset`** を追加
+- **`js/engine.js`**: `resolveNotePreset` と `normalizeInput.notePreset`。`noteOpeningQuestionLine` / `noteLeadWithPreset` / `buildNoteTurnAndWhy` / `buildNoteFinalBlock` をプリセットで軽く分岐。Kindle構造の note（`buildNoteKindleStructured`）は **導入の noteLead** に `noteLeadWithPreset` を反映。4コマ・画像APIは未変更
+- `README.md` `ops/handoff.md` 更新
+
+## 現在の状態（noteプリセット後）
+- note本文だけ **雰囲気を寄せ分け**できる。**短文余白・`##` なし**は維持。4コマ・統合プロンプトの式はそのまま
