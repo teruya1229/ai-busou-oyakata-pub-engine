@@ -38,6 +38,7 @@ ai-busou-oyakata-pub-engine/
 1. `index.html` をブラウザで開く（`file://`）。画像生成APIは別起動が必要で、オリジンが異なると失敗しやすい
 
 ## 4コマ画像生成API（推奨仕様・フロント既定）
+- **生成用テキスト**（`#comic-gen-prompt-draft`）が空なら、**4コマ統合画像プロンプト**がそのまま「4コマ画像を生成」に渡る（**「生成用入力へ転記」は任意**）。
 - **ローカル既定**: `http://127.0.0.1:8787/api/comic-image`（`js/app.js` の **`COMIC_IMAGE_API_CONFIG.url`**）。本番では例として **`https://your-domain.com/api/comic-image`** へ差し替え。
 - **HTTP**: `POST`。**認証**: 初期はなし（将来は同じ `COMIC_IMAGE_API_CONFIG` と `fetch` の `headers` に最小で足す想定）。
 - **リクエスト本文**: `{ "prompt": "4コマ漫画を描いてください。1コマ目: ..." }` のように **プロンプト文字列**を `prompt` に入れる。

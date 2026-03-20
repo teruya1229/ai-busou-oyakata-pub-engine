@@ -89,7 +89,10 @@
       <section class="card">
         <p style="margin: 0 0 12px; font-size: 14px; color: #6b7280; line-height: 1.55">
           <strong style="color: #374151">流れ</strong>
-          ：① 統合プロンプトを「生成用入力へ転記」→ ② 外部の画像生成で4コマ1枚を作る → ③ 返った
+          ：<strong style="color: #374151">「生成用入力へ転記」は任意</strong>（プロンプトを編集したいとき用）。<strong style="color: #374151"
+            >生成用テキストが空のときは、統合プロンプトがそのまま「4コマ画像を生成」に使われます。</strong
+          >
+          ① 同一オリジンなら「4コマ画像を生成」でプレビューまで進められます。② 外部の画像生成を使う場合は、生成用テキストからコピーして4コマ1枚を作り、③ 返った
           <code style="font-size: 13px">URL</code> / <code style="font-size: 13px">data:image/...</code>
           を下に貼り「4コマ画像を表示」。（※将来APIで③を自動化するため、同一ブロック内に置いています）
         </p>
@@ -103,12 +106,15 @@
         </div>
         <div class="field" style="margin-top: 12px">
           <label for="comic-gen-prompt-draft">生成用テキスト（画像生成サービスへ貼り付け）</label>
+          <p style="margin: 4px 0 8px; font-size: 14px; color: #6b7280; line-height: 1.5">
+            空欄のままなら、統合プロンプトがそのまま「4コマ画像を生成」に使われます。
+          </p>
           <textarea
             id="comic-gen-prompt-draft"
             rows="5"
             autocomplete="off"
             spellcheck="false"
-            placeholder="「生成用入力へ転記」で上部の統合プロンプトをここへ取り込めます。必要なら編集してから外部ツールへコピーしてください。"
+            placeholder="「生成用入力へ転記」で取り込めます（任意）。編集してから外部ツールへコピーする場合もここを使います。"
           ></textarea>
         </div>
         <div class="actions" style="margin-top: 8px">
@@ -118,7 +124,7 @@
 
         <h2 style="margin: 18px 0 8px">4コマ漫画プレビュー</h2>
         <p style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          ② で得た4コマ1枚の画像URL、または <code style="font-size: 13px">data:image/...</code> を貼り、プレビューを確認します。
+          「4コマ画像を生成」で得た／または外部で得た4コマ1枚の画像URL、または <code style="font-size: 13px">data:image/...</code> を貼り、プレビューを確認します。
         </p>
         <div class="field">
           <label for="comic-image-url">生成結果（画像URL / data URL）</label>

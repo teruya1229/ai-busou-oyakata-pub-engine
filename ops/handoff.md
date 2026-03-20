@@ -1,5 +1,9 @@
 # handoff
 
+## UI文言（参考）
+
+- **「生成用入力へ転記」は任意**。`#comic-gen-prompt-draft` が**空**のときは、`js/app.js` の **`getPromptTextForComicImageApi()`** が **4コマ統合画像プロンプト**（`#comic-unified-prompt-output`）をそのまま **「4コマ画像を生成」** に渡す。**転記なしでAPIから画像まで進められる**（文言は `index.html` / `README.md` と整合）。
+
 ## 次にやるべき1手（運用確認）
 
 - **最優先**：実際に **note 1本のネタ**で入力 → **「構成を生成」** → **「4コマ画像を生成」**（または手入力 URL / data URL）→ **プレビュー表示** → **「4コマ画像を保存」** で `4koma-comic.png` が落ちるか、を **同一オリジン**（`cd api && npm start` → `http://127.0.0.1:8787/`）で通し確認する
