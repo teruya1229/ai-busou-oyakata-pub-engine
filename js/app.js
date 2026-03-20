@@ -57,6 +57,9 @@
       learning: data.get("learning"),
       characters: data.get("characters"),
       tone: data.get("tone"),
+      coreMain: data.get("coreMain"),
+      corePhrase: data.get("corePhrase"),
+      coreConclusion: data.get("coreConclusion"),
     };
   }
 

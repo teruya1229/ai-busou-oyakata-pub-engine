@@ -107,13 +107,22 @@
     return "気づき型";
   }
 
+  function trimOptional(value) {
+    return compactSpaces(value || "");
+  }
+
   function normalizeInput(input) {
     const tone = templates.toneTemplates[input.tone] ? input.tone : "ゆるい";
     const incident = ensureIncidentText(input.incident);
     const learning = ensureLearningText(input.learning, incident);
     const theme = safeText(input.theme, "").trim() || "現場の小さな改善";
     const characters = normalizeCharacters(input.characters);
-    const comicPattern = selectComicPattern(incident, learning);
+    const coreMain = trimOptional(input.coreMain);
+    const corePhrase = trimOptional(input.corePhrase);
+    const coreConclusion = trimOptional(input.coreConclusion);
+    const hasCoreLocks = !!(coreMain || corePhrase || coreConclusion);
+    const patternSource = compactSpaces(incident + " " + coreMain + " " + corePhrase + " " + coreConclusion);
+    const comicPattern = selectComicPattern(patternSource, learning);
     const inputSparse =
       !compactSpaces(input.theme) ||
       !compactSpaces(input.characters) ||
@@ -133,6 +142,10 @@
       comicPattern,
       inputSparse,
       learningFocus,
+      coreMain,
+      corePhrase,
+      coreConclusion,
+      hasCoreLocks,
     };
   }
 
@@ -161,18 +174,29 @@
       ];
     }
 
+    const learningForPanel4 = normalized.coreConclusion || normalized.learning;
+    const panel1Head = [`1コマ目（導入）`];
+    if (normalized.coreMain) {
+      panel1Head.push(normalized.coreMain);
+    }
+    panel1Head.push(
+      `${toneData.narratorLead}`,
+      `${protagonist}と${partner}が現場を見回す。`,
+      `状況: ${normalized.incident}`,
+    );
+    const panel2PartnerLine = normalized.corePhrase
+      ? `${partner}: 「${normalized.corePhrase}」`
+      : `${partner}: ${toneData.copilotQuestion}`;
+
     return [
       `【タイトル】${leadTitle}`,
       `【型】${pattern.name}`,
       "",
-      `1コマ目（導入）`,
-      `${toneData.narratorLead}`,
-      `${protagonist}と${partner}が現場を見回す。`,
-      `状況: ${normalized.incident}`,
+      panel1Head.join("\n"),
       "",
       "2コマ目（問題発生）",
       pattern.panel2,
-      `${partner}: ${toneData.copilotQuestion}`,
+      panel2PartnerLine,
       "",
       "3コマ目（気づき）",
       pattern.panel3,
@@ -180,7 +204,7 @@
       panel3Conversation[1],
       "",
       "4コマ目（学び）",
-      `学び: ${normalized.learning}`,
+      `学び: ${learningForPanel4}`,
       pattern.panel4,
     ].join("\n");
   }
@@ -330,15 +354,37 @@
       uip && archetypeLines ? archetypeLines : "",
       "【入力に基づく情景の補足（絵に文字は出さない）】",
       panelSummaries.join("\n"),
-      "最終指示: 4コマが1枚の漫画レイアウトとして明確に分かれ、読み順が崩れにくい構図にする。1枚イラスト化・ポスター化しない。",
     ]
+      .concat(buildCoreLockUnifiedLines(normalized))
+      .concat([
+        "最終指示: 4コマが1枚の漫画レイアウトとして明確に分かれ、読み順が崩れにくい構図にする。1枚イラスト化・ポスター化しない。",
+      ])
       .filter(function (line) {
         return line !== "";
       })
       .join("\n");
   }
 
+  function buildCoreLockUnifiedLines(normalized) {
+    if (!normalized.hasCoreLocks) {
+      return [];
+    }
+    return [
+      "【芯固定（作画は文字にせず、情景・表情・構図で示す）】",
+      normalized.coreMain ? `コアメッセージ: ${normalized.coreMain}` : "",
+      normalized.corePhrase ? `必須フレーズ（台詞として描かず、情景で示す）: ${normalized.corePhrase}` : "",
+      normalized.coreConclusion ? `絶対にズラさない結論（4コマ目で前進・改善へ）: ${normalized.coreConclusion}` : "",
+      "現場のリアルな流れ: 状況 → 違和感 → 気づき → 改善。最終コマは必ず改善・前進の印象で締める。",
+    ].filter(function (line) {
+      return line !== "";
+    });
+  }
+
   function buildNoteIntro(normalized, toneData) {
+    if (normalized.coreMain) {
+      const bridge = `${toneData.noteLead}\n\n${normalized.theme}。こういうテーマで、現場では起きがちなことがあります。`;
+      return `${normalized.coreMain}\n\n${bridge}`;
+    }
     const src = (normalized.theme + " " + normalized.incident).toLowerCase();
     if (src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0) {
       return [
@@ -370,6 +416,9 @@
     if (normalized.inputSparse) {
       out += " まずは一つだけ決めて試す。それで十分です。";
     }
+    if (normalized.coreConclusion) {
+      out = `${normalized.coreConclusion}\n\n${out}`;
+    }
     return out;
   }
 
@@ -377,6 +426,9 @@
     const normalized = normalizeInput(input);
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const toneData = templates.toneTemplates[normalized.tone];
+    const incidentBody = normalized.corePhrase
+      ? `${normalized.incident}\n\n${normalized.corePhrase}`
+      : normalized.incident;
     const lines = [
       `# ${leadTitle}`,
       "",
@@ -384,7 +436,7 @@
       buildNoteIntro(normalized, toneData),
       "",
       "## 現場で起きたこと",
-      normalized.incident,
+      incidentBody,
       "",
       "## なぜそうなったか",
       buildNoteWhy(normalized),

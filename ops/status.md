@@ -618,3 +618,13 @@
 
 ## 現在の状態（note本文刷新後）
 - note出力は **投稿想定の記事本文**中心。メタ行・相談ログ調の補足は本文に混ぜない方針
+
+## 今日やったこと（芯固定欄：note / 4コマ / 統合プロンプトの方向合わせ）
+- **追加**: `index.html` の入力フォームに **この話で一番伝えたいこと / 絶対に入れたい表現 / 絶対にズラしたくない結論**（任意）を追加
+- **`js/app.js`**: `getInputFromForm()` で `coreMain` / `corePhrase` / `coreConclusion` を `engine` に渡す
+- **`js/engine.js`**: `normalizeInput` に芯3項目と `hasCoreLocks` を追加（**すべて空なら従来と同値**）。`buildNote` は導入・現場・まとめに反映。`buildComic` は1コマ目・2コマ目（相棒セリフ）・4コマ目の学び行に反映。`buildUnifiedComicImagePrompt` は **【芯固定】** ブロックを追記（画像API・保存は未変更）
+- **`README.md`** に芯固定の意味を追記
+- `ops/handoff.md` を更新
+
+## 現在の状態（芯固定欄追加後）
+- 芯欄未入力時は **従来どおり**。入力時は **note・4コマ・統合プロンプト**が同じ芯に寄る
