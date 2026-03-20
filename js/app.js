@@ -15,6 +15,8 @@
     kindleManuscript: document.getElementById("kindle-manuscript-output"),
   };
   const chapterEpisodesField = document.getElementById("chapter-episodes");
+  const comicGenPromptDraft = document.getElementById("comic-gen-prompt-draft");
+  const comicUnifiedToDraftBtn = document.getElementById("comic-unified-to-draft-btn");
   const comicImageUrlInput = document.getElementById("comic-image-url");
   const comicImageApplyBtn = document.getElementById("comic-image-apply-btn");
   const comicImagePreviewWrap = document.getElementById("comic-image-preview-wrap");
@@ -24,6 +26,7 @@
   const COMIC_PREVIEW_STATUS_IDLE =
     "URL または data URL を入力し、「4コマ画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。";
   const COMIC_PREVIEW_STATUS_LOADING = "読み込み中…";
+  const OUTPUT_PLACEHOLDER = "ここに生成結果が表示されます。";
 
   const exampleData = {
     theme: "段取り確認とAI活用",
@@ -208,6 +211,19 @@
       window.AIBusouKindleEngine.buildKindleManuscriptPreview(chapters);
   }
 
+  function transferUnifiedPromptToDraft() {
+    if (!outputs.comicUnifiedPrompt || !comicGenPromptDraft) {
+      return;
+    }
+    const text = (outputs.comicUnifiedPrompt.textContent || "").trim();
+    if (!text || text === OUTPUT_PLACEHOLDER || text.indexOf("4コマ統合画像プロンプトを生成できませんでした") >= 0) {
+      window.alert("先に「構成を生成」で4コマ統合画像プロンプトを表示してください。");
+      return;
+    }
+    comicGenPromptDraft.value = outputs.comicUnifiedPrompt.textContent || "";
+    comicGenPromptDraft.focus();
+  }
+
   function isAllowedComicImageSource(raw) {
     const s = (raw || "").trim();
     if (!s) {
@@ -227,6 +243,9 @@
   }
 
   function resetComicImagePreview() {
+    if (comicGenPromptDraft) {
+      comicGenPromptDraft.value = "";
+    }
     if (comicImageUrlInput) {
       comicImageUrlInput.value = "";
     }
@@ -391,6 +410,12 @@
     clearOutputs();
     resetComicImagePreview();
   });
+
+  if (comicUnifiedToDraftBtn) {
+    comicUnifiedToDraftBtn.addEventListener("click", function () {
+      transferUnifiedPromptToDraft();
+    });
+  }
 
   if (comicImageApplyBtn) {
     comicImageApplyBtn.addEventListener("click", function () {

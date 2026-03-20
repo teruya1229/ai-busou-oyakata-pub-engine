@@ -87,20 +87,37 @@
       </section>
 
       <section class="card">
+        <p style="margin: 0 0 12px; font-size: 14px; color: #6b7280; line-height: 1.55">
+          <strong style="color: #374151">流れ</strong>
+          ：① 統合プロンプトを「生成用入力へ転記」→ ② 外部の画像生成で4コマ1枚を作る → ③ 返った
+          <code style="font-size: 13px">URL</code> / <code style="font-size: 13px">data:image/...</code>
+          を下に貼り「4コマ画像を表示」。（※将来APIで③を自動化するため、同一ブロック内に置いています）
+        </p>
         <div class="result-head">
           <h2>4コマ統合画像プロンプト</h2>
           <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">コピー</button>
         </div>
         <pre id="comic-unified-prompt-output" class="output-block">ここに生成結果が表示されます。</pre>
-      </section>
+        <div class="actions" style="margin-top: 8px">
+          <button type="button" id="comic-unified-to-draft-btn" class="subtle">生成用入力へ転記</button>
+        </div>
+        <div class="field" style="margin-top: 12px">
+          <label for="comic-gen-prompt-draft">生成用テキスト（画像生成サービスへ貼り付け）</label>
+          <textarea
+            id="comic-gen-prompt-draft"
+            rows="5"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="「生成用入力へ転記」で上部の統合プロンプトをここへ取り込めます。必要なら編集してから外部ツールへコピーしてください。"
+          ></textarea>
+        </div>
 
-      <section class="card">
-        <h2>4コマ漫画プレビュー</h2>
+        <h2 style="margin: 18px 0 8px">4コマ漫画プレビュー</h2>
         <p style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          外部で生成した4コマ1枚画像のURL、または <code style="font-size: 13px">data:image/...</code> を貼り付けて確認できます。
+          ② で得た4コマ1枚の画像URL、または <code style="font-size: 13px">data:image/...</code> を貼り、プレビューを確認します。
         </p>
         <div class="field">
-          <label for="comic-image-url">4コマ漫画画像URL</label>
+          <label for="comic-image-url">生成結果（画像URL / data URL）</label>
           <textarea
             id="comic-image-url"
             rows="4"
