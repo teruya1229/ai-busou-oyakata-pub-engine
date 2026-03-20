@@ -301,21 +301,39 @@
       return `- ${meta.number}コマ目（${meta.name}）: ${summary} / 情景のねらい（絵に文字は出さない）: ${sceneIntent}`;
     });
 
+    const uip = templates.characterProfile.unifiedImagePrompt;
+    const archetypeLines =
+      uip && uip.panelArchetype && uip.panelArchetype.length
+        ? uip.panelArchetype.join("\n")
+        : "";
+
     return [
       "【4コマ統合画像プロンプト】",
       "これは1枚のポスター・1枚イラスト・全面一枚絵ではない。4コマ漫画（4-panel comic strip）を1枚のキャンバスにまとめた図として描く。",
       "レイアウト必須: 2行×2列（2x2）の等分パネル。各コマは白い枠線または薄い仕切り線で境界をはっきり分け、パネル同士が溶け合わないようにする。",
       "読み順の固定: 左上が1コマ目、右上が2コマ目、左下が3コマ目、右下が4コマ目（日本語の横書きZ字読み）。",
       "ストーリー性: 各コマは起承転結の流れ（導入→問題→気づき→学び）を担い、4コマ全体で一つの短い出来事として完結する。",
+      uip ? `【シリーズテーマ】${uip.seriesTheme}` : "",
+      uip ? `【トーン】${uip.businessTone}` : "",
       `キャラクター一貫性: 同じ主人公「${protagonist}」と同じ相棒ロボ「${partner}」を全コマで同じ外見・服装・体型として描く。`,
+      uip ? `【主人公の見た目】${uip.protagonistVisual}（名前: ${protagonist}）` : "",
+      uip ? `【相棒の見た目】${uip.partnerVisual}（名前: ${partner}）` : "",
       `登場人物: ${normalized.characters}`,
       `絵柄共通指定: ${styleGuide}`,
       "画風: 白黒漫画、ゆるい線、シンプル背景、必要時のみ最小限の現場要素。",
       "画像内に文字・数字・吹き出し・セリフ・キャプション・ロゴを入れない。下の「情景のねらい」は作画の意図のみで、絵に文字として描かない。",
-      "コマ内容のねらい（絵に文字は出さない）:",
+      uip && archetypeLines
+        ? "【4コマの流れ（参考骨格：疲れ→混乱→整理→前進）】小道具・背景は入力の出来事に合わせてよいが、感情の流れはこの骨格に沿うこと。"
+        : "",
+      uip && archetypeLines ? archetypeLines : "",
+      "【入力に基づく情景の補足（絵に文字は出さない）】",
       panelSummaries.join("\n"),
       "最終指示: 4コマが1枚の漫画レイアウトとして明確に分かれ、読み順が崩れにくい構図にする。1枚イラスト化・ポスター化しない。",
-    ].join("\n");
+    ]
+      .filter(function (line) {
+        return line !== "";
+      })
+      .join("\n");
   }
 
   function buildNote(input) {
