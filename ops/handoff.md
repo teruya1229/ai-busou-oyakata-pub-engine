@@ -2,12 +2,11 @@
 
 ## 次にやるべき1手（生成後の改善フェーズ）
 
-- **課金・quota 解消後の本物確認**：`billing_hard_limit_reached` / `insufficient_quota` 等を解消し、**本物の `imageSrc`** でプレビュー・品質を確認する（フォールバック時はダミーPNGのため見た目検証は限定的）
-- **プロンプト調整**：統合プロンプトをそのまま渡すか、4コマ向けの前置きを `api/server.js` の `generateImage` 内だけで足すかを試す
-- **生成品質の改善**：`quality` / `size` / `output_format`（OpenAI 公式パラメータ）を **`generateImage` 内のみ** 最小で試す
-- **コストと速度の調整**：モデル（`OPENAI_IMAGE_MODEL`）・解像度・生成枚数（`n`）のトレードオフを記録し、運用に合わせて固定
+- **本物画像での品質確認（最優先）**：課金・quota が通る状態で **「4コマ画像を生成」** を実行し、**2x2・読み順・枠・キャラのブレ**を目視確認する（フォールバック時はダミーPNGのため本物評価は限定的）
+- **4コマ感が弱い場合**：まず **`js/engine.js` の `buildUnifiedComicImagePrompt`** の共通指示を **最小差分で文言調整**（API・フロントは触らない方針のまま）
+- **補助的な調整**：必要なら **`api/server.js` の `generateImage` 内**で前置きを足す、`quality` / `size` / `output_format` や **`OPENAI_IMAGE_MODEL`** のトレードオフを記録
 
-※ **API サーバの土台**（`POST /api/comic-image`・`{ imageSrc }`）と **フロント接続**は揃っている。**バックエンドで差し替えるのは主に `generateImage()` のパラメータとプロンプト加工**。
+※ **API サーバの土台**（`POST /api/comic-image`・`{ imageSrc }`）と **フロント接続**は揃っている。統合プロンプトの質は **`buildUnifiedComicImagePrompt`**、サーバ側は **`generateImage()`** が主な調整点。
 
 ## 判断基準
 
