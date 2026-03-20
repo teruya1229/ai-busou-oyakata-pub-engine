@@ -416,6 +416,136 @@
     );
   }
 
+  function chapterDisplayTitleForBook(chapter) {
+    let t = compactSpaces(chapter && chapter.chapterTitle) || "";
+    if (t.indexOf("AI武装親方｜") === 0) {
+      t = t.slice("AI武装親方｜".length);
+    }
+    t = t.replace(/（[0-9]+本の話題）\s*$/, "").trim();
+    return compactSpaces(t) || compactSpaces(chapter && chapter.chapterTitle) || "（無題）";
+  }
+
+  function mergeBookChapterThemes(chapterMaterials) {
+    const bases = uniqueNonEmpty(
+      (chapterMaterials || []).map(function (ch) {
+        const raw = compactSpaces(ch && ch.chapterTheme) || "";
+        if (!raw) {
+          return "";
+        }
+        return raw.length > 26 ? raw.slice(0, 26) + "…" : raw;
+      })
+    );
+    if (!bases.length) {
+      return "現場改善";
+    }
+    if (bases.length === 1) {
+      return bases[0];
+    }
+    let merged = bases.join("・");
+    if (merged.length > 72) {
+      merged = merged.slice(0, 70) + "…";
+    }
+    return merged;
+  }
+
+  function buildBookConcept(chapterMaterials) {
+    const n = (chapterMaterials || []).length;
+    if (!n) {
+      return "本のコンセプトを準備中。";
+    }
+    const bases = uniqueNonEmpty(
+      chapterMaterials.map(function (ch) {
+        return compactSpaces(ch && ch.chapterTheme);
+      })
+    );
+    const spine = bases.length ? bases.slice(0, 4).join("、") : "現場の実話";
+    if (n === 1) {
+      return (
+        "この本は、1章の実話を基点に、現場で起きた事実から学びの一行までを読みやすい順に並べた。" +
+        "章のテーマは「" +
+        spine +
+        "」を軸に、節ごとに同じリズムで整理している。"
+      );
+    }
+    return (
+      "この本は、" +
+      n +
+      "章の実話を束ね、章ごとにテーマのズレが違っても「起きたこと→ズレ→次の一手」のリズムを揃えた。" +
+      "目次どおりに読めば、集客・価格・契約のように見え方が変わる現場の話を、一冊の流れとして追える。"
+    );
+  }
+
+  function inferBookSubtitleSpine(chapterMaterials) {
+    const blob = (chapterMaterials || [])
+      .map(function (ch) {
+        return compactSpaces(ch && ch.chapterTheme) + " " + compactSpaces(ch && ch.chapterTitle);
+      })
+      .join(" ");
+    const parts = [];
+    if (/口コミ|顧客|導線|集客|レビュー/.test(blob)) {
+      parts.push("顧客と導線");
+    }
+    if (/安売り|価格|客層|値引/.test(blob)) {
+      parts.push("価格と客層");
+    }
+    if (/契約|定期|相性/.test(blob)) {
+      parts.push("契約と相性");
+    }
+    const uniq = uniqueNonEmpty(parts);
+    if (uniq.length >= 2) {
+      return "職人の実話から学ぶ" + uniq.join("・") + "の設計";
+    }
+    if (uniq.length === 1) {
+      return "現場の実話から「" + uniq[0] + "」を組み立てる";
+    }
+    return "";
+  }
+
+  function buildChapterOrderNote(chapterMaterials) {
+    const list = chapterMaterials || [];
+    const n = list.length;
+    if (n <= 1) {
+      return "章が1冊なので、本の読み順はこの章の節の順に従う。";
+    }
+    const labels = list.map(function (ch, i) {
+      const t = chapterDisplayTitleForBook(ch);
+      const short = t.length > 26 ? t.slice(0, 24) + "…" : t;
+      return "第" + (i + 1).toString() + "章「" + short + "」";
+    });
+    return (
+      "読み順の意図: " +
+      labels.join(" → ") +
+      "。前章の気づきを持ち越しつつ、次の現場の話へ進む。"
+    );
+  }
+
+  function buildBookTocFormatted(chapterMaterials) {
+    return (chapterMaterials || [])
+      .map(function (ch, i) {
+        const title = chapterDisplayTitleForBook(ch);
+        const short = title.length > 48 ? title.slice(0, 46) + "…" : title;
+        const kp0 = compactSpaces((ch.chapterKeyTakeaways || [])[0] || "");
+        const hookShort = kp0.length > 42 ? kp0.slice(0, 40) + "…" : kp0;
+        const tail = hookShort ? " — " + hookShort : "";
+        return "第" + (i + 1).toString() + "章　" + short + tail;
+      })
+      .join("\n");
+  }
+
+  function buildBookClosingPitch(chapterMaterials, keyInsights) {
+    const n = (chapterMaterials || []).length;
+    const insights = (keyInsights || []).slice(0, 3);
+    const tail = insights.length ? insights.join(" ") : "現場のズレを言語化する。";
+    if (n <= 1) {
+      return "この本の編集では、章末の要点を目次に戻し、読者が自分の現場に写像できる例を足すと完成度が上がる。";
+    }
+    return (
+      "この本の締め方: 各章の一行要点（" +
+      tail +
+      "）を束ね、はじめにで約束したテーマに回収する。次の版では章順を入れ替えても、同じ目次骨子で比較できる。"
+    );
+  }
+
   function normalizeChapterSections(inputsOrSections) {
     if (!Array.isArray(inputsOrSections)) {
       return [];
@@ -596,7 +726,10 @@
     if (!chapterMaterials.length) {
       return "現場改善";
     }
-    return compactSpaces(chapterMaterials[0].chapterTheme) || "現場改善";
+    if (chapterMaterials.length === 1) {
+      return compactSpaces(chapterMaterials[0].chapterTheme) || "現場改善";
+    }
+    return mergeBookChapterThemes(chapterMaterials);
   }
 
   function buildBookTitle(chapterMaterials, options) {
@@ -607,6 +740,12 @@
     const theme = buildBookTheme(chapterMaterials, options);
     if (!theme) {
       return "AI武装親方｜実践集";
+    }
+    if (chapterMaterials.length >= 2) {
+      if (theme.indexOf("AI武装親方｜") === 0) {
+        return theme + "（全" + chapterMaterials.length + "章・目次構成案）";
+      }
+      return "AI武装親方｜" + theme + "（全" + chapterMaterials.length + "章・目次構成案）";
     }
     if (theme.indexOf("AI武装親方｜") === 0) {
       return theme + "実践集";
@@ -646,6 +785,12 @@
         ? "終わり方: 重要な学びを次の現場へ再利用し、再発防止と改善を継続する。"
         : "終わり方: 章素材を統合し、次段で学びの再利用方針を確定する。";
 
+    const bookConcept = buildBookConcept(chapterMaterials);
+    const bookTitleSubtitle = inferBookSubtitleSpine(chapterMaterials);
+    const chapterOrderNote = buildChapterOrderNote(chapterMaterials);
+    const tocFormatted = buildBookTocFormatted(chapterMaterials);
+    const bookClosingPitch = buildBookClosingPitch(chapterMaterials, keyInsights);
+
     return {
       bookTitle: bookTitle,
       bookTheme: bookTheme,
@@ -654,6 +799,11 @@
       chapterSummaries: chapterSummaries,
       keyInsights: keyInsights,
       endingOutline: endingOutline,
+      bookConcept: bookConcept,
+      bookTitleSubtitle: bookTitleSubtitle,
+      chapterOrderNote: chapterOrderNote,
+      tocFormatted: tocFormatted,
+      bookClosingPitch: bookClosingPitch,
       sourceSummary: chapterMaterials.map(function (chapter, index) {
         return {
           chapterIndex: index + 1,
@@ -676,26 +826,52 @@
       return (index + 1).toString() + ". " + line;
     });
 
+    const subtitleBlock =
+      compactSpaces(material.bookTitleSubtitle) !== ""
+        ? ["■ 本タイトル候補（サブ）", material.bookTitleSubtitle, ""]
+        : [];
+
     return [
-      "【Kindle本素材プレビュー】",
-      "本タイトル: " + material.bookTitle,
-      "本テーマ: " + material.bookTheme,
+      "【Kindle本素材プレビュー】（本の目次・企画たたき台）",
       "",
-      "章タイトル一覧:",
-      chapterTitles.join("\n") || "（章素材なし）",
+      "■ 本タイトル候補（メイン）",
+      material.bookTitle,
       "",
-      "導入概要:",
-      material.introductionOutline,
-      "",
-      "各章要約:",
-      summaryLines.join("\n") || "（要約なし）",
-      "",
-      "重要な学び:",
-      insightLines.join("\n") || "（学びなし）",
-      "",
-      "終わり方の骨子:",
-      material.endingOutline,
-    ].join("\n");
+    ]
+      .concat(subtitleBlock)
+      .concat([
+        "■ 本のコンセプト",
+        material.bookConcept,
+        "",
+        "■ 本テーマ（章を束ねた見出し）",
+        material.bookTheme,
+        "",
+        "■ 目次（構成案）",
+        material.tocFormatted || "（章素材なし）",
+        "",
+        "■ 読み順の意図",
+        material.chapterOrderNote,
+        "",
+        "■ 本の締め（編集メモ）",
+        material.bookClosingPitch,
+        "",
+        "──── 章・学びの詳細（互換） ────",
+        "章タイトル一覧:",
+        chapterTitles.join("\n") || "（章素材なし）",
+        "",
+        "導入概要:",
+        material.introductionOutline,
+        "",
+        "各章要約:",
+        summaryLines.join("\n") || "（要約なし）",
+        "",
+        "重要な学び:",
+        insightLines.join("\n") || "（学びなし）",
+        "",
+        "終わり方の骨子:",
+        material.endingOutline,
+      ])
+      .join("\n");
   }
 
   function isBookMaterial(source) {
