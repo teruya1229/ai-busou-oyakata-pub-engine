@@ -463,3 +463,13 @@
 - 4コマ漫画構成 / 描画プロンプト / 統合画像プロンプトの出力ブロックは維持（統合とプレビューは近接配置）
 - 統合プロンプト→生成用欄→（外部生成）→URL・data URL プレビューの流れが1画面で追える
 - 本格的な外部画像生成API実装は未着手（将来は③の自動反映を差し込みやすい）
+
+## 今日やったこと（2026-03-20：薄い画像結果アダプター）
+- `js/app.js` に `normalizeComicImageResult` と `applyComicImageResult` を追加し、**data URL 1本（推奨）** または `{ imageSrc: string }` を既存「生成結果」欄＋プレビューへ流す土台を用意
+- `window.AIBusouComicImageAdapter` を公開（コンソール・将来の fetch 完了コールバックから呼び出し可能）
+- `index.html` に「テスト用データURLを反映」（1×1 PNG）と開発者向け1行を最小追加
+- `ops/status.md` `ops/handoff.md` を更新（`js/engine.js` は未変更）
+
+## 現在の状態（薄いアダプター追加後）
+- 手入力プレビューはそのまま。API返却は **正規化→`comic-image-url` へ代入→既存 `applyComicImagePreview`** の経路で接続可能
+- 本格 HTTP クライアント・認証・サービス選定は未着手

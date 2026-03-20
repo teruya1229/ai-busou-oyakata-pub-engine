@@ -128,9 +128,18 @@
         </div>
         <div class="actions">
           <button type="button" id="comic-image-apply-btn">4コマ画像を表示</button>
+          <button type="button" id="comic-image-adapter-test-btn" class="subtle" title="1×1 PNG の data URL でアダプター経路を試します">
+            テスト用データURLを反映
+          </button>
         </div>
         <p id="comic-image-preview-status" class="output-block" style="min-height: auto; margin-top: 8px; font-size: 14px; color: #6b7280">
-          URL または data URL を入力し、「4コマ画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。
+          URL または data URL を入力し、「4コマ画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。将来APIは
+          <code style="font-size: 13px">data:image/...</code>
+          1本を <code style="font-size: 12px">AIBusouComicImageAdapter.applyComicImageResult</code> に渡す想定です。
+        </p>
+        <p style="margin: 6px 0 0; font-size: 12px; color: #9ca3af">
+          開発者向け（コンソール）:
+          <code style="font-size: 11px">AIBusouComicImageAdapter.applyComicImageResult({ imageSrc: "data:image/png;base64,..." })</code>
         </p>
         <div
           id="comic-image-preview-wrap"

@@ -27,6 +27,9 @@
     "URL または data URL を入力し、「4コマ画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。";
   const COMIC_PREVIEW_STATUS_LOADING = "読み込み中…";
   const OUTPUT_PLACEHOLDER = "ここに生成結果が表示されます。";
+  /* 将来APIの戻り（data URL 1本）を試す用: 1×1 PNG */
+  const COMIC_IMAGE_DUMMY_1PX_PNG =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6X9Z8kAAAAASUVORK5CYII=";
 
   const exampleData = {
     theme: "段取り確認とAI活用",
@@ -242,6 +245,58 @@
     return false;
   }
 
+  /* data URL（推奨）/ https URL 文字列 / { imageSrc } → { ok, imageSrc, reason } */
+  function normalizeComicImageResult(raw) {
+    if (raw == null) {
+      return { ok: false, imageSrc: "", reason: "画像生成結果が空です。" };
+    }
+    if (typeof raw === "string") {
+      const t = raw.trim();
+      if (!t) {
+        return { ok: false, imageSrc: "", reason: "画像生成結果が空です。" };
+      }
+      if (isAllowedComicImageSource(t)) {
+        return { ok: true, imageSrc: t };
+      }
+      return {
+        ok: false,
+        imageSrc: "",
+        reason: "data:image/... または https?:// 形式が必要です（将来APIは data URL 1本推奨）。",
+      };
+    }
+    if (typeof raw === "object" && raw !== null && typeof raw.imageSrc === "string") {
+      return normalizeComicImageResult(raw.imageSrc);
+    }
+    return {
+      ok: false,
+      imageSrc: "",
+      reason: "文字列、または { imageSrc: string } のみ対応しています。",
+    };
+  }
+
+  /* 正規化 → #comic-image-url へ代入 → applyComicImagePreview */
+  function applyComicImageResult(raw) {
+    const normalized = normalizeComicImageResult(raw);
+    if (!normalized.ok) {
+      if (comicImagePreviewStatus) {
+        comicImagePreviewStatus.textContent = normalized.reason || "画像結果を反映できませんでした。";
+        comicImagePreviewStatus.style.color = "#b45309";
+      }
+      if (comicImagePreview) {
+        comicImagePreview.onload = null;
+        comicImagePreview.onerror = null;
+        comicImagePreview.removeAttribute("src");
+      }
+      hideComicImagePreview();
+      return false;
+    }
+    if (comicImageUrlInput) {
+      comicImageUrlInput.value = normalized.imageSrc;
+    }
+    applyComicImagePreview();
+    return true;
+  }
+
   function resetComicImagePreview() {
     if (comicGenPromptDraft) {
       comicGenPromptDraft.value = "";
@@ -422,6 +477,19 @@
       applyComicImagePreview();
     });
   }
+
+  const comicImageAdapterTestBtn = document.getElementById("comic-image-adapter-test-btn");
+  if (comicImageAdapterTestBtn) {
+    comicImageAdapterTestBtn.addEventListener("click", function () {
+      applyComicImageResult(COMIC_IMAGE_DUMMY_1PX_PNG);
+    });
+  }
+
+  window.AIBusouComicImageAdapter = {
+    normalizeComicImageResult: normalizeComicImageResult,
+    applyComicImageResult: applyComicImageResult,
+    DUMMY_1PX_PNG_DATA_URL: COMIC_IMAGE_DUMMY_1PX_PNG,
+  };
 
   if (comicImageUrlInput) {
     comicImageUrlInput.addEventListener("keydown", function (e) {
