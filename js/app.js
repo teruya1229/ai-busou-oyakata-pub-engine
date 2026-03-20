@@ -24,6 +24,9 @@
   const comicImagePreviewStatus = document.getElementById("comic-image-preview-status");
   const comicImageApiStatus = document.getElementById("comic-image-api-status");
   const comicImageGenerateBtn = document.getElementById("comic-image-generate-btn");
+  const comicImageDownloadBtn = document.getElementById("comic-image-download-btn");
+
+  const COMIC_IMAGE_DOWNLOAD_FILENAME = "4koma-comic.png";
 
   const COMIC_PREVIEW_STATUS_IDLE =
     "URL または data URL を入力し、「4コマ画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。";
@@ -514,6 +517,75 @@
     comicImagePreview.src = trimmed;
   }
 
+  function hasVisibleComicImagePreview() {
+    if (!comicImagePreview || !comicImagePreviewWrap) {
+      return false;
+    }
+    if (comicImagePreviewWrap.style.display === "none" || comicImagePreview.style.display === "none") {
+      return false;
+    }
+    const src = (comicImagePreview.getAttribute("src") || comicImagePreview.src || "").trim();
+    if (!src) {
+      return false;
+    }
+    return true;
+  }
+
+  function triggerDownloadFromBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function triggerDownloadFromHref(href, filename) {
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function downloadComicImageFromPreview() {
+    if (!comicImagePreview) {
+      return;
+    }
+    if (!hasVisibleComicImagePreview()) {
+      window.alert("先に4コマ画像を表示してください。");
+      return;
+    }
+    const src = comicImagePreview.src || "";
+    const lower = src.toLowerCase();
+    if (lower.startsWith("data:")) {
+      triggerDownloadFromHref(src, COMIC_IMAGE_DOWNLOAD_FILENAME);
+      return;
+    }
+    if (lower.startsWith("http://") || lower.startsWith("https://")) {
+      fetch(src)
+        .then(function (res) {
+          if (!res.ok) {
+            throw new Error("bad status");
+          }
+          return res.blob();
+        })
+        .then(function (blob) {
+          triggerDownloadFromBlob(blob, COMIC_IMAGE_DOWNLOAD_FILENAME);
+        })
+        .catch(function () {
+          window.alert("画像を保存できませんでした（ネットワーク・CORS・URLを確認してください）。");
+        });
+      return;
+    }
+    window.alert("この形式の画像は保存できませんでした。");
+  }
+
   function clearOutputs() {
     const placeholder = "ここに生成結果が表示されます。";
     outputs.comic.textContent = placeholder;
@@ -629,6 +701,12 @@
     });
   }
 
+  if (comicImageDownloadBtn) {
+    comicImageDownloadBtn.addEventListener("click", function () {
+      downloadComicImageFromPreview();
+    });
+  }
+
   window.AIBusouComicImageAdapter = {
     normalizeComicImageResult: normalizeComicImageResult,
     applyComicImageResult: applyComicImageResult,
@@ -636,6 +714,7 @@
     COMIC_IMAGE_API_CONFIG: COMIC_IMAGE_API_CONFIG,
     requestComicImage: requestComicImage,
     generateComicImageFromPrompt: generateComicImageFromPrompt,
+    downloadComicImageFromPreview: downloadComicImageFromPreview,
   };
 
   if (comicImageGenerateBtn) {
