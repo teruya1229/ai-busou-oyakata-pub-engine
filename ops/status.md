@@ -487,3 +487,10 @@
 ## 現在の状態（最小 fetch 接続後）
 - 手入力・転記・テスト用 data URL 反映は維持。実サーバを **`COMIC_IMAGE_API_CONFIG.url`** に載せれば **統合プロンプト系文字列 → API → プレビュー** が1本で試せる
 - 認証ヘッダ・複数ベンダ対応・本番運用設計は未着手
+
+## 今日やったこと（確認のみ・実API仕様の整理）
+- `js/app.js` の **`COMIC_IMAGE_API_CONFIG` / `requestComicImage` / `normalizeComicImageApiPayload` / `generateComicImageFromPrompt`** を読み、実API確定後に変えるべき箇所を **アプリコードは変更せず** 文書化
+- `README.md`・本ファイルの仮API記述を要約し、**URL / method / body / 認証 / レスポンスキー / エラー / data URL優先** の確認項目を `ops/handoff.md` のチェックリストに集約
+
+## 現在の状態（確認整理後・コード無変更）
+- 実装ロジックはそのまま。接続前に決めるべき事項と差し替えポイントは **`ops/handoff.md` の「実API接続・仕様確認チェックリスト」** を参照

@@ -1,5 +1,30 @@
 # handoff
 
+## 実API接続・仕様確認チェックリスト（差し替え指針）
+
+実APIの契約が固まったら、まず下記を **1枚のメモ（URL・サンプルreq/res）** に落とし、`js/app.js` を **次の3箇所だけ** 意識して触る。
+
+| 観点 | 現状（コード上の事実） | 確定時に決めること |
+|------|------------------------|----------------------|
+| **URL** | `COMIC_IMAGE_API_CONFIG.url`（空＝未接続） | 本番/検証の絶対URL。パスにバージョン（`/v1/...`）を含めるか |
+| **HTTP method** | `POST` 固定（`requestComicImage`） | `GET` 等なら `fetch` の `method` を変更 |
+| **request body** | `JSON.stringify({ prompt: promptText })` | キー名が `text` / `input` / `messages` 等なら **この1行** を合わせる |
+| **認証** | `Content-Type: application/json` のみ | `Authorization` / `x-api-key` 等が要るなら **`fetch` の `headers`** に追加。**シークレットはリポジトリに載せない**（.env・別設定・手入力など運用で決める） |
+| **response JSON** | トップレベル **`imageSrc` または `dataUrl`**（文字列） | ネスト（例: `data.url`）や別キー名なら **`normalizeComicImageApiPayload` のみ** 拡張 |
+| **エラー** | 非200は「HTTPステータス＋短文」、`fetch` 例外はCORS等の短文 | エラーJSON（`error.message` 等）をユーザーに見せるなら **`!res.ok` 時に `res.json()` してメッセージ抽出** を最小追加 |
+| **data URL vs 通常URL** | どちらも `normalizeComicImageResult` で許可。**README・コメント上の本命は data URL** | APIが **HTTPS URL だけ** 返すならそのまま流用可。**バイナリ/base64のみ** なら **client側で `data:image/...;base64,...` に組み立て** してから `applyComicImageResult` |
+
+### コード内の差し替えポイント（ファイル: `js/app.js`）
+
+1. **`COMIC_IMAGE_API_CONFIG`** … 現状は `{ url: "" }` のみ。認証用の **ヘッダテンプレ** を足すならここに寄せるのが自然。
+2. **`requestComicImage`** … `method` / `headers` / `body`（JSON形）の **3点** がAPI契約の本体。
+3. **`normalizeComicImageApiPayload`** … レスポンスの **キー名・ネスト** をここだけで吸収し、その先は既存の **`applyComicImageResult`** に任せる。
+
+### README / ops にある「仮仕様」の要約
+
+- **README**: POST 先は `COMIC_IMAGE_API_CONFIG.url`。req は **`{ "prompt": "統合プロンプト文字列" }`**。res は **`imageSrc` または `dataUrl`** に **data URL 1本を推奨**（HTTPS画像URLもプレビュー許容）。
+- **ops/status.md**: 上記に加え、生成用テキスト優先・未設定時は案内表示・認証ヘッダ未実装である旨の記録あり。**正式なベンダ仕様書は未記載**（プロジェクト内に固定エンドポイントの正はまだない）。
+
 ## 次にやるべき1手（どれか1つだけに絞る）
 - **仕様固定**：実運用の画像生成APIの **URL・認証・レスポンス形（`imageSrc` / `dataUrl` 以外があるか）** を1枚のメモに固定し、`COMIC_IMAGE_API_CONFIG` をその前提に合わせて最小修正する
 - または **ローカル画像**：ファイル選択で `FileReader.readAsDataURL` → 既存 **`applyComicImageResult`** への導線だけ追加する（fetch は触らない）
