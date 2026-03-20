@@ -56,14 +56,59 @@
     };
   }
 
+  function stripNoteTitle(noteText) {
+    let body = (noteText || "").replace(/\r\n/g, "\n").trim();
+    if (body.indexOf("# ") === 0) {
+      body = body.replace(/^#[^\n]*\n+/, "");
+    }
+    return body.trim();
+  }
+
+  function sliceBetween(text, startTag, endTag) {
+    const i = text.indexOf(startTag);
+    if (i < 0) {
+      return "";
+    }
+    const start = i + startTag.length;
+    if (!endTag) {
+      return text.slice(start).trim();
+    }
+    const j = text.indexOf(endTag, start);
+    if (j < 0) {
+      return text.slice(start).trim();
+    }
+    return text.slice(start, j).trim();
+  }
+
   function extractNoteBodyOutline(noteText) {
     const raw = (noteText || "").replace(/\r\n/g, "\n").trim();
     if (!raw) {
       return [];
     }
-    let body = raw;
-    if (body.indexOf("# ") === 0) {
-      body = body.replace(/^#[^\n]*\n+/, "");
+    const body = stripNoteTitle(raw);
+    if (body.indexOf("【実話】") >= 0) {
+      const tags = ["【実話】", "【なぜそうなったか】", "【気づき】", "【まとめ】"];
+      const labels = ["実話", "なぜそうなったか", "気づき", "まとめ"];
+      const endAfterMatome = "（章や本の中では";
+      const outline = [];
+      for (let i = 0; i < tags.length; i += 1) {
+        const next = i + 1 < tags.length ? tags[i + 1] : endAfterMatome;
+        let chunk = sliceBetween(body, tags[i], next);
+        if (i === tags.length - 1) {
+          chunk = chunk.split(endAfterMatome)[0] || chunk;
+        }
+        chunk = compactSpaces(chunk);
+        if (chunk) {
+          outline.push(labels[i] + ": " + chunk.slice(0, 220));
+        }
+      }
+      if (outline.length) {
+        const intro = sliceBetween(body, "", "【実話】").trim();
+        if (intro) {
+          outline.unshift("導入: " + compactSpaces(intro).slice(0, 220));
+        }
+        return outline;
+      }
     }
     const paras = body
       .split(/\n\n+/)
@@ -73,10 +118,77 @@
       .filter(Boolean);
     const labels = ["導入", "実話", "反転・背景", "気づき", "締め"];
     const outline = [];
-    for (let i = 0; i < paras.length && i < labels.length; i++) {
+    for (let i = 0; i < paras.length && i < labels.length; i += 1) {
       outline.push(labels[i] + ": " + paras[i].slice(0, 220));
     }
     return outline;
+  }
+
+  function formatStructuredKindleSectionDraft(hook, noteText) {
+    const body = stripNoteTitle(noteText);
+    const intro = sliceBetween(body, "", "【実話】").trim();
+    const jitsu = sliceBetween(body, "【実話】", "【なぜそうなったか】");
+    const naze = sliceBetween(body, "【なぜそうなったか】", "【気づき】");
+    const kidzuki = sliceBetween(body, "【気づき】", "【まとめ】");
+    let matome = sliceBetween(body, "【まとめ】", "（章や本の中では");
+    if (!matome) {
+      matome = sliceBetween(body, "【まとめ】", "");
+    }
+    matome = matome.replace(/\n*（章や本の中では[\s\S]*$/, "").trim();
+    const parts = [];
+    parts.push("◎ フック（4コマ・状況）");
+    parts.push(hook);
+    parts.push("");
+    if (intro) {
+      parts.push("■ 導入");
+      parts.push(intro);
+      parts.push("");
+    }
+    parts.push("■ 現場で起きたこと（実話）");
+    parts.push(jitsu || "（本文なし）");
+    parts.push("");
+    parts.push("■ そこから見えたズレ・背景（なぜそうなったか）");
+    parts.push(naze || "（本文なし）");
+    parts.push("");
+    parts.push("■ 気づき（学び）");
+    parts.push(kidzuki || "（本文なし）");
+    parts.push("");
+    parts.push("■ この節のまとめ");
+    parts.push(matome || "（本文なし）");
+    return parts.join("\n");
+  }
+
+  function formatFallbackKindleSectionDraft(hook, noteText) {
+    const body = stripNoteTitle(noteText);
+    const paras = body
+      .split(/\n\n+/)
+      .map(function (p) {
+        return compactSpaces(p);
+      })
+      .filter(Boolean);
+    const parts = [];
+    parts.push("◎ フック（4コマ・状況）");
+    parts.push(hook);
+    parts.push("");
+    const labels = ["■ 導入", "■ 現場の実話", "■ 反転・背景", "■ 気づき", "■ 締め"];
+    for (let i = 0; i < paras.length && i < labels.length; i += 1) {
+      parts.push(labels[i]);
+      parts.push(paras[i]);
+      parts.push("");
+    }
+    if (paras.length > labels.length) {
+      parts.push("■ つづき");
+      parts.push(paras.slice(labels.length).join("\n\n"));
+    }
+    return parts.join("\n").trim();
+  }
+
+  function formatKindleSectionDraftBody(material) {
+    const noteText = material.noteFull || "";
+    if (noteText.indexOf("【実話】") >= 0) {
+      return formatStructuredKindleSectionDraft(material.hook, noteText);
+    }
+    return formatFallbackKindleSectionDraft(material.hook, noteText);
   }
 
   function extractComicHook(comicText, fallbackIncident) {
@@ -138,6 +250,7 @@
       hook: hook,
       bodyOutline: bodyOutline,
       keyPoint: keyPoint,
+      noteFull: noteText,
       sourceSummary: {
         comic: compactSpaces(comicText).slice(0, 160),
         note: compactSpaces(noteText).slice(0, 160),
@@ -148,22 +261,30 @@
 
   function buildKindleSectionPreview(inputOrEpisodeModel) {
     const material = buildKindleSectionMaterial(inputOrEpisodeModel);
-    const bodyLines = material.bodyOutline.map(function (item, index) {
-      return (index + 1).toString() + ". " + item;
-    });
+    const draftBody = formatKindleSectionDraftBody(material);
+    const styleHint =
+      (toEpisodeModel(inputOrEpisodeModel).outputStyle || "") === "kindle"
+        ? "（出力スタイル: Kindle向け。note本文は【実話】構造。下記は章に貼りやすい段落見出し付き）"
+        : "（出力スタイルが Kindle向けのとき、noteが【実話】構造になり、下書きがよりつながります）";
 
     return [
-      "【Kindle節素材プレビュー】",
+      "【Kindle節素材プレビュー】（原稿下書き寄り）",
+      styleHint,
+      "",
       "節タイトル: " + material.sectionTitle,
       "",
-      "導入フック:",
-      material.hook,
+      "────────",
+      draftBody,
       "",
-      "本文アウトライン:",
-      bodyLines.join("\n"),
+      "────────",
       "",
-      "節末要点:",
+      "節末要点（行動に落とす一行）:",
       material.keyPoint,
+      "",
+      "※ 章組み用の短い見出しリスト（互換・目次向け）:",
+      material.bodyOutline.map(function (item, index) {
+        return (index + 1).toString() + ". " + item;
+      }).join("\n"),
     ].join("\n");
   }
 

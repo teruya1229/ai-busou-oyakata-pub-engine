@@ -682,3 +682,11 @@
 
 ## 現在の状態（4コマ最終確認UI後）
 - 有料API前に **送る内容を一覧**できる。`engine`・`api` の生成式は未変更
+
+## 今日やったこと（Kindle節・原稿下書き寄り）
+- **`js/kindle-engine.js`**: `buildKindleSectionMaterial` に **`noteFull`** を保持。`buildKindleSectionPreview` を **段落＋見出し（◎フック／■導入・実話・なぜ・気づき・まとめ）**中心に再構成。**【実話】** 付き note を **sliceBetween** で解体。従来の **番号付きアウトライン**は **※章組み用**として末尾に残す
+- **`extractNoteBodyOutline`**: 【実話】構造のときは **ブロック単位**で要約行を生成（導入も抽出可能なら付与）
+- `README.md` `ops/handoff.md` 更新
+
+## 現在の状態（Kindle節プレビュー改善後）
+- **節素材**のまま **貼って編集しやすい**下書き表示に寄せた。`buildNote`・4コマ・画像APIは未変更

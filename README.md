@@ -69,6 +69,9 @@ ai-busou-oyakata-pub-engine/
 - 今後の品質改善は `samples/test-cases.js` の代表ケースを基準に比較しながら進める
 - 品質改善の運用順は `samples/test-cases.js` -> `docs/evaluation-guide.md` -> `docs/evaluation-log.md`
 
+## Kindle節素材プレビュー（`js/kindle-engine.js`）
+- **Kindle節素材プレビュー**は **原稿下書き寄り**の段落表示（◎フック／■導入・実話・なぜ・気づき・まとめ）。`出力スタイル: Kindle向け` のとき、note の【実話】構造をそのままつながりやすく載せる。**章組み用の短い見出しリスト**は末尾に互換で残す。
+
 ## Kindle前段設計
 - 章構成設計ドキュメント: `docs/kindle-bridge-design.md`
 - MVP固定後は `docs/kindle-bridge-design.md` を基準に次フェーズへ進める
