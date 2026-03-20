@@ -3,6 +3,7 @@
   const outputs = {
     comic: document.getElementById("comic-output"),
     comicPrompt: document.getElementById("comic-prompt-output"),
+    comicUnifiedPrompt: document.getElementById("comic-unified-prompt-output"),
     note: document.getElementById("note-output"),
     xPost: document.getElementById("x-output"),
     kindle: document.getElementById("kindle-output"),
@@ -47,6 +48,10 @@
     outputs.comic.textContent = result.comic;
     if (outputs.comicPrompt) {
       outputs.comicPrompt.textContent = result.comicPrompt || "4コマ描画プロンプトを生成できませんでした。";
+    }
+    if (outputs.comicUnifiedPrompt) {
+      outputs.comicUnifiedPrompt.textContent =
+        result.comicUnifiedPrompt || "4コマ統合画像プロンプトを生成できませんでした。";
     }
     outputs.note.textContent = result.note;
     outputs.xPost.textContent = result.xPost;
@@ -199,6 +204,9 @@
     outputs.comic.textContent = placeholder;
     if (outputs.comicPrompt) {
       outputs.comicPrompt.textContent = placeholder;
+    }
+    if (outputs.comicUnifiedPrompt) {
+      outputs.comicUnifiedPrompt.textContent = placeholder;
     }
     outputs.note.textContent = placeholder;
     outputs.xPost.textContent = placeholder;

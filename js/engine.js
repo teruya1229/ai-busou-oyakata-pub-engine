@@ -273,6 +273,49 @@
     return ["【4コマ描画プロンプト】", "（既存の4コマ漫画構成を元に生成）", "", panelBlocks.join("\n\n")].join("\n");
   }
 
+  function buildUnifiedComicImagePrompt(input) {
+    const normalized = normalizeInput(input);
+    const comicText = buildComic(input);
+    const styleGuide = templates.characterProfile.comicStyle.join("、");
+    const protagonist = templates.characterProfile.protagonist.name;
+    const partner = templates.characterProfile.partner.name;
+    const panelMeta = [
+      { number: 1, start: "1コマ目（導入）", next: "2コマ目（問題発生）", name: "導入" },
+      { number: 2, start: "2コマ目（問題発生）", next: "3コマ目（気づき）", name: "問題発生" },
+      { number: 3, start: "3コマ目（気づき）", next: "4コマ目（学び）", name: "気づき" },
+      { number: 4, start: "4コマ目（学び）", next: "", name: "学び" },
+    ];
+
+    const panelSummaries = panelMeta.map(function (meta) {
+      const lines = extractComicPanelBlock(comicText, meta.start, meta.next);
+      const situation = pickFirstLineStartWith(lines, "状況:");
+      const learningLine = pickFirstLineStartWith(lines, "学び:");
+      const dialogueLines = (lines || []).filter(function (line) {
+        return line.indexOf(`${protagonist}:`) === 0 || line.indexOf(`${partner}:`) === 0;
+      });
+      const narrativeLines = (lines || []).filter(function (line) {
+        return line.indexOf("状況:") !== 0 && line.indexOf("学び:") !== 0 && line.indexOf(`${protagonist}:`) !== 0 && line.indexOf(`${partner}:`) !== 0;
+      });
+      const summary = compactSpaces((situation || learningLine || narrativeLines.join(" ") || "要点を簡潔に描写する。").replace(/^状況:\s*/, "").replace(/^学び:\s*/, ""));
+      const dialogue = dialogueLines.join(" / ") || "短い吹き出しで要点を示す。";
+      return `- ${meta.number}コマ目（${meta.name}）: ${summary} / セリフ: ${dialogue}`;
+    });
+
+    return [
+      "【4コマ統合画像プロンプト】",
+      "1枚の画像として4コマ漫画を描画する。",
+      "必須: 4コマ漫画、2x2レイアウト、左上→右上→左下→右下の順で読める構成。",
+      `キャラクター一貫性: 主人公は${protagonist}、相手役は${partner}。全コマで同一キャラクターとして描く。`,
+      `登場人物: ${normalized.characters}`,
+      `絵柄共通指定: ${styleGuide}`,
+      "画風: 白黒漫画、ゆるい線、シンプル背景、必要時のみ最小限の現場要素。",
+      "吹き出し・セリフ: 各コマに短い吹き出しを配置し、読み順に自然につながるようにする。",
+      "コマ内容要約:",
+      panelSummaries.join("\n"),
+      "最終指示: 4コマを1枚画像として完成させ、コマ枠・吹き出し・視線誘導を明確にする。",
+    ].join("\n");
+  }
+
   function buildNote(input) {
     const normalized = normalizeInput(input);
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
@@ -354,6 +397,7 @@
     return {
       comic: buildComic(input),
       comicPrompt: buildComicPanelPrompts(input),
+      comicUnifiedPrompt: buildUnifiedComicImagePrompt(input),
       note: buildNote(input),
       xPost: buildXPost(input),
     };
@@ -363,6 +407,7 @@
     normalizeInput,
     buildComic,
     buildComicPanelPrompts,
+    buildUnifiedComicImagePrompt,
     buildNote,
     buildXPost,
     buildAllOutputs,
