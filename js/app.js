@@ -74,9 +74,11 @@
     if (outputs.comicPrompt) {
       outputs.comicPrompt.textContent = result.comicPrompt || "4コマ描画プロンプトを生成できませんでした。";
     }
-    if (outputs.comicUnifiedPrompt) {
-      outputs.comicUnifiedPrompt.textContent =
-        result.comicUnifiedPrompt || "4コマ統合画像プロンプトを生成できませんでした。";
+    const unifiedText = result.comicUnifiedPrompt || "4コマ統合画像プロンプトを生成できませんでした。";
+    const unifiedEl = document.getElementById("comic-unified-prompt-output");
+    if (unifiedEl) {
+      unifiedEl.textContent = unifiedText;
+      outputs.comicUnifiedPrompt = unifiedEl;
     }
     outputs.note.textContent = result.note;
     outputs.xPost.textContent = result.xPost;
@@ -592,8 +594,10 @@
     if (outputs.comicPrompt) {
       outputs.comicPrompt.textContent = placeholder;
     }
-    if (outputs.comicUnifiedPrompt) {
-      outputs.comicUnifiedPrompt.textContent = placeholder;
+    const unifiedClear = document.getElementById("comic-unified-prompt-output");
+    if (unifiedClear) {
+      unifiedClear.textContent = placeholder;
+      outputs.comicUnifiedPrompt = unifiedClear;
     }
     outputs.note.textContent = placeholder;
     outputs.xPost.textContent = placeholder;

@@ -306,9 +306,11 @@
       uip && uip.panelArchetype && uip.panelArchetype.length
         ? uip.panelArchetype.join("\n")
         : "";
+    const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
 
     return [
       "【4コマ統合画像プロンプト】",
+      `【入力反映】${leadTitle}`,
       "これは1枚のポスター・1枚イラスト・全面一枚絵ではない。4コマ漫画（4-panel comic strip）を1枚のキャンバスにまとめた図として描く。",
       "レイアウト必須: 2行×2列（2x2）の等分パネル。各コマは白い枠線または薄い仕切り線で境界をはっきり分け、パネル同士が溶け合わないようにする。",
       "読み順の固定: 左上が1コマ目、右上が2コマ目、左下が3コマ目、右下が4コマ目（日本語の横書きZ字読み）。",
