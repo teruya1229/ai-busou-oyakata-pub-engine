@@ -95,6 +95,17 @@ button.copy-btn {
   color: #111827;
 }
 
+.copy-hint {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+.copy-hint code {
+  font-size: 13px;
+}
+
 .result-head {
   display: flex;
   justify-content: space-between;

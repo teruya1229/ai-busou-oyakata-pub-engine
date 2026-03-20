@@ -632,6 +632,16 @@
     }
   }
 
+  const COPY_BUNDLE_SEPARATOR = "\n\n---\n\n";
+
+  function getOutputTextById(targetId) {
+    const target = document.getElementById(targetId);
+    if (!target) {
+      return "";
+    }
+    return (target.textContent || "").trim();
+  }
+
   function copyTextById(targetId) {
     const target = document.getElementById(targetId);
     if (!target) {
@@ -642,6 +652,36 @@
       return;
     }
     navigator.clipboard.writeText(text).catch(function () {
+      window.alert("コピーに失敗しました。");
+    });
+  }
+
+  function copyStyleBundle() {
+    const data = new FormData(form);
+    const style = (data.get("outputStyle") || "").trim();
+    let ids;
+    if (style === "note") {
+      ids = ["note-output", "comic-output"];
+    } else if (style === "comic") {
+      ids = ["comic-output", "comic-unified-prompt-output"];
+    } else if (style === "kindle") {
+      ids = ["note-output", "kindle-output"];
+    } else {
+      ids = ["note-output", "comic-output", "comic-unified-prompt-output"];
+    }
+    const parts = [];
+    for (let i = 0; i < ids.length; i += 1) {
+      const t = getOutputTextById(ids[i]);
+      if (t) {
+        parts.push(t);
+      }
+    }
+    if (!parts.length) {
+      window.alert("コピーする内容がありません。先に「構成を生成」を押してください。");
+      return;
+    }
+    const combined = parts.join(COPY_BUNDLE_SEPARATOR);
+    navigator.clipboard.writeText(combined).catch(function () {
       window.alert("コピーに失敗しました。");
     });
   }
@@ -750,6 +790,13 @@
       copyTextById(targetId);
     });
   });
+
+  const copyStyleBundleBtn = document.getElementById("copy-style-bundle-btn");
+  if (copyStyleBundleBtn) {
+    copyStyleBundleBtn.addEventListener("click", function () {
+      copyStyleBundle();
+    });
+  }
 
   clearOutputs();
 })();

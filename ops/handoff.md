@@ -3,6 +3,7 @@
 ## UI文言（参考）
 
 - **出力スタイル**（`index.html`）: **指定なし**は従来どおり。**note向け / 4コマ向け / Kindle向け**は `js/app.js` の `getInputFromForm()` で `outputStyle` を渡し、`js/engine.js` の `normalizeInput` → `buildNote` / `buildComic` / `buildUnifiedComicImagePrompt` の寄せ方が変わる
+- **用途別コピー**: 入力フォーム直下の **用途別コピー（生成後）** から、**note本文 / 4コマ構成 / 4コマ統合プロンプト / Kindle節素材**を個別コピー。**スタイル向けにまとめてコピー**は `copyStyleBundle()`（`js/app.js`）で `outputStyle` に応じた連結。各出力ブロック横のボタン文言も用途が分かる表記に揃えている
 - **「生成用入力へ転記」は任意**。`#comic-gen-prompt-draft` が**空**のときは、`js/app.js` の **`getPromptTextForComicImageApi()`** が **4コマ統合画像プロンプト**（`#comic-unified-prompt-output`）をそのまま **「4コマ画像を生成」** に渡す。**転記なしでAPIから画像まで進められる**（文言は `index.html` / `README.md` と整合）。
 
 ## 4コマ統合画像プロンプト（実装メモ）

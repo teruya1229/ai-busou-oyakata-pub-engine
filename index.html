@@ -95,9 +95,23 @@
       </section>
 
       <section class="card">
+        <h2>用途別コピー（生成後）</h2>
+        <p class="copy-hint">
+          よく使うブロックをここから一発コピーできます。<strong>スタイル向けにまとめてコピー</strong>は、出力スタイル（上のプルダウン）に合わせて本文・4コマ・統合・節素材を連結します（区切りは <code>---</code> 行）。
+        </p>
+        <div class="actions">
+          <button type="button" data-copy-target="note-output" class="copy-btn">note本文をコピー</button>
+          <button type="button" data-copy-target="comic-output" class="copy-btn">4コマ構成をコピー</button>
+          <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">4コマ統合プロンプトをコピー</button>
+          <button type="button" data-copy-target="kindle-output" class="copy-btn">Kindle節素材をコピー</button>
+          <button type="button" id="copy-style-bundle-btn" class="subtle">スタイル向けにまとめてコピー</button>
+        </div>
+      </section>
+
+      <section class="card">
         <div class="result-head">
           <h2>4コマ漫画構成</h2>
-          <button type="button" data-copy-target="comic-output" class="copy-btn">コピー</button>
+          <button type="button" data-copy-target="comic-output" class="copy-btn">4コマ構成をコピー</button>
         </div>
         <pre id="comic-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
@@ -105,7 +119,7 @@
       <section class="card">
         <div class="result-head">
           <h2>4コマ描画プロンプト</h2>
-          <button type="button" data-copy-target="comic-prompt-output" class="copy-btn">コピー</button>
+          <button type="button" data-copy-target="comic-prompt-output" class="copy-btn">4コマ描画プロンプトをコピー</button>
         </div>
         <pre id="comic-prompt-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
@@ -122,7 +136,7 @@
         </p>
         <div class="result-head">
           <h2>4コマ統合画像プロンプト</h2>
-          <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">コピー</button>
+          <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">4コマ統合プロンプトをコピー</button>
         </div>
         <pre id="comic-unified-prompt-output" class="output-block">ここに生成結果が表示されます。</pre>
         <div class="actions" style="margin-top: 8px">
@@ -191,7 +205,7 @@
       <section class="card">
         <div class="result-head">
           <h2>note記事本文</h2>
-          <button type="button" data-copy-target="note-output" class="copy-btn">コピー</button>
+          <button type="button" data-copy-target="note-output" class="copy-btn">note本文をコピー</button>
         </div>
         <pre id="note-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
@@ -199,7 +213,7 @@
       <section class="card">
         <div class="result-head">
           <h2>X投稿文</h2>
-          <button type="button" data-copy-target="x-output" class="copy-btn">コピー</button>
+          <button type="button" data-copy-target="x-output" class="copy-btn">X投稿をコピー</button>
         </div>
         <pre id="x-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
@@ -207,7 +221,7 @@
       <section class="card">
         <div class="result-head">
           <h2>Kindle節素材プレビュー</h2>
-          <button type="button" data-copy-target="kindle-output" class="copy-btn">コピー</button>
+          <button type="button" data-copy-target="kindle-output" class="copy-btn">Kindle節素材をコピー</button>
         </div>
         <pre id="kindle-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
