@@ -27,6 +27,10 @@
 
 - **`buildKindleBookMaterial` / `buildKindleBookPreview`**（`js/kindle-engine.js`）: 複数章のとき **本テーマ**は各章の `chapterTheme` を束ね、**本タイトル**に **（全N章・目次構成案）** を付与。**`bookConcept` / `bookTitleSubtitle`（キーワード推定）・`tocFormatted`・`chapterOrderNote`・`bookClosingPitch`** を追加。プレビューは **本の目次・企画たたき台**を先頭に、従来の **章・学びの詳細（互換）**を末尾に
 
+## 語尾補正（`ensureActionEnding`・実装メモ）
+
+- **`js/kindle-engine.js`** の **`ensureActionEnding`**（節の `keyPoint` 等）: 末尾に無条件で **`する。`** を付けない。**`必要` / `こと` / `勇気` / `ない`（否定形）**、**`る`（ただし `…する` は除外）**、五段動詞終止形の **`[うくぐすつぬぶむ]`** など、既に述語として完結しやすい形は **句点のみ**にする。従来の **`する` / `しよう` / `できる`** 分岐は維持
+
 ## note記事本文（実装メモ）
 
 - 生成は `js/engine.js` の **`buildNote`**。見出しは **導入 / 現場で起きたこと / なぜそうなったか / 気づき / まとめ**（`## 学び` は廃止）

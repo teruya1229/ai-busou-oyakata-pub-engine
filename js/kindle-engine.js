@@ -18,6 +18,24 @@
     if (/できる$/.test(withoutPeriod)) {
       return withoutPeriod.replace(/できる$/, "できるようにする") + "。";
     }
+    if (/必要$/.test(withoutPeriod)) {
+      return withoutPeriod + "。";
+    }
+    if (/こと$/.test(withoutPeriod)) {
+      return withoutPeriod + "。";
+    }
+    if (/勇気$/.test(withoutPeriod)) {
+      return withoutPeriod + "。";
+    }
+    if (/ない$/.test(withoutPeriod)) {
+      return withoutPeriod + "。";
+    }
+    if (/る$/.test(withoutPeriod) && !/する$/.test(withoutPeriod)) {
+      return withoutPeriod + "。";
+    }
+    if (/[うくぐすつぬぶむ]$/.test(withoutPeriod)) {
+      return withoutPeriod + "。";
+    }
     return withoutPeriod + "する。";
   }
 
