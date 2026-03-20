@@ -406,3 +406,14 @@
 - Kindle導線MVPの段階構造とUI確認導線は維持
 - `manuscriptText` は改行過多や段落詰まりを抑えた表示に改善
 - 既存MVP本体（`engine.js` / `templates.js` / UI）には変更なし
+
+## 今日やったこと（4コマ描画プロンプト出力の最小追加）
+- 既存の `buildComic(...)` 出力を再利用して、1〜4コマ別の描画プロンプト生成処理を `js/engine.js` に追加
+- `buildAllOutputs(...)` に `comicPrompt` を最小追加し、既存の 4コマ / note / X 出力は維持
+- `index.html` と `js/app.js` に `4コマ描画プロンプト` の表示枠を最小追加
+- `README.md` `ops/status.md` `ops/handoff.md` を更新
+
+## 現在の状態（4コマ描画プロンプト追加後）
+- 既存の4コマ漫画構成テキストはそのまま確認可能
+- 構成テキストに加え、コマ1〜4ごとの描画用プロンプトを同画面で確認可能
+- 既存の note / X / Kindle 各導線は未破壊で維持

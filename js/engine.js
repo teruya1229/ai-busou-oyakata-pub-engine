@@ -185,6 +185,94 @@
     ].join("\n");
   }
 
+  function extractComicPanelBlock(comicText, panelStartLabel, nextPanelStartLabel) {
+    const lines = (comicText || "").split("\n");
+    const startIndex = lines.findIndex(function (line) {
+      return line.indexOf(panelStartLabel) === 0;
+    });
+    if (startIndex < 0) {
+      return [];
+    }
+    let endIndex = lines.length;
+    if (nextPanelStartLabel) {
+      const nextIndex = lines.findIndex(function (line, index) {
+        return index > startIndex && line.indexOf(nextPanelStartLabel) === 0;
+      });
+      if (nextIndex > startIndex) {
+        endIndex = nextIndex;
+      }
+    }
+    return lines
+      .slice(startIndex + 1, endIndex)
+      .map(function (line) {
+        return line.trim();
+      })
+      .filter(Boolean);
+  }
+
+  function pickFirstLineStartWith(lines, prefix) {
+    const found = (lines || []).find(function (line) {
+      return line.indexOf(prefix) === 0;
+    });
+    return found || "";
+  }
+
+  function buildPanelPrompt(panelNumber, panelName, lines, normalized, styleGuide) {
+    const protagonist = templates.characterProfile.protagonist.name;
+    const partner = templates.characterProfile.partner.name;
+    const characters = normalized.characters || `${protagonist}、${partner}`;
+    const situation = pickFirstLineStartWith(lines, "状況:");
+    const narrativeLines = (lines || []).filter(function (line) {
+      return line.indexOf("状況:") !== 0 && line.indexOf(`${protagonist}:`) !== 0 && line.indexOf(`${partner}:`) !== 0;
+    });
+    const dialogueLines = (lines || []).filter(function (line) {
+      return line.indexOf(`${protagonist}:`) === 0 || line.indexOf(`${partner}:`) === 0;
+    });
+
+    const expressionByPanel = {
+      1: "導入の観察表情、落ち着いた雰囲気",
+      2: "戸惑いと緊張が少し出る表情",
+      3: "気づきが生まれる真剣な表情",
+      4: "納得して前向きな表情",
+    };
+    const compositionByPanel = {
+      1: "中景、2人を中心にした導入カット",
+      2: "やや寄り、問題点が分かる構図",
+      3: "会話が読み取りやすい対話構図",
+      4: "引き気味、学びで締める安定構図",
+    };
+
+    return [
+      `コマ${panelNumber}:`,
+      `- シーン説明: ${panelName}。${situation || narrativeLines.join(" ") || "現場の流れを説明するシーン。"}`,
+      `- キャラ: ${characters}`,
+      `- 表情: ${expressionByPanel[panelNumber]}`,
+      "- 背景: 白ベース、最小限の現場要素（工具・資材・簡易線）",
+      `- 構図: ${compositionByPanel[panelNumber]}`,
+      `- セリフ: ${dialogueLines.join(" / ") || "ナレーション中心、短文で要点を示す。"}`,
+      `- 絵柄共通指定: ${styleGuide}`,
+    ].join("\n");
+  }
+
+  function buildComicPanelPrompts(input) {
+    const normalized = normalizeInput(input);
+    const comicText = buildComic(input);
+    const styleGuide = templates.characterProfile.comicStyle.join("、");
+    const panelMeta = [
+      { number: 1, start: "1コマ目（導入）", next: "2コマ目（問題発生）", name: "導入" },
+      { number: 2, start: "2コマ目（問題発生）", next: "3コマ目（気づき）", name: "問題発生" },
+      { number: 3, start: "3コマ目（気づき）", next: "4コマ目（学び）", name: "気づき" },
+      { number: 4, start: "4コマ目（学び）", next: "", name: "学び" },
+    ];
+
+    const panelBlocks = panelMeta.map(function (meta) {
+      const lines = extractComicPanelBlock(comicText, meta.start, meta.next);
+      return buildPanelPrompt(meta.number, meta.name, lines, normalized, styleGuide);
+    });
+
+    return ["【4コマ描画プロンプト】", "（既存の4コマ漫画構成を元に生成）", "", panelBlocks.join("\n\n")].join("\n");
+  }
+
   function buildNote(input) {
     const normalized = normalizeInput(input);
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
@@ -265,6 +353,7 @@
   function buildAllOutputs(input) {
     return {
       comic: buildComic(input),
+      comicPrompt: buildComicPanelPrompts(input),
       note: buildNote(input),
       xPost: buildXPost(input),
     };
@@ -273,6 +362,7 @@
   window.AIBusouEngine = {
     normalizeInput,
     buildComic,
+    buildComicPanelPrompts,
     buildNote,
     buildXPost,
     buildAllOutputs,

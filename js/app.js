@@ -2,6 +2,7 @@
   const form = document.getElementById("input-form");
   const outputs = {
     comic: document.getElementById("comic-output"),
+    comicPrompt: document.getElementById("comic-prompt-output"),
     note: document.getElementById("note-output"),
     xPost: document.getElementById("x-output"),
     kindle: document.getElementById("kindle-output"),
@@ -44,6 +45,9 @@
 
   function renderOutputs(result) {
     outputs.comic.textContent = result.comic;
+    if (outputs.comicPrompt) {
+      outputs.comicPrompt.textContent = result.comicPrompt || "4コマ描画プロンプトを生成できませんでした。";
+    }
     outputs.note.textContent = result.note;
     outputs.xPost.textContent = result.xPost;
   }
@@ -193,6 +197,9 @@
   function clearOutputs() {
     const placeholder = "ここに生成結果が表示されます。";
     outputs.comic.textContent = placeholder;
+    if (outputs.comicPrompt) {
+      outputs.comicPrompt.textContent = placeholder;
+    }
     outputs.note.textContent = placeholder;
     outputs.xPost.textContent = placeholder;
     if (outputs.kindle) {
