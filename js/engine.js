@@ -625,10 +625,126 @@
     return t;
   }
 
+  function splitMemoFragments(text) {
+    const t = compactSpaces(text);
+    if (!t) {
+      return [];
+    }
+    const parts = t.split(/[\n。、]+/).map(function (s) {
+      return compactSpaces(s);
+    }).filter(Boolean);
+    return parts.length ? parts : [t];
+  }
+
+  function polishRoughIncidentClause(s) {
+    let x = compactSpaces(s);
+    if (!x) {
+      return "";
+    }
+    if (/^質問多かった$/.test(x)) {
+      return "質問は多かった";
+    }
+    if (/^かなり仲良くなった$/.test(x)) {
+      return "かなり仲良くなれた";
+    }
+    if (/^でも口コミは来なかった$/.test(x)) {
+      return "口コミにはつながらなかった";
+    }
+    if (/^質問/.test(x) && x.indexOf("は") < 0 && x.indexOf("が") < 0 && x.indexOf("も") < 0) {
+      x = x.replace(/^質問/, "質問は");
+    }
+    return x;
+  }
+
+  function recomposeIncidentMemo(raw, normalized) {
+    const t = trimOptional(raw);
+    if (!t) {
+      return ensurePeriod(normalized.incident);
+    }
+    const fr = splitMemoFragments(t);
+    if (!fr.length) {
+      return ensurePeriod(t);
+    }
+    if (fr.length === 1) {
+      let s = polishRoughIncidentClause(fr[0]);
+      if (compactSpaces(s).length < 22 && normalized.coreMain) {
+        s = "「" + normalized.theme + "」の場面で、" + s + "——という断片だけが残った。";
+      }
+      return ensurePeriod(s);
+    }
+    const head = fr
+      .slice(0, -1)
+      .map(polishRoughIncidentClause)
+      .filter(Boolean)
+      .join("、");
+    const rawTail = fr[fr.length - 1];
+    let tail = polishRoughIncidentClause(rawTail);
+    if (tail && !/^でも|^しかし|^それでも|^ところが/.test(compactSpaces(rawTail))) {
+      tail = "それでも、" + tail;
+    }
+    return ensurePeriod(head + "。" + tail);
+  }
+
+  function recomposeLearningMemo(raw, normalized) {
+    const t = trimOptional(raw);
+    if (!t) {
+      return "";
+    }
+    const fr = splitMemoFragments(t);
+    if (!fr.length) {
+      return ensurePeriod(t);
+    }
+    const bundle = (normalized.theme + " " + normalized.coreMain + " " + t).toLowerCase();
+    const reviewish = bundle.indexOf("口コミ") >= 0 || bundle.indexOf("レビュー") >= 0;
+
+    if (fr.length === 1) {
+      let s = compactSpaces(fr[0]);
+      if (reviewish && /満足|口コミ|導線|レビュー/.test(s)) {
+        if (/満足/.test(s) && /口コミ/.test(s)) {
+          s = "満足したことと、口コミを書くことは別物だとメモした";
+        } else if (s.length < 16 && normalized.coreMain) {
+          s = "「" + normalized.coreMain + "」を軸に、" + s + "という気づきに落ち着いた";
+        }
+      } else if (s.length < 12 && normalized.coreMain) {
+        s = "「" + normalized.coreMain + "」に沿うと、" + s + "という感覚が残った";
+      }
+      return ensurePeriod(s);
+    }
+
+    let a = compactSpaces(fr[0]);
+    let b = compactSpaces(fr[1]);
+    if (reviewish) {
+      if (/満足/.test(a) && /口コミ/.test(a)) {
+        a = "満足したことと、口コミを書くことは別物だ";
+      }
+      if (/導線/.test(b)) {
+        b = "足りないのは、満足直後の導線の設計だった";
+      }
+    }
+    let rest = "";
+    if (fr.length > 2) {
+      rest = "。" + fr.slice(2).join("。");
+    }
+    return ensurePeriod(a + "。" + b + rest);
+  }
+
+  function buildNoteLearningLine(normalized, input) {
+    const rawLearn = trimOptional(input.learning);
+    if (rawLearn) {
+      return recomposeLearningMemo(rawLearn, normalized);
+    }
+    return ensurePeriod(normalized.learning);
+  }
+
   function buildNoteStoryAndPhrase(normalized, input) {
     const rawInc = trimOptional(input.incident);
-    const incidentText = rawInc ? ensurePeriod(rawInc) : normalized.incident;
-    let story = storyAsShortParagraphs(incidentText);
+    let story;
+    if (rawInc) {
+      story = recomposeIncidentMemo(rawInc, normalized);
+      story = storyAsShortParagraphs(story);
+    } else {
+      story = storyAsShortParagraphs(ensurePeriod(normalized.incident));
+    }
     if (normalized.corePhrase && story.indexOf(normalized.corePhrase) < 0) {
       story = story + "\n\n" + normalized.corePhrase;
     }
@@ -788,8 +904,7 @@
     const normalized = normalizeInput(input);
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const toneData = templates.toneTemplates[normalized.tone];
-    const rawLearn = trimOptional(input.learning);
-    const learningLine = rawLearn ? ensurePeriod(rawLearn) : ensurePeriod(compactSpaces(normalized.learning));
+    const learningLine = buildNoteLearningLine(normalized, input);
     const st = normalized.outputStyle;
     if (st === "kindle") {
       return buildNoteKindleStructured(normalized, input, toneData, leadTitle, learningLine);
