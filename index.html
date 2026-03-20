@@ -95,6 +95,35 @@
       </section>
 
       <section class="card">
+        <h2>4コマ漫画プレビュー</h2>
+        <div class="field">
+          <label for="comic-image-url">4コマ漫画画像（URL または data URL）</label>
+          <input
+            id="comic-image-url"
+            type="text"
+            autocomplete="off"
+            placeholder="https://... または data:image/png;base64,..."
+          />
+        </div>
+        <div class="actions">
+          <button type="button" id="comic-image-apply-btn">プレビューに反映</button>
+        </div>
+        <p id="comic-image-preview-status" class="output-block" style="min-height: auto; margin-top: 8px; font-size: 14px; color: #6b7280">
+          画像URLまたは data URL を入力し、「プレビューに反映」を押してください。
+        </p>
+        <div
+          id="comic-image-preview-wrap"
+          style="margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; padding: 12px; text-align: center"
+        >
+          <img
+            id="comic-image-preview"
+            alt="4コマ漫画プレビュー"
+            style="max-width: 100%; height: auto; display: none"
+          />
+        </div>
+      </section>
+
+      <section class="card">
         <div class="result-head">
           <h2>note記事本文</h2>
           <button type="button" data-copy-target="note-output" class="copy-btn">コピー</button>

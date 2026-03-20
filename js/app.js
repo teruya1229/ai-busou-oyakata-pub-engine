@@ -15,6 +15,13 @@
     kindleManuscript: document.getElementById("kindle-manuscript-output"),
   };
   const chapterEpisodesField = document.getElementById("chapter-episodes");
+  const comicImageUrlInput = document.getElementById("comic-image-url");
+  const comicImageApplyBtn = document.getElementById("comic-image-apply-btn");
+  const comicImagePreview = document.getElementById("comic-image-preview");
+  const comicImagePreviewStatus = document.getElementById("comic-image-preview-status");
+
+  const COMIC_PREVIEW_STATUS_IDLE = "画像URLまたは data URL を入力し、「プレビューに反映」を押してください。";
+  const COMIC_PREVIEW_STATUS_LOADING = "読み込み中…";
 
   const exampleData = {
     theme: "段取り確認とAI活用",
@@ -199,6 +206,93 @@
       window.AIBusouKindleEngine.buildKindleManuscriptPreview(chapters);
   }
 
+  function isAllowedComicImageSource(raw) {
+    const s = (raw || "").trim();
+    if (!s) {
+      return false;
+    }
+    const lower = s.toLowerCase();
+    if (lower.startsWith("javascript:") || lower.startsWith("vbscript:")) {
+      return false;
+    }
+    if (lower.startsWith("http://") || lower.startsWith("https://")) {
+      return true;
+    }
+    if (lower.startsWith("data:image/")) {
+      return true;
+    }
+    return false;
+  }
+
+  function resetComicImagePreview() {
+    if (comicImageUrlInput) {
+      comicImageUrlInput.value = "";
+    }
+    if (comicImagePreview) {
+      comicImagePreview.onload = null;
+      comicImagePreview.onerror = null;
+      comicImagePreview.removeAttribute("src");
+      hideComicImagePreview();
+    }
+    if (comicImagePreviewStatus) {
+      comicImagePreviewStatus.textContent = COMIC_PREVIEW_STATUS_IDLE;
+      comicImagePreviewStatus.style.color = "#6b7280";
+    }
+  }
+
+  function hideComicImagePreview() {
+    if (comicImagePreview) {
+      comicImagePreview.style.display = "none";
+    }
+  }
+
+  function applyComicImagePreview() {
+    if (!comicImageUrlInput || !comicImagePreview || !comicImagePreviewStatus) {
+      return;
+    }
+    const trimmed = (comicImageUrlInput.value || "").trim();
+    if (!trimmed) {
+      comicImagePreviewStatus.textContent = "URL または data URL を入力してください。";
+      comicImagePreviewStatus.style.color = "#b45309";
+      comicImagePreview.onload = null;
+      comicImagePreview.onerror = null;
+      comicImagePreview.removeAttribute("src");
+      hideComicImagePreview();
+      return;
+    }
+    if (!isAllowedComicImageSource(trimmed)) {
+      comicImagePreviewStatus.textContent = "https://... または data:image/... 形式で入力してください。";
+      comicImagePreviewStatus.style.color = "#b45309";
+      comicImagePreview.onload = null;
+      comicImagePreview.onerror = null;
+      comicImagePreview.removeAttribute("src");
+      hideComicImagePreview();
+      return;
+    }
+
+    comicImagePreviewStatus.textContent = COMIC_PREVIEW_STATUS_LOADING;
+    comicImagePreviewStatus.style.color = "#6b7280";
+
+    comicImagePreview.onload = function () {
+      comicImagePreview.onload = null;
+      comicImagePreview.onerror = null;
+      comicImagePreview.style.display = "block";
+      comicImagePreviewStatus.textContent = "画像を表示しています。";
+      comicImagePreviewStatus.style.color = "#6b7280";
+    };
+    comicImagePreview.onerror = function () {
+      comicImagePreview.onload = null;
+      comicImagePreview.onerror = null;
+      comicImagePreview.removeAttribute("src");
+      hideComicImagePreview();
+      comicImagePreviewStatus.textContent =
+        "画像を読み込めませんでした。URL・data URL・ネットワークを確認してください。";
+      comicImagePreviewStatus.style.color = "#b91c1c";
+    };
+
+    comicImagePreview.src = trimmed;
+  }
+
   function clearOutputs() {
     const placeholder = "ここに生成結果が表示されます。";
     outputs.comic.textContent = placeholder;
@@ -292,7 +386,14 @@
   document.getElementById("reset-btn").addEventListener("click", function () {
     form.reset();
     clearOutputs();
+    resetComicImagePreview();
   });
+
+  if (comicImageApplyBtn) {
+    comicImageApplyBtn.addEventListener("click", function () {
+      applyComicImagePreview();
+    });
+  }
 
   document.querySelectorAll(".copy-btn").forEach(function (button) {
     button.addEventListener("click", function () {
