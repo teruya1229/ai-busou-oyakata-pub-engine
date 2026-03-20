@@ -111,11 +111,20 @@
     return compactSpaces(value || "");
   }
 
+  function stripDuplicateTitlePrefix(themeRaw) {
+    let theme = (themeRaw || "").trim() || "現場の小さな改善";
+    const prefix = templates.characterProfile.titlePrefix;
+    while (theme.indexOf(prefix) === 0) {
+      theme = theme.slice(prefix.length).trim();
+    }
+    return theme || "現場の小さな改善";
+  }
+
   function normalizeInput(input) {
     const tone = templates.toneTemplates[input.tone] ? input.tone : "ゆるい";
     const incident = ensureIncidentText(input.incident);
     const learning = ensureLearningText(input.learning, incident);
-    const theme = safeText(input.theme, "").trim() || "現場の小さな改善";
+    const theme = stripDuplicateTitlePrefix(safeText(input.theme, "").trim() || "現場の小さな改善");
     const characters = normalizeCharacters(input.characters);
     const coreMain = trimOptional(input.coreMain);
     const corePhrase = trimOptional(input.corePhrase);
@@ -380,20 +389,77 @@
     });
   }
 
-  function buildNoteIntro(normalized, toneData) {
-    if (normalized.coreMain) {
-      const bridge = `${toneData.noteLead}\n\n${normalized.theme}。こういうテーマで、現場では起きがちなことがあります。`;
-      return `${normalized.coreMain}\n\n${bridge}`;
-    }
+  function noteOpeningQuestionLine(normalized) {
     const src = (normalized.theme + " " + normalized.incident).toLowerCase();
     if (src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0) {
-      return [
-        "仲の良いお客様ほど、口コミを書かないことがあります。満足したことと、口コミを書くことは別だと、現場で感じることがあります。だからこそ、満足した直後の導線づくりが効いてきます。",
-        "",
-        `${normalized.theme}。こういう場面に、どこかで見覚えがあるかもしれません。`,
-      ].join("\n");
+      return "満足のあとに口コミが増えないとしたら、それは本当に「満足していなかった」からだろうか。";
     }
-    return `${toneData.noteLead}\n\n${normalized.theme}。こういうテーマで、現場では起きがちなことがあります。`;
+    return "";
+  }
+
+  function buildNoteOpeningBlock(normalized, toneData) {
+    const q = noteOpeningQuestionLine(normalized);
+    if (normalized.coreMain) {
+      if (q) {
+        return q + "\n\n" + normalized.coreMain;
+      }
+      return normalized.coreMain;
+    }
+    if (q) {
+      return q;
+    }
+    return toneData.noteLead;
+  }
+
+  function storyAsShortParagraphs(incident) {
+    const t = compactSpaces(incident);
+    if (!t || t.length < 36) {
+      return t;
+    }
+    const half = Math.floor(t.length / 2);
+    let cut = -1;
+    for (let i = half; i < t.length; i++) {
+      const ch = t.charAt(i);
+      if (ch === "。" || ch === "！" || ch === "？" || ch === "!" || ch === "?") {
+        cut = i + 1;
+        break;
+      }
+    }
+    if (cut > 0 && cut < t.length - 4) {
+      return t.slice(0, cut).trim() + "\n\n" + t.slice(cut).trim();
+    }
+    return t;
+  }
+
+  function buildNoteStoryAndPhrase(normalized, input) {
+    const rawInc = trimOptional(input.incident);
+    const incidentText = rawInc ? ensurePeriod(rawInc) : normalized.incident;
+    let story = storyAsShortParagraphs(incidentText);
+    if (normalized.corePhrase && story.indexOf(normalized.corePhrase) < 0) {
+      story = story + "\n\n" + normalized.corePhrase;
+    }
+    return story;
+  }
+
+  function buildNoteTurnAndWhy(normalized) {
+    const why = buildNoteWhy(normalized);
+    const first = compactSpaces(why.split("。")[0] || "");
+    if (!first) {
+      return "ただ、現場の前提は人それぞれだった。";
+    }
+    return "でも、" + first + "。";
+  }
+
+  function buildNoteFinalBlock(normalized) {
+    const src = (normalized.theme + " " + normalized.incident).toLowerCase();
+    const reviewish = src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0;
+    const tail = reviewish
+      ? "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？"
+      : "次の一歩、一つだけ試す。\n\nそれで十分です。";
+    if (normalized.coreConclusion) {
+      return normalized.coreConclusion + "\n\n" + tail;
+    }
+    return tail;
   }
 
   function buildNoteWhy(normalized) {
@@ -411,43 +477,30 @@
     return "起きやすいのは、小さなズレがじわじわ効率を下げることです。大きな問題ではなくても、前提のずれが積み上がると、現場のリズムが乱れます。";
   }
 
-  function buildNoteClosing(normalized) {
-    let out = "ここから先は、自分の現場で一度だけ試せる行動に落としてみてください。";
-    if (normalized.inputSparse) {
-      out += " まずは一つだけ決めて試す。それで十分です。";
-    }
-    if (normalized.coreConclusion) {
-      out = `${normalized.coreConclusion}\n\n${out}`;
-    }
-    return out;
-  }
-
   function buildNote(input) {
     const normalized = normalizeInput(input);
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const toneData = templates.toneTemplates[normalized.tone];
-    const incidentBody = normalized.corePhrase
-      ? `${normalized.incident}\n\n${normalized.corePhrase}`
-      : normalized.incident;
-    const lines = [
+    const rawLearn = trimOptional(input.learning);
+    const learningLine = rawLearn ? ensurePeriod(rawLearn) : ensurePeriod(compactSpaces(normalized.learning));
+    const parts = [
       `# ${leadTitle}`,
       "",
-      "## 導入",
-      buildNoteIntro(normalized, toneData),
+      buildNoteOpeningBlock(normalized, toneData),
       "",
-      "## 現場で起きたこと",
-      incidentBody,
+      buildNoteStoryAndPhrase(normalized, input),
       "",
-      "## なぜそうなったか",
-      buildNoteWhy(normalized),
+      buildNoteTurnAndWhy(normalized),
       "",
-      "## 気づき",
-      normalized.learning,
+      learningLine,
       "",
-      "## まとめ",
-      buildNoteClosing(normalized),
+      buildNoteFinalBlock(normalized),
     ];
-    return lines.join("\n");
+    let body = parts.join("\n");
+    if (normalized.inputSparse) {
+      body += "\n\n" + "入力が短くても、決めるのは一つで十分。";
+    }
+    return body;
   }
 
   function buildXPost(input) {

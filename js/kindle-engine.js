@@ -53,31 +53,25 @@
   }
 
   function extractNoteBodyOutline(noteText) {
-    const lines = (noteText || "").split("\n");
-    const wantedHeaders = ["## 現場で起きたこと", "## なぜそうなったか", "## 気づき", "## まとめ"];
+    const raw = (noteText || "").replace(/\r\n/g, "\n").trim();
+    if (!raw) {
+      return [];
+    }
+    let body = raw;
+    if (body.indexOf("# ") === 0) {
+      body = body.replace(/^#[^\n]*\n+/, "");
+    }
+    const paras = body
+      .split(/\n\n+/)
+      .map(function (p) {
+        return compactSpaces(p);
+      })
+      .filter(Boolean);
+    const labels = ["導入", "実話", "反転・背景", "気づき", "締め"];
     const outline = [];
-
-    wantedHeaders.forEach(function (header) {
-      const index = lines.indexOf(header);
-      if (index < 0) {
-        return;
-      }
-      let content = "";
-      for (let i = index + 1; i < lines.length; i += 1) {
-        const current = lines[i];
-        if (current.indexOf("## ") === 0) {
-          break;
-        }
-        if (compactSpaces(current)) {
-          content = compactSpaces(current);
-          break;
-        }
-      }
-      if (content) {
-        outline.push(header.replace("## ", "") + ": " + content);
-      }
-    });
-
+    for (let i = 0; i < paras.length && i < labels.length; i++) {
+      outline.push(labels[i] + ": " + paras[i].slice(0, 220));
+    }
     return outline;
   }
 
