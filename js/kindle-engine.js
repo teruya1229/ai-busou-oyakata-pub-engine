@@ -262,6 +262,8 @@
     const hook = extractComicHook(comicText, model.incident);
     const bodyOutline = extractNoteBodyOutline(noteText);
     const keyPoint = ensureActionEnding(model.lesson);
+    const catBlob = buildEpisodeCategoryBlob(model);
+    const catResult = inferMaterialCategories(catBlob);
 
     return {
       sectionTitle: sectionTitle,
@@ -270,6 +272,8 @@
       keyPoint: keyPoint,
       noteFull: noteText,
       outputStyle: model.outputStyle || "",
+      materialCategoryPrimary: catResult.primary,
+      materialCategoryLabels: catResult.labels,
       sourceSummary: {
         comic: compactSpaces(comicText).slice(0, 160),
         note: compactSpaces(noteText).slice(0, 160),
@@ -291,6 +295,11 @@
       styleHint,
       "",
       "節タイトル: " + material.sectionTitle,
+      "■ 本素材カテゴリ（仕分け）: " +
+        formatCategoryLine({
+          primary: material.materialCategoryPrimary,
+          labels: material.materialCategoryLabels || [],
+        }),
       "",
       "────────",
       draftBody,
@@ -319,6 +328,201 @@
       result.push(text);
     });
     return result;
+  }
+
+  function inferMaterialCategories(blob) {
+    const text = compactSpaces(blob || "");
+    const labels = [];
+    if (/口コミ|顧客|導線|集客|レビュー|紹介|アンケート/.test(text)) {
+      labels.push("顧客と導線");
+    }
+    if (/安売り|価格|客層|値引|安売/.test(text)) {
+      labels.push("価格と客層");
+    }
+    if (/契約|定期|相性|解約|切る|定期契約/.test(text)) {
+      labels.push("相性と契約判断");
+    }
+    if (
+      /AI活用|ChatGPT|GPT|生成AI|プロンプト|仕組み化|自動化|テンプレ|ルール化|ノーコード|機械学習|API連携/.test(text) ||
+      /段取り[^。\n]{0,16}AI|AI[^。\n]{0,16}活用/.test(text)
+    ) {
+      labels.push("AI活用と仕組み化");
+    }
+    if (/段取り|手戻り|朝礼|作業順|確認漏れ|手順ずれ|手順|現場改善|認識ずれ|写真共有/.test(text)) {
+      labels.push("現場改善と段取り");
+    }
+    if (!labels.length) {
+      return { primary: "その他／雑感", labels: ["その他／雑感"] };
+    }
+    return { primary: labels[0], labels: labels };
+  }
+
+  function buildEpisodeCategoryBlob(model) {
+    return [
+      model.titleTheme,
+      model.incident,
+      model.lesson,
+      model.coreMain || "",
+      model.corePhrase || "",
+      model.coreConclusion || "",
+    ].join(" ");
+  }
+
+  function formatCategoryLine(cat) {
+    const p = cat.primary;
+    const rest = (cat.labels || []).filter(function (x) {
+      return x !== p;
+    });
+    if (!rest.length) {
+      return p;
+    }
+    return p + "（副タグ: " + rest.join("、") + "）";
+  }
+
+  function inferCategoryFromSectionMaterial(section) {
+    if (section && section.materialCategoryPrimary) {
+      return {
+        primary: section.materialCategoryPrimary,
+        labels: section.materialCategoryLabels || [section.materialCategoryPrimary],
+      };
+    }
+    const blob = [
+      section && section.sectionTitle,
+      ((section && section.bodyOutline) || []).join(" "),
+      section && section.keyPoint,
+      compactSpaces((section && section.noteFull) || "").slice(0, 400),
+    ].join(" ");
+    return inferMaterialCategories(blob);
+  }
+
+  function countPrimaryCategories(primaries) {
+    const counts = {};
+    (primaries || []).forEach(function (p) {
+      const k = compactSpaces(p) || "その他／雑感";
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    return counts;
+  }
+
+  function formatChapterCategoryBreakdown(primaries) {
+    const counts = countPrimaryCategories(primaries);
+    const parts = Object.keys(counts).map(function (k) {
+      return k + "×" + counts[k];
+    });
+    let dominant = "その他／雑感";
+    let max = 0;
+    Object.keys(counts).forEach(function (k) {
+      if (counts[k] > max) {
+        max = counts[k];
+        dominant = k;
+      }
+    });
+    return {
+      dominantCategory: dominant,
+      dominantCount: max,
+      total: (primaries || []).length,
+      countLine: parts.join("、"),
+    };
+  }
+
+  function buildChapterCategoryBlock(sectionMaterials) {
+    const primaries = (sectionMaterials || []).map(function (section) {
+      return inferCategoryFromSectionMaterial(section).primary;
+    });
+    const bd = formatChapterCategoryBreakdown(primaries);
+    const lines = [];
+    (sectionMaterials || []).forEach(function (section, index) {
+      const c = inferCategoryFromSectionMaterial(section);
+      lines.push(
+        "第" +
+          (index + 1).toString() +
+          "節 → " +
+          c.primary +
+          (c.labels.length > 1 ? "（ヒット: " + c.labels.join("・") + "）" : "")
+      );
+    });
+    lines.push(
+      "章の主カテゴリ: 「" +
+        bd.dominantCategory +
+        "」（" +
+        bd.dominantCount.toString() +
+        "/" +
+        bd.total.toString() +
+        "節）"
+    );
+    if (bd.countLine) {
+      lines.push("内訳: " + bd.countLine);
+    }
+    return lines.join("\n");
+  }
+
+  function buildBookCategorySummary(chapterMaterials) {
+    const chapters = chapterMaterials || [];
+    if (!chapters.length) {
+      return "（章素材なし）";
+    }
+    const chapterPrimaries = [];
+    const lines = [];
+    chapters.forEach(function (ch, chapterIndex) {
+      const secs = ch.sectionMaterials || [];
+      let prim = "その他／雑感";
+      if (secs.length) {
+        const sp = secs.map(function (s) {
+          return inferCategoryFromSectionMaterial(s).primary;
+        });
+        const bd = formatChapterCategoryBreakdown(sp);
+        prim = bd.dominantCategory;
+        chapterPrimaries.push(prim);
+        lines.push(
+          "第" +
+            (chapterIndex + 1).toString() +
+            "章「" +
+            chapterDisplayTitleForBook(ch) +
+            "」→ 主カテゴリ「" +
+            prim +
+            "」（節内訳: " +
+            formatChapterCategoryBreakdown(sp).countLine +
+            "）"
+        );
+      } else {
+        prim = inferMaterialCategories(compactSpaces(ch.chapterTheme) + " " + compactSpaces(ch.chapterTitle))
+          .primary;
+        chapterPrimaries.push(prim);
+        lines.push(
+          "第" +
+            (chapterIndex + 1).toString() +
+            "章「" +
+            chapterDisplayTitleForBook(ch) +
+            "」→ 主カテゴリ「" +
+            prim +
+            "」（節なし・章テーマから推定）"
+        );
+      }
+    });
+    const bookCounts = countPrimaryCategories(chapterPrimaries);
+    let bookDominant = "その他／雑感";
+    let bookMax = 0;
+    Object.keys(bookCounts).forEach(function (k) {
+      if (bookCounts[k] > bookMax) {
+        bookMax = bookCounts[k];
+        bookDominant = k;
+      }
+    });
+    const bookParts = Object.keys(bookCounts).map(function (k) {
+      return k + "×" + bookCounts[k];
+    });
+    lines.push("");
+    lines.push(
+      "本全体の主カテゴリ傾向: 「" +
+        bookDominant +
+        "」（" +
+        bookMax.toString() +
+        "/" +
+        chapters.length.toString() +
+        "章）"
+    );
+    lines.push("章ごとの内訳: " + bookParts.join("、"));
+    return lines.join("\n");
   }
 
   function sectionTitleBase(section) {
@@ -644,6 +848,8 @@
       return compactSpaces(section.outputStyle || "") === "kindle";
     });
 
+    const chapterCategoryBlock = buildChapterCategoryBlock(sectionMaterials);
+
     return {
       chapterTitle: chapterTitle,
       chapterTheme: chapterTheme,
@@ -654,6 +860,7 @@
       chapterIntroDraft: chapterIntroDraft,
       sectionBridges: sectionBridges,
       chapterClosing: chapterClosing,
+      chapterCategoryBlock: chapterCategoryBlock,
       outputStyleAnyKindle: outputStyleAnyKindle,
       sourceSummary: sectionMaterials.map(function (section, index) {
         return {
@@ -711,6 +918,9 @@
       "",
       "章タイトル: " + material.chapterTitle,
       "章テーマ（束ねた見出し）: " + material.chapterTheme,
+      "",
+      "■ 節ごとのカテゴリ（仕分け）",
+      material.chapterCategoryBlock || "（節なし）",
       "",
       "■ 章の導入",
       material.chapterIntroDraft,
@@ -841,6 +1051,7 @@
     const chapterOrderNote = buildChapterOrderNote(chapterMaterials);
     const tocFormatted = buildBookTocFormatted(chapterMaterials);
     const bookClosingPitch = buildBookClosingPitch(chapterMaterials, keyInsights);
+    const bookCategorySummary = buildBookCategorySummary(chapterMaterials);
 
     return {
       bookTitle: bookTitle,
@@ -857,6 +1068,7 @@
       chapterOrderNote: chapterOrderNote,
       tocFormatted: tocFormatted,
       bookClosingPitch: bookClosingPitch,
+      bookCategorySummary: bookCategorySummary,
       sourceSummary: chapterMaterials.map(function (chapter, index) {
         return {
           chapterIndex: index + 1,
@@ -914,6 +1126,9 @@
       .concat(sellableMainBlock)
       .concat(sellableSubBlock)
       .concat([
+        "■ 本素材カテゴリ（仕分け・全体）",
+        material.bookCategorySummary || "（章素材なし）",
+        "",
         "■ 本のコンセプト",
         material.bookConcept,
         "",

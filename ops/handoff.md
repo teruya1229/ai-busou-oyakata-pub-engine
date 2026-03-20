@@ -17,11 +17,12 @@
 ## Kindle節素材プレビュー（実装メモ）
 
 - **`buildKindleSectionPreview`**（`js/kindle-engine.js`）: **原稿下書き寄り**。note に **【実話】** がある場合は **■見出し付き**で本文を展開し、**outputStyle が Kindle向け**のときの意図が読み取りやすい。**※ 章組み用の短い見出しリスト**は従来の `bodyOutline` を末尾に残す（章プレビュー等の互換）
+- **本素材カテゴリ（仕分け）**: **`inferMaterialCategories`** がテーマ・現場・学び・芯から **顧客と導線／価格と客層／相性と契約判断／AI活用と仕組み化／現場改善と段取り／その他** を付与。**`buildKindleSectionMaterial`** に `materialCategoryPrimary` / `materialCategoryLabels` を追加。**章**は `chapterCategoryBlock`、**本**は `bookCategorySummary`（`buildBookCategorySummary`）
 
 ## Kindle章素材プレビュー（複数入力・実装メモ）
 
 - **`buildKindleChapterMaterial`**（`js/kindle-engine.js`）: 複数節のとき **章テーマ**は各節タイトルのベース（`（` より前）を **・** で束ねる。戻り値に **`chapterIntroDraft` / `sectionBridges` / `chapterClosing` / `outputStyleAnyKindle`** を追加。節素材に **`outputStyle`** を1フィールド追加（既存互換のため任意）
-- **`buildKindleChapterPreview`**: 表示を **章ドラフト寄り**にし、**■ 章の導入 → 状況フックの抜粋 → 節の並びと接続（◇ ブリッジ）→ 章末** のあと、**章構成メモ（互換）**で従来の一覧を残す
+- **`buildKindleChapterPreview`**: 表示を **章ドラフト寄り**にし、**■ 節ごとのカテゴリ（仕分け）**を先頭付近に表示。**■ 章の導入 → 状況フックの抜粋 → 節の並びと接続（◇ ブリッジ）→ 章末** のあと、**章構成メモ（互換）**で従来の一覧を残す
 
 ## Kindle本素材プレビュー（複数章・実装メモ）
 
