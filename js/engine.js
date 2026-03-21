@@ -1328,8 +1328,6 @@
     const parts = [
       `# ${leadTitle}`,
       "",
-      buildNoteTitleCandidateBlock(normalized),
-      "",
       buildNoteOpeningBlock(normalized, toneData),
       "",
       buildNoteStoryAndPhrase(normalized, input),
@@ -1460,11 +1458,13 @@
   }
 
   function buildAllOutputs(input) {
+    const normalized = normalizeInput(input);
     return {
       comic: buildComic(input),
       comicPrompt: buildComicPanelPrompts(input),
       comicUnifiedPrompt: buildUnifiedComicImagePrompt(input),
       note: buildNote(input),
+      noteTitleSuggestions: buildNoteTitleCandidateBlock(normalized),
       xPost: buildXPost(input),
     };
   }
@@ -1475,6 +1475,7 @@
     buildComicPanelPrompts,
     buildUnifiedComicImagePrompt,
     buildNote,
+    buildNoteTitleCandidateBlock,
     buildXPost,
     buildAllOutputs,
   };

@@ -130,6 +130,7 @@
           よく使うブロックをここから一発コピーできます。<strong>スタイル向けにまとめてコピー</strong>は、出力スタイル（上のプルダウン）に合わせて本文・4コマ・統合・節素材を連結します（区切りは <code>---</code> 行）。
         </p>
         <div class="actions">
+          <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">noteタイトル案をコピー</button>
           <button type="button" data-copy-target="note-output" class="copy-btn">note本文をコピー</button>
           <button type="button" data-copy-target="comic-output" class="copy-btn">4コマ構成をコピー</button>
           <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">4コマ統合プロンプトをコピー</button>
@@ -270,6 +271,17 @@
             style="max-width: 100%; height: auto; display: none"
           />
         </div>
+      </section>
+
+      <section class="card">
+        <div class="result-head">
+          <h2>noteタイトル案</h2>
+          <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">タイトル案をコピー</button>
+        </div>
+        <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
+          本文とは別枠です。note のタイトル欄用に選んで貼り付けられます。
+        </p>
+        <pre id="note-title-suggestions-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
 
       <section class="card">

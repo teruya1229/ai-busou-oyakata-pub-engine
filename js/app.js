@@ -4,6 +4,7 @@
     comic: document.getElementById("comic-output"),
     comicPrompt: document.getElementById("comic-prompt-output"),
     comicUnifiedPrompt: document.getElementById("comic-unified-prompt-output"),
+    noteTitleSuggestions: document.getElementById("note-title-suggestions-output"),
     note: document.getElementById("note-output"),
     xPost: document.getElementById("x-output"),
     kindle: document.getElementById("kindle-output"),
@@ -208,6 +209,12 @@
       outputs.comicUnifiedPrompt = unifiedEl;
     }
     outputs.note.textContent = result.note;
+    if (outputs.noteTitleSuggestions) {
+      outputs.noteTitleSuggestions.textContent =
+        result.noteTitleSuggestions != null && result.noteTitleSuggestions !== ""
+          ? result.noteTitleSuggestions
+          : OUTPUT_PLACEHOLDER;
+    }
     outputs.xPost.textContent = result.xPost;
     updateComicImageReviewPanel();
   }
@@ -817,6 +824,9 @@
       outputs.comicUnifiedPrompt = unifiedClear;
     }
     outputs.note.textContent = placeholder;
+    if (outputs.noteTitleSuggestions) {
+      outputs.noteTitleSuggestions.textContent = placeholder;
+    }
     outputs.xPost.textContent = placeholder;
     if (outputs.kindle) {
       outputs.kindle.textContent = placeholder;
@@ -875,13 +885,13 @@
     const style = (data.get("outputStyle") || "").trim();
     let ids;
     if (style === "note") {
-      ids = ["note-output", "comic-output"];
+      ids = ["note-title-suggestions-output", "note-output", "comic-output"];
     } else if (style === "comic") {
-      ids = ["comic-output", "comic-unified-prompt-output"];
+      ids = ["note-title-suggestions-output", "comic-output", "comic-unified-prompt-output"];
     } else if (style === "kindle") {
-      ids = ["note-output", "kindle-output"];
+      ids = ["note-title-suggestions-output", "note-output", "kindle-output"];
     } else {
-      ids = ["note-output", "comic-output", "comic-unified-prompt-output"];
+      ids = ["note-title-suggestions-output", "note-output", "comic-output", "comic-unified-prompt-output"];
     }
     const parts = [];
     for (let i = 0; i < ids.length; i += 1) {
