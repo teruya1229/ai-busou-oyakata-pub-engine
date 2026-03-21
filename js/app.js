@@ -54,6 +54,89 @@
     return (text || "").replace(/\s+/g, " ").trim();
   }
 
+  function stripTrailPunct(s) {
+    return (s || "").replace(/[。！？!?]+$/, "").trim();
+  }
+
+  /** 題名向けに短くする（長いときだけ …） */
+  function shortenTitleLike(s, maxLen) {
+    const t = stripTrailPunct(compactOneLineMemo(s));
+    if (!t) {
+      return "";
+    }
+    if (t.length <= maxLen) {
+      return t;
+    }
+    return t.slice(0, maxLen - 1) + "…";
+  }
+
+  /** 。！？ で区切り（末尾に句読点がない文も1つとして拾う） */
+  function splitJapaneseSentences(s) {
+    const t = compactOneLineMemo(s);
+    if (!t) {
+      return [];
+    }
+    const out = [];
+    let buf = "";
+    for (let i = 0; i < t.length; i += 1) {
+      const ch = t[i];
+      buf += ch;
+      if (/[。！？!?]/.test(ch)) {
+        const piece = buf.trim();
+        if (piece) {
+          out.push(piece);
+        }
+        buf = "";
+      }
+    }
+    const tail = buf.trim();
+    if (tail) {
+      out.push(tail);
+    }
+    return out.length ? out : [t];
+  }
+
+  /** 1分割だけ：文・接続詞で theme / coreMain / coreConclusion を分ける */
+  function expandSingleSegmentMemo(single) {
+    const full = compactOneLineMemo(single);
+    if (!full) {
+      return null;
+    }
+    const sentences = splitJapaneseSentences(full);
+    if (sentences.length >= 2) {
+      const first = sentences[0];
+      const last = sentences[sentences.length - 1];
+      if (sentences.length === 2) {
+        return {
+          theme: shortenTitleLike(first, 36),
+          coreMain: first,
+          coreConclusion: last,
+        };
+      }
+      const middle = sentences.slice(1, -1).join(" ");
+      return {
+        theme: shortenTitleLike(first, 36),
+        coreMain: middle || first,
+        coreConclusion: last,
+      };
+    }
+    const conn = /^(.*?)(?:けど|でも|のに|だから)(.+)$/.exec(full);
+    if (conn) {
+      const left = compactOneLineMemo(conn[1]);
+      const right = compactOneLineMemo(conn[2].replace(/^[、,]\s*/, ""));
+      return {
+        theme: shortenTitleLike(left, 36),
+        coreMain: full,
+        coreConclusion: right || full,
+      };
+    }
+    return {
+      theme: shortenTitleLike(full, 32),
+      coreMain: full,
+      coreConclusion: "",
+    };
+  }
+
   /** 1行メモを theme / coreMain / coreConclusion に展開（空なら null） */
   function expandOneLineMemoParts(line) {
     const raw = compactOneLineMemo(line);
@@ -83,11 +166,7 @@
         coreConclusion: "",
       };
     }
-    return {
-      theme: parts[0],
-      coreMain: parts[0],
-      coreConclusion: "",
-    };
+    return expandSingleSegmentMemo(parts[0]);
   }
 
   function getInputFromForm() {
