@@ -23,8 +23,145 @@
     return /[。！？!?]$/.test(text) ? text : text + "。";
   }
 
+  /**
+   * 題材軸（コパイロットの「整理テンプレ」と独立。論点生成の分岐に使う）
+   */
+  function inferTopicAxis(bundleRaw) {
+    const b = compactSpaces(bundleRaw || "").toLowerCase();
+    if (b.indexOf("口コミ") >= 0 || b.indexOf("レビュー") >= 0) {
+      return "review";
+    }
+    if (
+      b.indexOf("共通認識") >= 0 ||
+      b.indexOf("言葉を揃") >= 0 ||
+      b.indexOf("言葉で揃") >= 0 ||
+      b.indexOf("共有不足") >= 0 ||
+      b.indexOf("食い違い") >= 0 ||
+      b.indexOf("伝わってない") >= 0 ||
+      b.indexOf("伝わっておら") >= 0 ||
+      b.indexOf("前提がずれ") >= 0 ||
+      b.indexOf("認識のずれ") >= 0 ||
+      b.indexOf("認識がそろわ") >= 0 ||
+      b.indexOf("短い確認でも") >= 0
+    ) {
+      return "alignment_comm";
+    }
+    if (b.indexOf("反省") >= 0 || b.indexOf("後悔") >= 0 || b.indexOf("感情") >= 0 || b.indexOf("気持ち") >= 0) {
+      return "emotion";
+    }
+    if (
+      b.indexOf("弟子") >= 0 ||
+      b.indexOf("協力会社") >= 0 ||
+      b.indexOf("教育") >= 0 ||
+      b.indexOf("指導") >= 0 ||
+      b.indexOf("研修") >= 0 ||
+      (b.indexOf("若手") >= 0 && (b.indexOf("職人") >= 0 || b.indexOf("現場") >= 0))
+    ) {
+      return "apprentice_education";
+    }
+    if (b.indexOf("直営業") >= 0 || b.indexOf("営業") >= 0 || b.indexOf("集客") >= 0 || b.indexOf("問い合わせ") >= 0) {
+      return "sales";
+    }
+    if (
+      b.indexOf("人間関係") >= 0 ||
+      b.indexOf("礼儀") >= 0 ||
+      b.indexOf("人として") >= 0 ||
+      (b.indexOf("信頼") >= 0 && b.indexOf("お客") >= 0)
+    ) {
+      return "human_relation";
+    }
+    if (b.indexOf("価格") >= 0 || b.indexOf("単価") >= 0 || b.indexOf("最安") >= 0 || b.indexOf("安値") >= 0 || b.indexOf("見積") >= 0) {
+      return "price";
+    }
+    if (b.indexOf("客層") >= 0 || b.indexOf("相性") >= 0 || b.indexOf("向き不向き") >= 0) {
+      return "customer_fit";
+    }
+    if (
+      b.indexOf("契約") >= 0 ||
+      (b.indexOf("売上") >= 0 && b.indexOf("しんどい") >= 0) ||
+      b.indexOf("続ける") >= 0
+    ) {
+      return "contract";
+    }
+    if (
+      b.indexOf("段取り") >= 0 ||
+      b.indexOf("手戻り") >= 0 ||
+      b.indexOf("朝礼") >= 0 ||
+      b.indexOf("確認漏れ") >= 0 ||
+      b.indexOf("手順") >= 0 ||
+      b.indexOf("現場改善") >= 0 ||
+      b.indexOf("ミス") >= 0
+    ) {
+      return "site_ops";
+    }
+    return "general";
+  }
+
+  function gapLabelForAxis(axis) {
+    if (axis === "alignment_comm") {
+      return "ズレのポイント";
+    }
+    if (axis === "site_ops") {
+      return "現場の問題";
+    }
+    if (axis === "price" || axis === "customer_fit") {
+      return "価格・客層の引っかかり";
+    }
+    if (axis === "human_relation") {
+      return "人間関係の引っかかり";
+    }
+    if (axis === "apprentice_education") {
+      return "関係・役割の引っかかり";
+    }
+    if (axis === "sales") {
+      return "営業・商流の引っかかり";
+    }
+    if (axis === "emotion") {
+      return "心に残ったこと";
+    }
+    if (axis === "review") {
+      return "口コミまわりの引っかかり";
+    }
+    if (axis === "contract") {
+      return "続け方の引っかかり";
+    }
+    return "引っかかった点";
+  }
+
+  function partnerProbeLine(axis, themeChip) {
+    const ch = clipComicLine(themeChip, 26);
+    if (axis === "alignment_comm") {
+      return "「" + ch + "」、いちばんズレたのはここ？";
+    }
+    if (axis === "human_relation" || axis === "apprentice_education") {
+      return "「" + ch + "」、ここが一番しんどかった？";
+    }
+    if (axis === "price" || axis === "customer_fit") {
+      return "「" + ch + "」、いちばん効いたのはどこ？";
+    }
+    if (axis === "sales") {
+      return "「" + ch + "」、次に決めるならどこ？";
+    }
+    if (axis === "emotion") {
+      return "「" + ch + "」、いちばん残ったのはどこ？";
+    }
+    return "「" + ch + "」、いちばん引っかかったのはここ？";
+  }
+
+  function copilotSecondLineForTopic(axis, learning, toneData) {
+    const lr = clipComicLine(learning, 40);
+    if (lr) {
+      return lr;
+    }
+    if (axis === "alignment_comm") {
+      return clipComicLine(toneData.copilotShort || "確認の順、どこで分かれた？", 40);
+    }
+    return clipComicLine(toneData.copilotReaction || "一歩、試す？", 36);
+  }
+
   function buildFallbackLearning(incident) {
     const normalizedIncident = compactSpaces(incident);
+    const ax = inferTopicAxis(normalizedIncident);
     if (normalizedIncident.indexOf("口コミ") >= 0 || normalizedIncident.indexOf("レビュー") >= 0) {
       return "満足と口コミは別。導線が要る、という感覚を学びとして残す。";
     }
@@ -34,25 +171,44 @@
     if (normalizedIncident.indexOf("確認") >= 0 || normalizedIncident.indexOf("漏れ") >= 0) {
       return "確認漏れは、作業前の声かけ一つで減らせる。";
     }
-    return "短い確認でも、先に共通認識を作るとズレが減る。";
+    if (ax === "price" || ax === "customer_fit") {
+      return "価格は、集客だけでなく客層の作り方も変える。次の一歩を一つにする。";
+    }
+    if (ax === "human_relation") {
+      return "人としての線引きと、ルールを、まず短く言語化しておく。";
+    }
+    if (ax === "apprentice_education") {
+      return "役割と境界を、関係が良いほど言葉にしておく。";
+    }
+    if (ax === "sales") {
+      return "誰の顧客に、どう向けるか。商流の前提を一つ決める。";
+    }
+    if (ax === "alignment_comm") {
+      return "伝え方と受け取り方のズレを、短い一文で切り分けておく。";
+    }
+    return "今回の学びを、次の一歩に一つだけ落とす。";
   }
 
   function deriveIncidentFromCore(theme, coreMain, coreConclusion) {
     const bundle = compactSpaces(theme + " " + coreMain + " " + coreConclusion);
     const lower = bundle.toLowerCase();
+    const ax = inferTopicAxis(bundle);
     if (lower.indexOf("口コミ") >= 0 || lower.indexOf("レビュー") >= 0) {
       return "関係は良くなった。喜んでもらえた。それでも口コミの導線は動かなかった。";
     }
     const stem = coreMain || coreConclusion || theme;
     if (!stem) {
-      return "作業前の認識がそろわず、手戻りが出た。";
+      return "出来事のメモが短く、現場の輪郭だけが残った。";
     }
     const clipped = stem.length > 96 ? stem.slice(0, 96) + "…" : stem;
     const th = compactSpaces(theme || "");
     if (th) {
       return ensurePeriod("「" + th + "」の話の場面で、" + clipped + "——ここが、会話の中心に残った。");
     }
-    return ensurePeriod(clipped + "——この認識のずれが、その日の論点になった。");
+    if (ax === "alignment_comm") {
+      return ensurePeriod(clipped + "——伝え方と受け取り方のズレが、その日の論点になった。");
+    }
+    return ensurePeriod(clipped + "——この経験が、その日の話の中心になった。");
   }
 
   function ensureLearningText(text, incident) {
@@ -72,7 +228,7 @@
   function ensureIncidentText(text) {
     const trimmed = compactSpaces(text);
     if (!trimmed) {
-      return "作業前の認識がそろわず、手戻りが出た。";
+      return "出来事のメモを一言足すと、具体が出やすい。";
     }
     if (trimmed.length < 16) {
       return ensurePeriod(trimmed) + " その結果、作業の流れに迷いが生まれた。";
@@ -195,14 +351,16 @@
     const characters = normalizeCharacters(input.characters);
     const patternSource = compactSpaces(incident + " " + coreMain + " " + corePhrase + " " + coreConclusion);
     const comicPattern = selectComicPattern(patternSource, learning);
+    const topicBundle = compactSpaces(theme + " " + incident + " " + coreMain + " " + coreConclusion + " " + learning + " " + corePhrase);
+    const topicAxis = inferTopicAxis(topicBundle);
     const inputSparse =
       !compactSpaces(input.theme) ||
       !compactSpaces(input.characters) ||
       compactSpaces(input.incident).length < 10 ||
       compactSpaces(input.learning).length < 6;
     const learningFocus =
-      comicPattern === "誤解型"
-        ? "短文・空欄入力でも、確認の要点を一つに絞って学びとして残す。"
+      topicAxis === "alignment_comm" || comicPattern === "誤解型"
+        ? "短文でも、要点を一つに絞って学びとして残す。"
         : "入力が短くても、改善点を一つ具体化して次の現場につなげる。";
     const outputStyle = resolveOutputStyle(input && input.outputStyle);
     const notePreset = resolveNotePreset(input && input.notePreset);
@@ -224,6 +382,7 @@
       outputStyle,
       notePreset,
       noteLengthPreset,
+      topicAxis,
     };
   }
 
@@ -378,20 +537,22 @@
   }
 
   function buildComicGapNarrative(normalized, incidentForComic, reviewMode) {
+    const axisKey = reviewMode ? "review" : normalized.topicAxis || "general";
+    const label = gapLabelForAxis(axisKey);
     if (reviewMode) {
       const cm = compactSpaces(normalized.coreMain || "");
       if (cm) {
-        return "ズレ: " + clipComicLine(cm, 72);
+        return label + ": " + clipComicLine(cm, 72);
       }
-      return "ズレ: 満足と口コミの導線が、別の話になっている。";
+      return label + ": 満足と口コミの導線が、別の話になっている。";
     }
     const cm = compactSpaces(normalized.coreMain || "");
     if (cm) {
-      return "ズレ: " + clipComicLine(cm, 76);
+      return label + ": " + clipComicLine(cm, 76);
     }
     const inc = compactSpaces(incidentForComic.replace(/^状況:\s*/, ""));
     const first = inc.split(/[。！？!?]/)[0] || inc;
-    return "ズレ: " + clipComicLine(first, 76);
+    return label + ": " + clipComicLine(first, 76);
   }
 
   function buildComicInsightNarrative(normalized) {
@@ -414,11 +575,9 @@
     if (style === "kindle") {
       return comicPanel3Dialogue(toneData, protagonist, partner, style);
     }
+    const axis = normalized.topicAxis || "general";
     const a = clipComicLine(normalized.coreMain || normalized.theme, 40);
-    const b = clipComicLine(
-      normalized.learning || toneData.copilotShort || toneData.copilotQuestion,
-      40
-    );
+    const b = clipComicLine(copilotSecondLineForTopic(axis, normalized.learning, toneData), 40);
     return [`${protagonist}: ${a}`, `${partner}: ${b}`];
   }
 
@@ -426,12 +585,12 @@
     if (normalized.corePhrase) {
       return `${partner}: 「${normalized.corePhrase}」`;
     }
+    const axis = normalized.topicAxis || "general";
+    const probe = partnerProbeLine(axis, normalized.theme);
     if (style === "kindle") {
-      const chip = clipComicLine(normalized.theme, 28);
-      return `${partner}: 「${chip}」、いちばんズレたのはここ？`;
+      return `${partner}: ${probe}`;
     }
-    const chip = clipComicLine(normalized.theme, 28);
-    return `${partner}: 「${chip}」、いちばんズレたのはここ？`;
+    return `${partner}: ${probe}`;
   }
 
   function buildComic(input) {
@@ -523,7 +682,7 @@
     };
     const compositionByPanel = {
       1: "中景、状況が伝わるカット",
-      2: "やや寄り、ズレや違和感が分かる構図",
+      2: "やや寄り、引っかかりや緊張が分かる構図",
       3: "会話が読み取りやすい対話構図",
       4: "引き気味、前進で締める安定構図",
     };
@@ -640,7 +799,7 @@
       normalized.coreMain ? `コアメッセージ: ${normalized.coreMain}` : "",
       normalized.corePhrase ? `必須フレーズ（台詞として描かず、情景で示す）: ${normalized.corePhrase}` : "",
       normalized.coreConclusion ? `絶対にズラさない結論（4コマ目で前進・改善へ）: ${normalized.coreConclusion}` : "",
-      "現場のリアルな流れ: 状況 → 違和感 → 気づき → 改善。最終コマは必ず改善・前進の印象で締める。",
+      "4コマの流れ: 出来事 → 引っかかり → 気づき → 次の一手。最終コマは改善・前進の印象で締める。",
     ].filter(function (line) {
       return line !== "";
     });
@@ -733,10 +892,10 @@
       if (b === "review") {
         return "レビュー導線は、満足の直後の設計とセットで見る。";
       }
-      return "満足のあとに口コミが増えないとき、まず見るのは「導線」と「客層の行動」のズレだ。";
+      return "満足のあとに口コミが増えないとき、まず見るのは「導線」と「客層の行動」の噛み合わせだ。";
     }
     if (b === "satisfactionKuchikomi") {
-      return "満足の瞬間と、口コミの動きは同じタイミングでは起きない。どこでズレる？";
+      return "満足の瞬間と、口コミの動きは同じタイミングでは起きない。どこで噛み合わない？";
     }
     if (b === "relationCustomer") {
       return "関係が良くなっても、口コミに繋がるとは限らない。何が別問題だ？";
@@ -770,13 +929,13 @@
       return base;
     }
     if (preset === "strong") {
-      return base + " 今日は、前提を言い切る。";
+      return base + " 今日は、論点を一言で言い切る。";
     }
     if (preset === "soft") {
       return base + " 今日は、ちょっとだけ静かに。";
     }
     if (preset === "biz") {
-      return base + " 現場の話は、導線と仕組みに変換できる。";
+      return base + " 現場の話は、次の一手に落とす。";
     }
     return base;
   }
@@ -998,6 +1157,104 @@
     return (blob || "").indexOf(needle);
   }
 
+  function pickNoteTurnForTopicAxis(axis, normalized, preset) {
+    const p = preset || "";
+    if (axis === "review") {
+      return pickNoteTurnMidBranch("review", p);
+    }
+    if (axis === "price") {
+      return pickNoteTurnMidBranch("price", p);
+    }
+    if (axis === "contract") {
+      return pickNoteTurnMidBranch("contract", p);
+    }
+    if (axis === "site_ops") {
+      if (p === "strong") {
+        return "だが、段取りのズレは、能力不足より「順番の未共有」で起きることが多い。";
+      }
+      if (p === "soft") {
+        return "けれど、小さな手戻りは、積み上がると流れを止める。";
+      }
+      if (p === "biz") {
+        return "でも、段取りは短い言語化で共有できる。";
+      }
+      return "でも、順番のズレが積み上がると、現場のリズムが乱れる。";
+    }
+    if (axis === "alignment_comm") {
+      if (p === "strong") {
+        return "だが、伝え方と受け取り方のズレは、放置すると手戻りが増える。";
+      }
+      if (p === "soft") {
+        return "けれど、言葉の当たり前は人それぞれで、ここが衝突点になりやすい。";
+      }
+      if (p === "biz") {
+        return "でも、伝達は「誰が・いつ・何を」に落とすと、論点がぶれにくい。";
+      }
+      return "でも、伝えたつもりと受け取りは、同じにならないことがある。";
+    }
+    if (axis === "human_relation") {
+      if (p === "strong") {
+        return "だが、関係の良さだけでは、ルールの外に出る問題は防げない。";
+      }
+      if (p === "soft") {
+        return "けれど、気持ちの良さと、やってよい線は別物だ。";
+      }
+      if (p === "biz") {
+        return "でも、人としての線引きを先に置くほうが、長く続く。";
+      }
+      return "でも、人としての線引きが曖昧だと、後からしんどくなる。";
+    }
+    if (axis === "apprentice_education") {
+      if (p === "strong") {
+        return "だが、育成の延長で役割が曖昧だと、商流の外で火がつく。";
+      }
+      if (p === "soft") {
+        return "けれど、善意でも境界がないと、信頼が逆に削れる。";
+      }
+      if (p === "biz") {
+        return "でも、誰の顧客に誰が触れるかを先に決めると、事故が減る。";
+      }
+      return "でも、役割の境界は、関係が良いほど言葉にしておきたい。";
+    }
+    if (axis === "sales") {
+      if (p === "strong") {
+        return "だが、商流の外で動くと、信頼の前提が崩れやすい。";
+      }
+      if (p === "soft") {
+        return "けれど、成果の前に、誰の顧客かが曖昧だと、あとから揉めやすい。";
+      }
+      if (p === "biz") {
+        return "でも、獲得導線は、担当と顧客の定義をセットで見る。";
+      }
+      return "でも、営業の筋道は、関係の良さとは別に決めたい。";
+    }
+    if (axis === "emotion") {
+      if (p === "strong") {
+        return "だが、感情は事実と別に切り出すと、次の一手が軽くなる。";
+      }
+      if (p === "soft") {
+        return "けれど、気持ちは否定せず、次の行動だけを一つにする。";
+      }
+      if (p === "biz") {
+        return "でも、反省は一つに言語化すると、再発防止に繋がる。";
+      }
+      return "けれど、感情と判断は、一度分けて書くと次が決めやすい。";
+    }
+    if (axis === "customer_fit") {
+      if (p === "strong") {
+        return "だが、相性の良し悪しは、価格や期待の置き方とセットで見える。";
+      }
+      if (p === "soft") {
+        return "けれど、合う合わないは、気持ちだけの話では片づかない。";
+      }
+      if (p === "biz") {
+        return "でも、客層は図にすると、次の意思決定が早い。";
+      }
+      return "でも、向き不向きは、前提の置き方で変わる。";
+    }
+    return "";
+  }
+
   function pickNoteTurnMidBranch(branch, preset) {
     const p = preset || "";
     if (branch === "review") {
@@ -1038,7 +1295,7 @@
     }
     if (branch === "ops") {
       if (p === "strong") {
-        return "だが、現場のズレは、能力不足より前提の未共有で起きることが多い。";
+        return "だが、段取りのズレは、能力不足より「順番の未共有」で起きることが多い。";
       }
       if (p === "soft") {
         return "けれど、小さな手戻りは、積み上がると流れを止める。";
@@ -1046,7 +1303,7 @@
       if (p === "biz") {
         return "でも、段取りは短い言語化で共有できる。";
       }
-      return "でも、前提のずれが積み上がると、現場のリズムが乱れる。";
+      return "でも、順番のズレが積み上がると、現場のリズムが乱れる。";
     }
     return "";
   }
@@ -1075,7 +1332,7 @@
       return "けれど、気づきは一行で足りることもある。";
     }
     if (p === "biz") {
-      return "でも、現場の話は、導線と仕組みに変換できる。";
+      return "でも、論点を一つにすると、次が見えやすい。";
     }
     return "でも、一段だけ視点を変える。";
   }
@@ -1084,17 +1341,24 @@
     const why = buildNoteWhy(normalized);
     const first = compactSpaces(why.split("。")[0] || "");
     const p = normalized.notePreset || "";
+    const ax = normalized.topicAxis || inferTopicAxis(noteContextBundle(normalized));
     if (!first) {
+      if (ax === "human_relation") {
+        return "それでも、関係の良さだけでは、ルールの外に出る問題は防げない。";
+      }
+      if (ax === "apprentice_education") {
+        return "それでも、役割の境界は、関係が良いほど言葉にしておきたい。";
+      }
       if (p === "strong") {
-        return "それでも、現場の前提は人それぞれだった。";
+        return "それでも、同じ出来事でも、見え方は人によって違う。";
       }
       if (p === "soft") {
-        return "ただ、現場の前提は人それぞれだった。";
+        return "ただ、同じ出来事でも、見え方は人によって違う。";
       }
       if (p === "biz") {
-        return "ただ、現場の前提は人それぞれだった。手順と期待のズレが効いてくる。";
+        return "ただ、論点を一つにすると、次の意思決定が早い。";
       }
-      return "ただ、現場の前提は人それぞれだった。";
+      return "ただ、同じ出来事でも、見え方は人によって違う。";
     }
     let connector = "でも、";
     if (p === "strong") {
@@ -1107,14 +1371,25 @@
     return connector + first + "。";
   }
 
-  function buildNoteTurnAndWhy(normalized) {
-    const bundle = noteContextBundle(normalized);
-    const branch = classifyNoteMidBranch(bundle);
-    const p = normalized.notePreset || "";
+  function buildNoteTurnFromClassifiedBranch(normalized, preset) {
+    const branch = classifyNoteMidBranch(noteContextBundle(normalized));
+    const p = preset || "";
     if (branch === "default") {
+      return "";
+    }
+    return pickNoteTurnMidBranch(branch, p);
+  }
+
+  function buildNoteTurnAndWhy(normalized) {
+    const p = normalized.notePreset || "";
+    const axis = normalized.topicAxis || inferTopicAxis(noteContextBundle(normalized));
+    let turn = pickNoteTurnForTopicAxis(axis, normalized, p);
+    if (!turn) {
+      turn = buildNoteTurnFromClassifiedBranch(normalized, p);
+    }
+    if (!turn) {
       return buildNoteTurnAndWhyLegacy(normalized);
     }
-    let turn = pickNoteTurnMidBranch(branch, p);
     if (normalized.learning && turnLineOverlapsLearning(turn, normalized.learning)) {
       turn = pickNoteTurnAlternateFallback(p);
     }
@@ -1154,14 +1429,14 @@
     if (reviewish) {
       if (p === "strong") {
         tail =
-          "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
+          "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
       } else if (p === "soft") {
-        tail = "結果が見えるのは、ズレが見えたことの前進かもしれない。\n\n次の一枚、どう設計する？";
+        tail = "結果が見えるのは、論点が一つ言葉になったことの前進かもしれない。\n\n次の一枚、どう設計する？";
       } else if (p === "biz") {
         tail =
-          "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、導線と導入の設計をどうする？";
+          "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、導線と導入の設計をどうする？";
       } else {
-        tail = "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？";
+        tail = "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、どう設計する？";
       }
     } else if (p === "strong") {
       tail = "次の一歩は、一つに絞る。\n\nそれで十分です。";
@@ -1184,9 +1459,9 @@
           return "関係が良くても、口コミは導線の勝負だ。次の一手は、最短の一歩を決める。\n\n次の一枚、どう設計する？ — ここで言い切る。";
         }
         if (rb === "guide") {
-          return "満足の直後に置く導線を、一つに言語化する。結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
+          return "満足の直後に置く導線を、一つに言語化する。結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
         }
-        return "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
+        return "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
       }
       if (p === "soft") {
         if (rb === "relation") {
@@ -1195,7 +1470,7 @@
         if (rb === "guide") {
           return "満足のあとに動かないのは、気持ちだけの問題とは限らない。導線を一つに落とす。\n\n次の一枚、どう設計する？";
         }
-        return "結果が見えるのは、ズレが見えたことの前進かもしれない。\n\n次の一枚、どう設計する？";
+        return "結果が見えるのは、論点が一つ言葉になったことの前進かもしれない。\n\n次の一枚、どう設計する？";
       }
       if (p === "biz") {
         if (rb === "relation") {
@@ -1204,7 +1479,7 @@
         if (rb === "guide") {
           return "満足と行動は別KPI。導線を一つ決めてから、導入の設計に落とす。\n\n次の一枚、導線と導入の設計をどうする？";
         }
-        return "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、導線と導入の設計をどうする？";
+        return "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、導線と導入の設計をどうする？";
       }
       if (rb === "relation") {
         return "関係が良くなっても、口コミは別の導線を持つ。次の一手は、満足の直後に置く一歩を決める。\n\n次の一枚、どう設計する？";
@@ -1212,7 +1487,7 @@
       if (rb === "guide") {
         return "満足のあとに動かないのは、気持ちが足りないからだとは限らない。導線を一つに落とす。\n\n次の一枚、どう設計する？";
       }
-      return "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？";
+      return "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、どう設計する？";
     }
     if (p === "strong") {
       if (nb === "contract") {
@@ -1268,17 +1543,38 @@
 
   function buildNoteWhy(normalized) {
     const src = (normalized.theme + " " + normalized.incident).toLowerCase();
+    const axis = normalized.topicAxis || inferTopicAxis(noteContextBundle(normalized));
     if (src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0) {
       return "起きやすいのは、満足した瞬間は「お礼」で終わり、口コミが必要だという気持ちはまだ起きていないからです。だからこそ、タイミングと手間を減らす導線が効いてきます。";
     }
-    const name = normalized.comicPattern;
-    if (name === "誤解型") {
-      return "起きやすいのは、言葉の当たり前が人それぞれだからです。伝えたつもりが伝わっておらず、作業の前提にズレが出ます。同じ現場でも見え方が分かれると、手戻りは一気に膨らみます。";
-    }
-    if (name === "ヒヤリ型") {
+    if (normalized.comicPattern === "ヒヤリ型") {
       return "起きやすいのは、焦りや慣れです。一瞬の判断で手順を飛ばすと、空気が張りつめます。安全優先で止め、手順を再確認するほうが、結果的に早いです。";
     }
-    return "起きやすいのは、小さなズレがじわじわ効率を下げることです。大きな問題ではなくても、前提のずれが積み上がると、現場のリズムが乱れます。";
+    if (axis === "price" || axis === "customer_fit") {
+      return "起きやすいのは、価格は「安さ」だけでなく、集まる仕事の種類と空気の質も変えるからです。誰に向けてどう並べるかが、見えないままだと迷いが続きます。";
+    }
+    if (axis === "human_relation") {
+      return "起きやすいのは、関係が良いほど、ルールや役割の線が曖昧になりやすいからです。気持ちの良さだけでは、越えてはいけない線が守れないことがあります。";
+    }
+    if (axis === "apprentice_education") {
+      return "起きやすいのは、育成や協力の延長で、役割の境界が曖昧になるからです。善意でも、商流の外で動くと、信頼の前提が崩れやすいです。";
+    }
+    if (axis === "sales") {
+      return "起きやすいのは、成果の前に、誰がどの顧客に向けるかという前提が揃っていないまま動くと、後から火がつくからです。";
+    }
+    if (axis === "emotion") {
+      return "起きやすいのは、感情は事実と別に扱わないと、次の判断が重くなるからです。一度言葉にすると、次の一手が決めやすくなります。";
+    }
+    if (axis === "site_ops") {
+      return "起きやすいのは、大きなミスではなくても、順番の違いが積み上がると、現場のリズムが乱れるからです。";
+    }
+    if (axis === "contract") {
+      return "起きやすいのは、売上の伸びと、続け方の負担は別問題だからです。数字だけでは、次の判断が誤りやすいです。";
+    }
+    if (axis === "alignment_comm" || normalized.comicPattern === "誤解型") {
+      return "起きやすいのは、言葉の当たり前が人それぞれだからです。伝えたつもりが伝わっておらず、同じ現場でも見え方が分かれると、手戻りは一気に膨らみます。";
+    }
+    return "起きやすいのは、出来事の中心が、誰にとってどう映ったかで説明が変わるからです。ここを整理すると、次の一手が軽くなります。";
   }
 
   function shortenTitlePart(s, maxLen) {
@@ -1310,7 +1606,7 @@
     if (topic === "contract") {
       return "売上だけでは続けない";
     }
-    return "前提を一言で言語化する";
+    return "いま一番大事な一文を決める";
   }
 
   function pickDiscomfortTitleLine(topic, th) {
@@ -1327,7 +1623,7 @@
     if (topic === "contract") {
       return "売上があるのに、続けるほどしんどい";
     }
-    return shortenTitlePart(th, 32) || "現場の前提は人それぞれ";
+    return shortenTitlePart(th, 32) || "その日の引っかかり";
   }
 
   function pickDiscomfortTitleLineAlt(topic, th) {
@@ -1340,7 +1636,7 @@
     if (topic === "contract") {
       return "数字の良さと、続け心地のズレ";
     }
-    return "小さなズレがじわっと効く";
+    return shortenTitlePart(th, 34) || "続きが気になるポイント";
   }
 
   function pickEssenceTitleLine(topic, cm, th) {
@@ -1765,7 +2061,7 @@
     const shortText = `【${toneData.xLead}】${leadTitle}\n${normalized.incident}\n学び: ${normalized.learning}`;
     const focusLine = normalized.inputSparse ? `要点: ${normalized.learningFocus}` : "";
     const source = `${normalized.theme} ${normalized.incident} ${normalized.learning}`;
-    let longBody = `現場のズレは、能力不足より「前提の未共有」で起きることが多い。${templates.characterProfile.protagonist.name}と${templates.characterProfile.partner.name}で整理した結論は「${normalized.learning}」。`;
+    let longBody = `今回の出来事から拾った結論は「${normalized.learning}」。${templates.characterProfile.protagonist.name}と${templates.characterProfile.partner.name}のメモとして残すなら、次の一歩を一つにすると運びやすい。`;
     if (source.indexOf("工具配置") >= 0 || source.indexOf("段取り見直し") >= 0) {
       longBody = `工具配置を少し見直しただけで、現場の流れはしっかり変わる。今日の結論は「${normalized.learning}」。小さな改善を続けると、明日の余裕につながる。`;
     } else if (
