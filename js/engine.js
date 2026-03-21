@@ -151,6 +151,14 @@
     return "";
   }
 
+  function resolveNoteLengthPreset(raw) {
+    const s = compactSpaces(raw || "");
+    if (s === "short" || s === "extended") {
+      return s;
+    }
+    return "standard";
+  }
+
   function stripDuplicateTitlePrefix(themeRaw) {
     let theme = (themeRaw || "").trim() || "現場の小さな改善";
     const prefix = templates.characterProfile.titlePrefix;
@@ -194,6 +202,7 @@
         : "入力が短くても、改善点を一つ具体化して次の現場につなげる。";
     const outputStyle = resolveOutputStyle(input && input.outputStyle);
     const notePreset = resolveNotePreset(input && input.notePreset);
+    const noteLengthPreset = resolveNoteLengthPreset(input && input.noteLengthPreset);
 
     return {
       theme,
@@ -210,6 +219,7 @@
       hasCoreLocks,
       outputStyle,
       notePreset,
+      noteLengthPreset,
     };
   }
 
@@ -1340,22 +1350,88 @@
     return lines.slice(i).join("\n");
   }
 
+  function firstSentenceJapanese(text) {
+    const t = compactSpaces(text);
+    if (!t) {
+      return "";
+    }
+    const m = t.match(/^[^。！？!?]+[。！？!?]?/);
+    return m ? m[0] : t;
+  }
+
+  function storyFirstParagraphOnly(story) {
+    const s = (story || "").toString();
+    const idx = s.indexOf("\n\n");
+    if (idx < 0) {
+      return s.trim();
+    }
+    return s.slice(0, idx).trim();
+  }
+
+  function shortenNoteOpeningForLength(normalized, toneData) {
+    if (normalized.coreMain) {
+      return normalized.coreMain;
+    }
+    const full = buildNoteOpeningBlock(normalized, toneData);
+    return firstSentenceJapanese(full) || full;
+  }
+
+  function shortenNoteFinalBlockForLength(normalized) {
+    if (normalized.coreConclusion) {
+      return normalized.coreConclusion + "\n\n" + "次の一歩は、一つで十分。";
+    }
+    return "次の一歩、一つだけ試す。\nそれで十分です。";
+  }
+
+  function extendNoteStoryOrLearning(story, learningLine) {
+    if (story.indexOf("\n\n") < 0) {
+      return {
+        story: story + "\n\n" + "流れは早かったが、違和感は残った。",
+        learningLine,
+      };
+    }
+    const tail = "次の現場でも、同じ手順で試す。";
+    return {
+      story,
+      learningLine: learningLine ? learningLine + "\n\n" + tail : tail,
+    };
+  }
+
   function buildNoteShortSpaced(normalized, input, toneData, leadTitle, learningLine) {
+    const len = normalized.noteLengthPreset || "standard";
+    let opening = buildNoteOpeningBlock(normalized, toneData);
+    let story = buildNoteStoryAndPhrase(normalized, input);
+    let turn = buildNoteTurnAndWhy(normalized);
+    let learn = learningLine;
+    let finalBlock = buildNoteFinalBlock(normalized);
+
+    if (len === "short") {
+      opening = shortenNoteOpeningForLength(normalized, toneData);
+      story = storyFirstParagraphOnly(story);
+      turn = firstSentenceJapanese(turn) || turn;
+      learn = firstSentenceJapanese(learn) || learn;
+      finalBlock = shortenNoteFinalBlockForLength(normalized);
+    } else if (len === "extended") {
+      const ex = extendNoteStoryOrLearning(story, learn);
+      story = ex.story;
+      learn = ex.learningLine;
+    }
+
     const parts = [
       `# ${leadTitle}`,
       "",
-      buildNoteOpeningBlock(normalized, toneData),
+      opening,
       "",
-      buildNoteStoryAndPhrase(normalized, input),
+      story,
       "",
-      buildNoteTurnAndWhy(normalized),
+      turn,
       "",
-      learningLine,
+      learn,
       "",
-      buildNoteFinalBlock(normalized),
+      finalBlock,
     ];
     let body = parts.join("\n");
-    if (normalized.inputSparse) {
+    if (normalized.inputSparse && len !== "short") {
       body += "\n\n" + "入力が短くても、決めるのは一つで十分。";
     }
     return body;
