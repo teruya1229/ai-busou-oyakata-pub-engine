@@ -50,19 +50,61 @@
     tone: "少し真面目",
   };
 
+  function compactOneLineMemo(text) {
+    return (text || "").replace(/\s+/g, " ").trim();
+  }
+
+  /** 1行メモを theme / coreMain / coreConclusion に展開（空なら null） */
+  function expandOneLineMemoParts(line) {
+    const raw = compactOneLineMemo(line);
+    if (!raw) {
+      return null;
+    }
+    const parts = raw
+      .split(/[｜|]/)
+      .map(function (s) {
+        return s.trim();
+      })
+      .filter(Boolean);
+    if (!parts.length) {
+      return null;
+    }
+    if (parts.length >= 3) {
+      return {
+        theme: parts[0],
+        coreMain: parts[1],
+        coreConclusion: parts[2],
+      };
+    }
+    if (parts.length === 2) {
+      return {
+        theme: parts[0],
+        coreMain: parts[1],
+        coreConclusion: "",
+      };
+    }
+    return {
+      theme: parts[0],
+      coreMain: parts[0],
+      coreConclusion: "",
+    };
+  }
+
   function getInputFromForm() {
     const data = new FormData(form);
+    const oneLine = compactOneLineMemo(data.get("oneLineMemo"));
+    const expanded = oneLine ? expandOneLineMemoParts(oneLine) : null;
     return {
-      theme: data.get("theme"),
+      theme: expanded ? expanded.theme : data.get("theme"),
       incident: data.get("incident"),
       learning: data.get("learning"),
       characters: data.get("characters"),
       tone: data.get("tone"),
       outputStyle: data.get("outputStyle"),
       notePreset: data.get("notePreset"),
-      coreMain: data.get("coreMain"),
+      coreMain: expanded ? expanded.coreMain : data.get("coreMain"),
       corePhrase: data.get("corePhrase"),
-      coreConclusion: data.get("coreConclusion"),
+      coreConclusion: expanded ? expanded.coreConclusion : data.get("coreConclusion"),
     };
   }
 

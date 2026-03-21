@@ -16,9 +16,23 @@
       <section class="card">
         <h2>入力</h2>
         <p class="input-mode-hint">
-          まずは<strong>最小入力</strong>（テーマ・一番伝えたいこと・結論）だけで「構成を生成」できます。現場メモやトーンなどは、必要なときだけ<strong>詳細入力</strong>を開いてください。
+          さらに軽く<strong>1行メモ</strong>だけでも始められます。または<strong>最小入力</strong>（テーマ・一番伝えたいこと・結論）だけで「構成を生成」できます。現場メモやトーンなどは、必要なときだけ<strong>詳細入力</strong>を開いてください。
         </p>
         <form id="input-form">
+          <div class="field">
+            <label for="one-line-memo">1行メモ（超簡易・任意）</label>
+            <input
+              id="one-line-memo"
+              name="oneLineMemo"
+              type="text"
+              maxlength="500"
+              autocomplete="off"
+              placeholder="例: 段取りの認識ズレ｜着手前に一言で言語化｜短い確認が強い"
+            />
+            <p class="input-mode-hint" style="margin-top: 8px; margin-bottom: 0">
+              <code>｜</code> または <code>|</code> で <strong>テーマ｜伝えたいこと｜結論</strong> のように区切れます。1行だけのときは、その内容をテーマと「一番伝えたいこと」に共通で使います（入力欄は上書きしません。生成時にだけ反映されます）。
+            </p>
+          </div>
           <div class="field">
             <label for="theme">タイトルテーマ</label>
             <input id="theme" name="theme" type="text" placeholder="例: 段取り確認とAI活用" />
