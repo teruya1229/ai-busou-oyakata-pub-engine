@@ -1209,9 +1209,126 @@
     return "起きやすいのは、小さなズレがじわじわ効率を下げることです。大きな問題ではなくても、前提のずれが積み上がると、現場のリズムが乱れます。";
   }
 
+  function shortenTitlePart(s, maxLen) {
+    const t = compactSpaces(s);
+    if (!t) {
+      return "";
+    }
+    if (t.length <= maxLen) {
+      return t;
+    }
+    return t.slice(0, maxLen - 1) + "…";
+  }
+
+  function classifyTitleTopic(bundle) {
+    const b = classifyNoteMidBranch(bundle);
+    if (b === "ops") {
+      return "default";
+    }
+    return b;
+  }
+
+  function defaultAssertiveByTopic(topic) {
+    if (topic === "review") {
+      return "口コミは導線の勝負だ";
+    }
+    if (topic === "price") {
+      return "安さは客層も選ぶ";
+    }
+    if (topic === "contract") {
+      return "売上だけでは続けない";
+    }
+    return "前提を一言で言語化する";
+  }
+
+  function pickDiscomfortTitleLine(topic, th) {
+    const t = (th || "").toLowerCase();
+    if (topic === "review") {
+      if (t.indexOf("仲良く") >= 0 || t.indexOf("お客") >= 0) {
+        return "嬉しいのに、口コミが来ない落差";
+      }
+      return "満足のあとに口コミが動かない";
+    }
+    if (topic === "price") {
+      return "安くすると、空気が変わる";
+    }
+    if (topic === "contract") {
+      return "売上があるのに、続けるほどしんどい";
+    }
+    return shortenTitlePart(th, 32) || "現場の前提は人それぞれ";
+  }
+
+  function pickDiscomfortTitleLineAlt(topic, th) {
+    if (topic === "review") {
+      return "口コミだけが、仲の良さの証明ではない";
+    }
+    if (topic === "price") {
+      return "依頼は増えるのに、空気が違う";
+    }
+    if (topic === "contract") {
+      return "数字の良さと、続け心地のズレ";
+    }
+    return "小さなズレがじわっと効く";
+  }
+
+  function pickEssenceTitleLine(topic, cm, th) {
+    if (topic === "review") {
+      return "導線が口コミを決める";
+    }
+    if (topic === "price") {
+      return "価格は客層設計でもある";
+    }
+    if (topic === "contract") {
+      return "相性の悪い契約は密度を壊す";
+    }
+    return shortenTitlePart(cm || th, 34) || "一行で言語化すると戻る";
+  }
+
+  function buildNoteTitleCandidateBlock(normalized) {
+    const prefix = templates.characterProfile.titlePrefix;
+    const bundle = noteContextBundle(normalized);
+    const topic = classifyTitleTopic(bundle);
+    const th = compactSpaces(normalized.theme || "");
+    const cm = compactSpaces(normalized.coreMain || "");
+    const cc = compactSpaces(normalized.coreConclusion || "");
+
+    let assertive;
+    if (cm) {
+      assertive = prefix + shortenTitlePart(cm, 34);
+    } else if (th) {
+      assertive = prefix + shortenTitlePart(th, 34);
+    } else {
+      assertive = prefix + defaultAssertiveByTopic(topic);
+    }
+
+    let discomfort = prefix + pickDiscomfortTitleLine(topic, th);
+    let essence;
+    if (cc) {
+      essence = prefix + shortenTitlePart(cc, 34);
+    } else {
+      essence = prefix + pickEssenceTitleLine(topic, cm, th);
+    }
+
+    const ca = compactSpaces(assertive);
+    const cd = compactSpaces(discomfort);
+    const ce = compactSpaces(essence);
+    if (cd === ca) {
+      discomfort = prefix + pickDiscomfortTitleLineAlt(topic, th);
+    }
+    if (ce === ca || ce === compactSpaces(discomfort)) {
+      essence = prefix + pickEssenceTitleLine(topic, "", th);
+      if (compactSpaces(essence) === ca || compactSpaces(essence) === compactSpaces(discomfort)) {
+        essence = prefix + defaultAssertiveByTopic(topic) + "（本質）";
+      }
+    }
+    return ["【タイトル案】", "・言い切り: " + assertive, "・実話・違和感: " + discomfort, "・気づき・本質: " + essence].join("\n");
+  }
+
   function buildNoteShortSpaced(normalized, input, toneData, leadTitle, learningLine) {
     const parts = [
       `# ${leadTitle}`,
+      "",
+      buildNoteTitleCandidateBlock(normalized),
       "",
       buildNoteOpeningBlock(normalized, toneData),
       "",

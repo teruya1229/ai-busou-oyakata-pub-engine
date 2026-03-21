@@ -806,3 +806,11 @@
 - **`js/app.js`**: `expandOneLineMemoParts` と `getInputFromForm` で1行メモを **theme / coreMain / coreConclusion** に展開（**フォームの表示値は上書きしない**。生成・プレビュー時の論理入力のみ反映）
 - **`README.md`** に1行追記
 - **`js/engine.js` `js/kindle-engine.js` `js/templates.js`**: 未変更（既存 `normalizeInput` をそのまま利用）
+
+## 今日やったこと（2026-03-21：noteタイトル案の複数パターン）
+- **`js/engine.js`**: 短文余白 note（`buildNoteShortSpaced`）の **H1直下**に **【タイトル案】** を追加（**言い切り／実話・違和感／気づき・本質**の3方向。`noteContextBundle` 系の題材分岐で口コミ・価格・契約に軽く寄せ、`coreMain`／`coreConclusion` を芯として優先）。**Kindle向け note 本文・4コマ・画像APIは未変更**
+- **`README.md`**・**`ops/handoff.md`** を追記
+
+## 現在の状態（noteタイトル案複数化後）
+- 既定の note 本文だけ、貼る前に **切り口の違うタイトル案**を並べて選びやすい
+- 本文ブロック（導入・反転・締め）の構成ロジックは原則そのまま
