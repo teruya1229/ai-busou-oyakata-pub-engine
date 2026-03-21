@@ -857,3 +857,13 @@
 
 ## 現在の状態（運用優先の引き継ぎ同期後）
 - コード挙動は不変。**引き継ぎ文書**の「次の1手」が **note 実運用 → 漫画付き通し**の順で読みやすい
+
+## 今日やったこと（2026-03-21：投稿前の確認メモ）
+- **`js/engine.js`**: **`buildNotePrePublishCheck`** を追加（本文のみ・タイトル案・正規化入力を材料に、メモ臭さ／硬さ／主語／タイトルとの整合／note向きの観点で**確認メモ**を生成）。**`buildAllOutputs`** に **`notePrePublishCheck`** を追加
+- **`index.html`**: **note記事本文**の下に **投稿前の確認メモ**ブロックを追加
+- **`js/app.js`**: 生成・リセットで **`#note-prepublish-check-output`** を更新
+- **`css/style.css`**: **`.note-precheck-card`** を最小追加
+- **`README.md`** `ops/handoff.md` を追記（Kindle・4コマ最終確認UIは未変更）
+
+## 現在の状態（投稿前の確認メモ追加後）
+- 実投稿前に**軽い違和感チェック**を同画面で確認可能。既存の note 本文・タイトル案・コピー導線は維持

@@ -6,6 +6,7 @@
     comicUnifiedPrompt: document.getElementById("comic-unified-prompt-output"),
     noteTitleSuggestions: document.getElementById("note-title-suggestions-output"),
     noteBodyOnly: document.getElementById("note-body-only-output"),
+    notePrePublishCheck: document.getElementById("note-prepublish-check-output"),
     note: document.getElementById("note-output"),
     xPost: document.getElementById("x-output"),
     kindle: document.getElementById("kindle-output"),
@@ -219,6 +220,12 @@
       outputs.noteTitleSuggestions.textContent =
         result.noteTitleSuggestions != null && result.noteTitleSuggestions !== ""
           ? result.noteTitleSuggestions
+          : OUTPUT_PLACEHOLDER;
+    }
+    if (outputs.notePrePublishCheck) {
+      outputs.notePrePublishCheck.textContent =
+        result.notePrePublishCheck != null && result.notePrePublishCheck !== ""
+          ? result.notePrePublishCheck
           : OUTPUT_PLACEHOLDER;
     }
     outputs.xPost.textContent = result.xPost;
@@ -836,6 +843,9 @@
     }
     if (outputs.noteTitleSuggestions) {
       outputs.noteTitleSuggestions.textContent = placeholder;
+    }
+    if (outputs.notePrePublishCheck) {
+      outputs.notePrePublishCheck.textContent = placeholder;
     }
     outputs.xPost.textContent = placeholder;
     if (outputs.kindle) {

@@ -1350,6 +1350,172 @@
     return lines.slice(i).join("\n");
   }
 
+  /**
+   * 投稿前の軽い確認メモ（採点ではない）。note本文・タイトル案ブロックを材料にルールベースで生成する。
+   */
+  function buildNotePrePublishCheck(normalized, noteBodyOnly, titleSuggestionsBlock) {
+    const body = compactSpaces(noteBodyOnly || "");
+    if (!body) {
+      return "先に「構成を生成」すると、ここに確認メモが出ます。";
+    }
+
+    const theme = compactSpaces(normalized.theme || "");
+    const coreMain = compactSpaces(normalized.coreMain || "");
+    const titleBlock = (titleSuggestionsBlock || "").toString();
+
+    const goodLines = [];
+    const concernLines = [];
+    let oneThing = "";
+
+    const paragraphs = body.split(/\n\s*\n/).map(function (p) {
+      return p.trim();
+    }).filter(Boolean);
+    const paraCount = paragraphs.length;
+
+    // --- メモ臭さ ---
+    if (paraCount >= 2) {
+      goodLines.push("段落に分かれていて、読みやすい余白があります。");
+    }
+    const bodyTrim = body.trim();
+    if (/^[・\-*＊]/.test(bodyTrim) || /\n[・\-*＊]/.test(body)) {
+      concernLines.push("箇条書きが目立つと、記事よりメモに近く見えることがあります。必要なら冒頭を一文に整えてみてください。");
+    }
+    if (/メモ|補足[:：]|日報の写し|以下[、。]/.test(body)) {
+      concernLines.push("「メモ」「補足」などの語があると、作業ログの印象が強くなることがあります（メモ臭さ）。");
+    }
+    if (paraCount === 1 && body.length > 380) {
+      concernLines.push("一段落が長いと、読みやすさは人によって差が出ます。空行を足すだけでも変わることがあります。");
+    }
+
+    // --- 文章の硬さ ---
+    if (/である[。]?$|である。|当該|について、|以下のとおり|いたします|させていただ|において/.test(body)) {
+      concernLines.push("少し事務的な言い回しが混ざっているかもしれません（文章の硬さ）。");
+    } else {
+      goodLines.push("話し言葉に近いトーンで、堅すぎない読み心地です。");
+    }
+
+    // --- 主語のぶれ ---
+    const subjectMarkers = ["私たち", "私達", "当社", "当方", "うち", "現場", "お客様", "お客さん", "お客", "依頼主", "職人", "若手", "班"];
+    const hit = [];
+    for (let i = 0; i < subjectMarkers.length; i += 1) {
+      if (body.indexOf(subjectMarkers[i]) >= 0) {
+        hit.push(subjectMarkers[i]);
+      }
+    }
+    if (body.indexOf("私") >= 0 && body.indexOf("私たち") < 0 && body.indexOf("私達") < 0) {
+      hit.push("私");
+    }
+    if (hit.length >= 3) {
+      concernLines.push(
+        "視点の語（「" + hit.slice(0, 3).join("」「") + "」など）が複数あります。主語のぶれとして読み手が拾うかもしれません。"
+      );
+    } else if (hit.length === 0 && body.length > 140) {
+      concernLines.push("「誰の視点」かが少し淡いかもしれません。必要なら一文だけ主語を足すと伝わりやすいです。");
+    }
+
+    // --- タイトルとの整合（テーマ語が冒頭付近にあるか） ---
+    function openingTouchesSeed(seed, opening) {
+      const s = compactSpaces(seed || "");
+      if (s.length < 2) {
+        return false;
+      }
+      if (s.length <= 8 && opening.indexOf(s) >= 0) {
+        return true;
+      }
+      for (let j = 0; j <= s.length - 2; j += 1) {
+        const bi = s.slice(j, j + 2);
+        if (bi.replace(/\s/g, "").length >= 2 && opening.indexOf(bi) >= 0) {
+          return true;
+        }
+      }
+      return false;
+    }
+    const openingWindow = body.slice(0, 220);
+    const titleSeeds = [];
+    if (theme) {
+      titleSeeds.push(theme);
+    }
+    if (coreMain) {
+      titleSeeds.push(coreMain);
+    }
+    const titleLines = titleBlock.split("\n");
+    for (let t = 0; t < titleLines.length; t += 1) {
+      const line = titleLines[t];
+      const m = line.match(/:\s*(.+)$/);
+      if (m && m[1]) {
+        const cleaned = compactSpaces(m[1].replace(/^[^｜]+｜/, ""));
+        if (cleaned.length > 3) {
+          titleSeeds.push(cleaned);
+        }
+      }
+    }
+    let touchOpening = false;
+    for (let u = 0; u < titleSeeds.length; u += 1) {
+      if (openingTouchesSeed(titleSeeds[u], openingWindow)) {
+        touchOpening = true;
+        break;
+      }
+    }
+    if (touchOpening) {
+      goodLines.push("タイトルやテーマに近い語が、本文の冒頭付近にも出ています（顔の揃い）。");
+    } else if (theme.length > 3 || coreMain.length > 3) {
+      concernLines.push("タイトル案やテーマの語が、本文の冒頭付近に少ないかもしれません（タイトルとの整合）。違和感がなければそのままで大丈夫です。");
+    }
+
+    // --- note向き ---
+    if (body.length >= 80 && body.length <= 3200) {
+      goodLines.push("長さは、note の記事として一般的な範囲に収まっています。");
+    } else if (body.length < 70) {
+      concernLines.push("短めのため、読み手によっては物足りなさを感じるかもしれません（note向き）。");
+    }
+
+    function uniq(arr) {
+      const seen = {};
+      const out = [];
+      for (let i = 0; i < arr.length; i += 1) {
+        const k = arr[i];
+        if (!seen[k]) {
+          seen[k] = true;
+          out.push(k);
+        }
+      }
+      return out;
+    }
+    const goodU = uniq(goodLines);
+    const concernU = uniq(concernLines);
+
+    if (concernU.length) {
+      oneThing = concernU[0];
+    } else if (goodU.length) {
+      oneThing = "タイトル案のどれかと、本文の冒頭が同じ方向を向いているか（矛盾がないか）だけ、もう一度見てください。";
+    } else {
+      oneThing = "全体を通して読み、違和感がなければそのまま投稿して大丈夫です。";
+    }
+
+    const goodBlock = goodU.length ? goodU.map(function (g) {
+      return "・" + g;
+    }).join("\n") : "・（特筆する点はありません。問題なければこのままで大丈夫です。）";
+    const concernBlock = concernU.length
+      ? concernU.map(function (c) {
+          return "・" + c;
+        }).join("\n")
+      : "・（大きな気になる点は拾いにくい状態です。最終は感覚で大丈夫です。）";
+
+    return [
+      "【投稿前の確認メモ】",
+      "貼る前のあと一歩用です。断定ではなく、目安として使ってください。",
+      "",
+      "■ 良い点",
+      goodBlock,
+      "",
+      "■ 気になる点",
+      concernBlock,
+      "",
+      "■ 投稿前に1つだけ見るなら",
+      "・" + oneThing,
+    ].join("\n");
+  }
+
   function firstSentenceJapanese(text) {
     const t = compactSpaces(text);
     if (!t) {
@@ -1552,13 +1718,16 @@
   function buildAllOutputs(input) {
     const normalized = normalizeInput(input);
     const noteHeaded = buildNote(input);
+    const noteBodyOnly = stripNoteLeadingHeading(noteHeaded);
+    const noteTitleSuggestions = buildNoteTitleCandidateBlock(normalized);
     return {
       comic: buildComic(input),
       comicPrompt: buildComicPanelPrompts(input),
       comicUnifiedPrompt: buildUnifiedComicImagePrompt(input),
       note: noteHeaded,
-      noteBodyOnly: stripNoteLeadingHeading(noteHeaded),
-      noteTitleSuggestions: buildNoteTitleCandidateBlock(normalized),
+      noteBodyOnly: noteBodyOnly,
+      noteTitleSuggestions: noteTitleSuggestions,
+      notePrePublishCheck: buildNotePrePublishCheck(normalized, noteBodyOnly, noteTitleSuggestions),
       xPost: buildXPost(input),
     };
   }
@@ -1571,6 +1740,7 @@
     buildNote,
     buildNoteTitleCandidateBlock,
     stripNoteLeadingHeading,
+    buildNotePrePublishCheck,
     buildXPost,
     buildAllOutputs,
   };

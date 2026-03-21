@@ -33,6 +33,16 @@ body {
   background: #fafbff;
 }
 
+.note-precheck-card {
+  border-color: #d1fae5;
+  background: #f8fffb;
+}
+
+.note-precheck-card .output-block {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
 h1,
 h2 {
   margin: 0 0 8px;
