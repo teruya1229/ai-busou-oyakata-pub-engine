@@ -176,8 +176,20 @@
     const data = new FormData(form);
     const oneLine = compactOneLineMemo(data.get("oneLineMemo"));
     const expanded = oneLine ? expandOneLineMemoParts(oneLine) : null;
+    const themeForm = compactOneLineMemo(data.get("theme"));
+    const coreMainForm = compactOneLineMemo(data.get("coreMain"));
+    const coreConclusionForm = compactOneLineMemo(data.get("coreConclusion"));
+    function mergeField(formValue, expandedKey) {
+      if (formValue) {
+        return formValue;
+      }
+      if (expanded && expanded[expandedKey]) {
+        return expanded[expandedKey];
+      }
+      return "";
+    }
     return {
-      theme: expanded ? expanded.theme : data.get("theme"),
+      theme: mergeField(themeForm, "theme"),
       incident: data.get("incident"),
       learning: data.get("learning"),
       characters: data.get("characters"),
@@ -185,9 +197,9 @@
       outputStyle: data.get("outputStyle"),
       notePreset: data.get("notePreset"),
       noteLengthPreset: data.get("noteLengthPreset"),
-      coreMain: expanded ? expanded.coreMain : data.get("coreMain"),
+      coreMain: mergeField(coreMainForm, "coreMain"),
       corePhrase: data.get("corePhrase"),
-      coreConclusion: expanded ? expanded.coreConclusion : data.get("coreConclusion"),
+      coreConclusion: mergeField(coreConclusionForm, "coreConclusion"),
     };
   }
 

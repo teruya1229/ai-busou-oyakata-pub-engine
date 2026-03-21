@@ -48,7 +48,11 @@
       return "作業前の認識がそろわず、手戻りが出た。";
     }
     const clipped = stem.length > 96 ? stem.slice(0, 96) + "…" : stem;
-    return ensurePeriod(clipped + "——という文脈で、現場の断片が残った。");
+    const th = compactSpaces(theme || "");
+    if (th) {
+      return ensurePeriod("「" + th + "」の話の場面で、" + clipped + "——ここが、会話の中心に残った。");
+    }
+    return ensurePeriod(clipped + "——この認識のずれが、その日の論点になった。");
   }
 
   function ensureLearningText(text, incident) {
@@ -365,10 +369,74 @@
     ];
   }
 
+  function clipComicLine(s, maxLen) {
+    const t = compactSpaces(s || "");
+    if (!t) {
+      return "";
+    }
+    return t.length <= maxLen ? t : t.slice(0, maxLen - 1) + "…";
+  }
+
+  function buildComicGapNarrative(normalized, incidentForComic, reviewMode) {
+    if (reviewMode) {
+      const cm = compactSpaces(normalized.coreMain || "");
+      if (cm) {
+        return "ズレ: " + clipComicLine(cm, 72);
+      }
+      return "ズレ: 満足と口コミの導線が、別の話になっている。";
+    }
+    const cm = compactSpaces(normalized.coreMain || "");
+    if (cm) {
+      return "ズレ: " + clipComicLine(cm, 76);
+    }
+    const inc = compactSpaces(incidentForComic.replace(/^状況:\s*/, ""));
+    const first = inc.split(/[。！？!?]/)[0] || inc;
+    return "ズレ: " + clipComicLine(first, 76);
+  }
+
+  function buildComicInsightNarrative(normalized) {
+    const lr = compactSpaces(normalized.learning || "");
+    if (lr) {
+      return "気づき: " + clipComicLine(lr, 84);
+    }
+    return "気づき: " + clipComicLine(normalized.coreMain || normalized.theme, 72);
+  }
+
+  function buildComicForwardNarrative(normalized, learningForPanel4) {
+    const cc = compactSpaces(normalized.coreConclusion || "");
+    if (cc) {
+      return "次に変える: " + clipComicLine(cc, 84);
+    }
+    return "次に変える: " + clipComicLine(learningForPanel4, 84);
+  }
+
+  function comicPanel3DialogueFromInput(normalized, protagonist, partner, toneData, style) {
+    if (style === "kindle") {
+      return comicPanel3Dialogue(toneData, protagonist, partner, style);
+    }
+    const a = clipComicLine(normalized.coreMain || normalized.theme, 40);
+    const b = clipComicLine(
+      normalized.learning || toneData.copilotShort || toneData.copilotQuestion,
+      40
+    );
+    return [`${protagonist}: ${a}`, `${partner}: ${b}`];
+  }
+
+  function comicPanel2PartnerLineGrounded(normalized, toneData, partner, style) {
+    if (normalized.corePhrase) {
+      return `${partner}: 「${normalized.corePhrase}」`;
+    }
+    if (style === "kindle") {
+      const chip = clipComicLine(normalized.theme, 28);
+      return `${partner}: 「${chip}」、いちばんズレたのはここ？`;
+    }
+    const chip = clipComicLine(normalized.theme, 28);
+    return `${partner}: 「${chip}」、いちばんズレたのはここ？`;
+  }
+
   function buildComic(input) {
     const normalized = normalizeInput(input);
     const toneData = templates.toneTemplates[normalized.tone];
-    const pattern = templates.comicPatterns[normalized.comicPattern];
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const protagonist = templates.characterProfile.protagonist.name;
     const partner = templates.characterProfile.partner.name;
@@ -376,24 +444,16 @@
     const rawInc = trimOptional(input.incident);
     const incidentForComic = rawInc ? ensurePeriod(rawInc) : normalized.incident;
     const st = normalized.outputStyle;
-    const scenes = selectComicScenesForStyle(pattern, reviewMode, st);
-    const panel3Conversation = comicPanel3Dialogue(toneData, protagonist, partner, st);
-    const panel2PartnerLine = comicPanel2PartnerLine(normalized, toneData, partner, st);
     const learningForPanel4 = normalized.coreConclusion || normalized.learning;
+    const gapLine = buildComicGapNarrative(normalized, incidentForComic, reviewMode);
+    const insightLine = buildComicInsightNarrative(normalized);
+    const forwardLine = buildComicForwardNarrative(normalized, learningForPanel4);
+    const panel3Conversation = comicPanel3DialogueFromInput(normalized, protagonist, partner, toneData, st);
+    const panel2PartnerLine = comicPanel2PartnerLineGrounded(normalized, toneData, partner, st);
 
-    const panel1Lines = [COMIC_PANEL_LABELS.p1];
-    if (normalized.coreMain && !reviewMode) {
-      panel1Lines.push(normalized.coreMain);
-    }
-    panel1Lines.push(`状況: ${incidentForComic}`);
+    const panel1Lines = [COMIC_PANEL_LABELS.p1, `状況: ${incidentForComic}`];
 
-    const panel3Lines = [COMIC_PANEL_LABELS.p3];
-    if (reviewMode && normalized.coreMain) {
-      panel3Lines.push(normalized.coreMain);
-    }
-    panel3Lines.push(scenes.p3);
-    panel3Lines.push(panel3Conversation[0]);
-    panel3Lines.push(panel3Conversation[1]);
+    const panel3Lines = [COMIC_PANEL_LABELS.p3, insightLine, panel3Conversation[0], panel3Conversation[1]];
 
     return [
       `【タイトル】${leadTitle}`,
@@ -401,14 +461,13 @@
       panel1Lines.join("\n"),
       "",
       COMIC_PANEL_LABELS.p2,
-      scenes.p2,
+      gapLine,
       panel2PartnerLine,
       "",
       panel3Lines.join("\n"),
       "",
       COMIC_PANEL_LABELS.p4,
-      `学び: ${learningForPanel4}`,
-      scenes.p4,
+      forwardLine,
     ].join("\n");
   }
 
@@ -531,46 +590,40 @@
       const narrativeLines = (lines || []).filter(function (line) {
         return line.indexOf("状況:") !== 0 && line.indexOf("学び:") !== 0 && line.indexOf(`${protagonist}:`) !== 0 && line.indexOf(`${partner}:`) !== 0;
       });
-      const summary = compactSpaces((situation || learningLine || narrativeLines.join(" ") || "要点を簡潔に描写する。").replace(/^状況:\s*/, "").replace(/^学び:\s*/, ""));
+      const rawBundle = situation || learningLine || narrativeLines.join(" ");
+      const summary = compactSpaces(
+        rawBundle
+          .replace(/^状況:\s*/, "")
+          .replace(/^学び:\s*/, "")
+          .replace(/^次に変える:\s*/, "")
+          .replace(/^気づき:\s*/, "")
+          .replace(/^ズレ:\s*/, "")
+      );
       const sceneIntent = dialogueLines.join(" / ") || "表情と構図で短い対話の気配を示す。";
-      return `- ${meta.number}コマ目（${meta.name}）: ${summary} / 情景のねらい（絵に文字は出さない）: ${sceneIntent}`;
+      return `${meta.number}コマ（${meta.name}）: ${summary || "今回の入力に沿った情景。"} — ねらい: ${sceneIntent}`;
     });
 
     const uip = templates.characterProfile.unifiedImagePrompt;
-    const archetypeLines =
-      uip && uip.panelArchetype && uip.panelArchetype.length
-        ? uip.panelArchetype.join("\n")
-        : "";
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const styleHint = unifiedStyleHintLine(normalized.outputStyle);
+    const lookLine = uip
+      ? `見た目固定: ${protagonist}＝${uip.protagonistVisual}／${partner}＝${uip.partnerVisual}。トーン: ${uip.seriesTheme}・${uip.businessTone}。`
+      : "";
 
     return [
       "【4コマ統合画像プロンプト】",
       `【入力反映】${leadTitle}`,
       styleHint,
-      "これは1枚のポスター・1枚イラスト・全面一枚絵ではない。4コマ漫画（4-panel comic strip）を1枚のキャンバスにまとめた図として描く。",
-      "レイアウト必須: 2行×2列（2x2）の等分パネル。各コマは白い枠線または薄い仕切り線で境界をはっきり分け、パネル同士が溶け合わないようにする。",
-      "読み順の固定: 左上が1コマ目、右上が2コマ目、左下が3コマ目、右下が4コマ目（日本語の横書きZ字読み）。",
-      "ストーリー性: 各コマは起承転結の流れ（状況→違和感→気づき→前進）を担い、4コマ全体で一つの短い出来事として完結する。",
-      uip ? `【シリーズテーマ】${uip.seriesTheme}` : "",
-      uip ? `【トーン】${uip.businessTone}` : "",
-      `キャラクター一貫性: 同じ主人公「${protagonist}」と同じ相棒ロボ「${partner}」を全コマで同じ外見・服装・体型として描く。`,
-      uip ? `【主人公の見た目】${uip.protagonistVisual}（名前: ${protagonist}）` : "",
-      uip ? `【相棒の見た目】${uip.partnerVisual}（名前: ${partner}）` : "",
-      `登場人物: ${normalized.characters}`,
-      `絵柄共通指定: ${styleGuide}`,
-      "画風: 白黒漫画、ゆるい線、シンプル背景、必要時のみ最小限の現場要素。",
-      "画像内に文字・数字・吹き出し・セリフ・キャプション・ロゴを入れない。下の「情景のねらい」は作画の意図のみで、絵に文字として描かない。",
-      uip && archetypeLines
-        ? "【4コマの流れ（参考骨格：疲れ→混乱→整理→前進）】小道具・背景は入力の出来事に合わせてよいが、感情の流れはこの骨格に沿うこと。"
-        : "",
-      uip && archetypeLines ? archetypeLines : "",
-      "【入力に基づく情景の補足（絵に文字は出さない）】",
+      "1枚のキャンバスに4コマ（2x2）・枠で区切る・Z字読み。白黒ゆる線・背景は最小。ポスター一枚絵にしない。",
+      lookLine,
+      `キャラ同一: ${protagonist}、${partner}（${normalized.characters}）。${styleGuide}`,
+      "画像内に文字・吹き出し・ロゴを入れない（下は作画意図のみ）。",
+      "【今回のコマ（入力固有・重複なく）】",
       panelSummaries.join("\n"),
     ]
       .concat(buildCoreLockUnifiedLines(normalized))
       .concat([
-        "最終指示: 4コマが1枚の漫画レイアウトとして明確に分かれ、読み順が崩れにくい構図にする。1枚イラスト化・ポスター化しない。",
+        "最終: 4コマの境界と読み順が一目で分かる構図にする。",
       ])
       .filter(function (line) {
         return line !== "";
@@ -806,7 +859,7 @@
     if (fr.length === 1) {
       let s = polishRoughIncidentClause(fr[0]);
       if (compactSpaces(s).length < 22 && normalized.coreMain) {
-        s = "「" + normalized.theme + "」の場面で、" + s + "——という断片だけが残った。";
+        s = "「" + normalized.theme + "」の場面で、" + s + "——ここが、その日の出来事の芯だった。";
       }
       return ensurePeriod(s);
     }
@@ -909,7 +962,15 @@
     if (blobIndex(bundle, "口コミ") >= 0 || blobIndex(bundle, "レビュー") >= 0) {
       return "review";
     }
-    if (blobIndex(bundle, "価格") >= 0 || blobIndex(bundle, "客層") >= 0 || blobIndex(bundle, "安く") >= 0 || blobIndex(bundle, "安売") >= 0) {
+    if (
+      blobIndex(bundle, "価格") >= 0 ||
+      blobIndex(bundle, "客層") >= 0 ||
+      blobIndex(bundle, "安く") >= 0 ||
+      blobIndex(bundle, "安売") >= 0 ||
+      blobIndex(bundle, "最安") >= 0 ||
+      blobIndex(bundle, "最安値") >= 0 ||
+      blobIndex(bundle, "安値") >= 0
+    ) {
       return "price";
     }
     if (
@@ -1195,13 +1256,14 @@
     const reviewishLegacy = srcLegacy.indexOf("口コミ") >= 0 || srcLegacy.indexOf("レビュー") >= 0;
     const reviewishBranch = bundle.indexOf("口コミ") >= 0 || bundle.indexOf("レビュー") >= 0;
     const p = normalized.notePreset || "";
-    const tail = normalized.coreConclusion
-      ? buildNoteFinalTailLegacy(reviewishLegacy, p)
-      : buildNoteFinalTailNoConclusion(reviewishBranch, p, bundle);
     if (normalized.coreConclusion) {
-      return normalized.coreConclusion + "\n\n" + tail;
+      const phrase = compactSpaces(normalized.corePhrase || "");
+      const nextLine = phrase
+        ? "次は、「" + phrase + "」を一つだけ入れて試す。"
+        : "次は、この結論を一つだけ行動に落とす。";
+      return normalized.coreConclusion + "\n\n" + nextLine;
     }
-    return tail;
+    return buildNoteFinalTailNoConclusion(reviewishBranch, p, bundle);
   }
 
   function buildNoteWhy(normalized) {
@@ -1534,17 +1596,41 @@
     return s.slice(0, idx).trim();
   }
 
-  function shortenNoteOpeningForLength(normalized, toneData) {
-    if (normalized.coreMain) {
-      return normalized.coreMain;
+  function buildNoteOpeningForArticle(normalized, toneData, story) {
+    const theme = compactSpaces(normalized.theme || "");
+    const core = compactSpaces(normalized.coreMain || "");
+    const headBlock = compactSpaces((story || "").split(/\n\n+/)[0] || story || "");
+    const leadFirst = compactSpaces(firstSentenceJapanese(headBlock) || headBlock);
+    if (leadFirst.length > 10) {
+      if (theme && leadFirst.indexOf(theme) === 0) {
+        const rest = leadFirst.slice(theme.length).replace(/^[｜、。\s]+/, "");
+        return rest ? "今回は、" + rest : "今回は、" + leadFirst;
+      }
+      return "今回は、" + leadFirst;
     }
-    const full = buildNoteOpeningBlock(normalized, toneData);
+    if (core) {
+      if (theme && core.toLowerCase() !== theme.toLowerCase()) {
+        return "今回は、「" + theme + "」の話で、" + (firstSentenceJapanese(core) || core);
+      }
+      return "今回は、" + (firstSentenceJapanese(core) || core);
+    }
+    const q = noteOpeningQuestionLine(normalized);
+    if (q) {
+      return q;
+    }
+    return noteLeadWithPreset(toneData, normalized.notePreset);
+  }
+
+  function shortenNoteOpeningForLength(normalized, toneData, story) {
+    const full = buildNoteOpeningForArticle(normalized, toneData, story);
     return firstSentenceJapanese(full) || full;
   }
 
   function shortenNoteFinalBlockForLength(normalized) {
     if (normalized.coreConclusion) {
-      return normalized.coreConclusion + "\n\n" + "次の一歩は、一つで十分。";
+      const phrase = compactSpaces(normalized.corePhrase || "");
+      const nextLine = phrase ? "次は「" + phrase + "」を一つ。" : "次はこの結論を一つに落とす。";
+      return normalized.coreConclusion + "\n\n" + nextLine;
     }
     return "次の一歩、一つだけ試す。\nそれで十分です。";
   }
@@ -1565,14 +1651,14 @@
 
   function buildNoteShortSpaced(normalized, input, toneData, leadTitle, learningLine) {
     const len = normalized.noteLengthPreset || "standard";
-    let opening = buildNoteOpeningBlock(normalized, toneData);
     let story = buildNoteStoryAndPhrase(normalized, input);
+    let opening = buildNoteOpeningForArticle(normalized, toneData, story);
     let turn = buildNoteTurnAndWhy(normalized);
     let learn = learningLine;
     let finalBlock = buildNoteFinalBlock(normalized);
 
     if (len === "short") {
-      opening = shortenNoteOpeningForLength(normalized, toneData);
+      opening = shortenNoteOpeningForLength(normalized, toneData, story);
       story = storyFirstParagraphOnly(story);
       turn = firstSentenceJapanese(turn) || turn;
       learn = firstSentenceJapanese(learn) || learn;
