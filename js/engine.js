@@ -906,10 +906,44 @@
     return connector + first + "。";
   }
 
-  function buildNoteFinalBlock(normalized) {
-    const src = (normalized.theme + " " + normalized.incident).toLowerCase();
-    const reviewish = src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0;
-    const p = normalized.notePreset || "";
+  function noteFinalClosingBundle(normalized) {
+    return compactSpaces(
+      (normalized.theme || "") +
+        " " +
+        (normalized.incident || "") +
+        " " +
+        (normalized.coreMain || "") +
+        " " +
+        (normalized.learning || "")
+    ).toLowerCase();
+  }
+
+  function pickReviewClosingBranchNoConclusion(bundle) {
+    if (bundle.indexOf("仲良く") >= 0 || bundle.indexOf("お客様") >= 0 || bundle.indexOf("お客さん") >= 0 || bundle.indexOf("お客") >= 0) {
+      return "relation";
+    }
+    if (bundle.indexOf("導線") >= 0 || bundle.indexOf("満足") >= 0) {
+      return "guide";
+    }
+    return "default";
+  }
+
+  function pickNonReviewClosingBranchNoConclusion(bundle) {
+    if (
+      bundle.indexOf("契約") >= 0 ||
+      bundle.indexOf("売上") >= 0 ||
+      bundle.indexOf("しんどい") >= 0 ||
+      bundle.indexOf("続ける") >= 0
+    ) {
+      return "contract";
+    }
+    if (bundle.indexOf("価格") >= 0 || bundle.indexOf("客層") >= 0 || bundle.indexOf("安く") >= 0 || bundle.indexOf("安売") >= 0) {
+      return "price";
+    }
+    return "default";
+  }
+
+  function buildNoteFinalTailLegacy(reviewish, p) {
     let tail;
     if (reviewish) {
       if (p === "strong") {
@@ -932,6 +966,93 @@
     } else {
       tail = "次の一歩、一つだけ試す。\n\nそれで十分です。";
     }
+    return tail;
+  }
+
+  function buildNoteFinalTailNoConclusion(reviewish, p, bundle) {
+    const rb = reviewish ? pickReviewClosingBranchNoConclusion(bundle) : "";
+    const nb = !reviewish ? pickNonReviewClosingBranchNoConclusion(bundle) : "";
+    if (reviewish) {
+      if (p === "strong") {
+        if (rb === "relation") {
+          return "関係が良くても、口コミは導線の勝負だ。次の一手は、最短の一歩を決める。\n\n次の一枚、どう設計する？ — ここで言い切る。";
+        }
+        if (rb === "guide") {
+          return "満足の直後に置く導線を、一つに言語化する。結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
+        }
+        return "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
+      }
+      if (p === "soft") {
+        if (rb === "relation") {
+          return "仲良くなっても、口コミは別の導線がいる。次の一枚、どう設計する？";
+        }
+        if (rb === "guide") {
+          return "満足のあとに動かないのは、気持ちだけの問題とは限らない。導線を一つに落とす。\n\n次の一枚、どう設計する？";
+        }
+        return "結果が見えるのは、ズレが見えたことの前進かもしれない。\n\n次の一枚、どう設計する？";
+      }
+      if (p === "biz") {
+        if (rb === "relation") {
+          return "関係性の良さと、口コミ導線はレイヤーが違う。次の一枚、導線と導入の設計をどうする？";
+        }
+        if (rb === "guide") {
+          return "満足と行動は別KPI。導線を一つ決めてから、導入の設計に落とす。\n\n次の一枚、導線と導入の設計をどうする？";
+        }
+        return "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、導線と導入の設計をどうする？";
+      }
+      if (rb === "relation") {
+        return "関係が良くなっても、口コミは別の導線を持つ。次の一手は、満足の直後に置く一歩を決める。\n\n次の一枚、どう設計する？";
+      }
+      if (rb === "guide") {
+        return "満足のあとに動かないのは、気持ちが足りないからだとは限らない。導線を一つに落とす。\n\n次の一枚、どう設計する？";
+      }
+      return "結果が見えるのは、ズレが見えたことの前進でもある。\n\n次の一枚、どう設計する？";
+    }
+    if (p === "strong") {
+      if (nb === "contract") {
+        return "売上の見え方だけで、続け方の判断はしない。次の一歩は、一つに絞る。\n\nそれで十分です。";
+      }
+      if (nb === "price") {
+        return "価格は、集客だけでなく客層の作り方も変える。次の一歩は、一つに絞る。\n\nそれで十分です。";
+      }
+      return "次の一歩は、一つに絞る。\n\nそれで十分です。";
+    }
+    if (p === "soft") {
+      if (nb === "contract") {
+        return "続け方のしんどさは、売上だけでは説明しきれない。次の一歩、一つだけ試してみる。\n\nそれで十分です。";
+      }
+      if (nb === "price") {
+        return "安さの設計は、来る仕事の質にも効く。次の一歩、一つだけ試してみる。\n\nそれで十分です。";
+      }
+      return "次の一歩、一つだけ試してみる。\n\nそれで十分です。";
+    }
+    if (p === "biz") {
+      if (nb === "contract") {
+        return "契約の相性は、売上の伸びとは別レイヤーで見る。次の一歩は、短い手順の言語化を現場に置く。\n\nそれで十分です。";
+      }
+      if (nb === "price") {
+        return "価格と客層は、セットで設計する。次の一歩は、短い手順の言語化を現場に置く。\n\nそれで十分です。";
+      }
+      return "次の一歩は、短い手順の言語化を現場に置く。\n\nそれで十分です。";
+    }
+    if (nb === "contract") {
+      return "売上の見え方だけで、続け方の判断はしない。次の一歩は、一つに絞る。\n\nそれで十分です。";
+    }
+    if (nb === "price") {
+      return "価格は、集客だけでなく客層の作り方も変える。次の一歩は、一つに絞る。\n\nそれで十分です。";
+    }
+    return "次の一歩、一つだけ試す。\n\nそれで十分です。";
+  }
+
+  function buildNoteFinalBlock(normalized) {
+    const bundle = noteFinalClosingBundle(normalized);
+    const srcLegacy = ((normalized.theme || "") + " " + (normalized.incident || "")).toLowerCase();
+    const reviewishLegacy = srcLegacy.indexOf("口コミ") >= 0 || srcLegacy.indexOf("レビュー") >= 0;
+    const reviewishBranch = bundle.indexOf("口コミ") >= 0 || bundle.indexOf("レビュー") >= 0;
+    const p = normalized.notePreset || "";
+    const tail = normalized.coreConclusion
+      ? buildNoteFinalTailLegacy(reviewishLegacy, p)
+      : buildNoteFinalTailNoConclusion(reviewishBranch, p, bundle);
     if (normalized.coreConclusion) {
       return normalized.coreConclusion + "\n\n" + tail;
     }
