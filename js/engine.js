@@ -879,7 +879,137 @@
     return story;
   }
 
-  function buildNoteTurnAndWhy(normalized) {
+  function noteContextBundle(normalized) {
+    return compactSpaces(
+      (normalized.theme || "") +
+        " " +
+        (normalized.incident || "") +
+        " " +
+        (normalized.coreMain || "") +
+        " " +
+        (normalized.learning || "")
+    ).toLowerCase();
+  }
+
+  function noteFinalClosingBundle(normalized) {
+    return noteContextBundle(normalized);
+  }
+
+  function classifyNoteMidBranch(bundle) {
+    if (blobIndex(bundle, "口コミ") >= 0 || blobIndex(bundle, "レビュー") >= 0) {
+      return "review";
+    }
+    if (blobIndex(bundle, "価格") >= 0 || blobIndex(bundle, "客層") >= 0 || blobIndex(bundle, "安く") >= 0 || blobIndex(bundle, "安売") >= 0) {
+      return "price";
+    }
+    if (
+      blobIndex(bundle, "契約") >= 0 ||
+      blobIndex(bundle, "相性") >= 0 ||
+      (blobIndex(bundle, "売上") >= 0 && blobIndex(bundle, "しんどい") >= 0) ||
+      blobIndex(bundle, "続ける") >= 0
+    ) {
+      return "contract";
+    }
+    if (
+      blobIndex(bundle, "段取り") >= 0 ||
+      blobIndex(bundle, "手戻り") >= 0 ||
+      blobIndex(bundle, "朝礼") >= 0 ||
+      blobIndex(bundle, "確認漏れ") >= 0 ||
+      blobIndex(bundle, "手順") >= 0 ||
+      blobIndex(bundle, "現場改善") >= 0
+    ) {
+      return "ops";
+    }
+    return "default";
+  }
+
+  function blobIndex(blob, needle) {
+    return (blob || "").indexOf(needle);
+  }
+
+  function pickNoteTurnMidBranch(branch, preset) {
+    const p = preset || "";
+    if (branch === "review") {
+      if (p === "strong") {
+        return "だが、満足の瞬間を「終わり」にしないと、口コミは動きにくい。";
+      }
+      if (p === "soft") {
+        return "けれど、気持ちの良さだけでは、口コミが書かれない理由がある。";
+      }
+      if (p === "biz") {
+        return "でも、口コミは関係の延長ではなく、導線の設計の問題だ。";
+      }
+      return "でも、口コミが必要だという気持ちは、満足の直後にはまだ起きない。";
+    }
+    if (branch === "price") {
+      if (p === "strong") {
+        return "だが、安さは集客だけでなく、客層の作り方も変える。";
+      }
+      if (p === "soft") {
+        return "けれど、依頼は増えても、空気の違いだけは見落としがちだ。";
+      }
+      if (p === "biz") {
+        return "でも、価格は客層も変える。図にすると決めやすい。";
+      }
+      return "でも、価格は客層も変える。図にすると決めやすい。";
+    }
+    if (branch === "contract") {
+      if (p === "strong") {
+        return "だが、売上は伸びても、続け方の負担は別問題だ。";
+      }
+      if (p === "soft") {
+        return "けれど、良い数字は、そのまま続け心地の良さではない。";
+      }
+      if (p === "biz") {
+        return "でも、契約の相性は、売上の曲線と別レイヤーで見る必要がある。";
+      }
+      return "でも、続け方のしんどさは、売上だけでは説明しきれない。";
+    }
+    if (branch === "ops") {
+      if (p === "strong") {
+        return "だが、現場のズレは、能力不足より前提の未共有で起きることが多い。";
+      }
+      if (p === "soft") {
+        return "けれど、小さな手戻りは、積み上がると流れを止める。";
+      }
+      if (p === "biz") {
+        return "でも、段取りは短い言語化で共有できる。";
+      }
+      return "でも、前提のずれが積み上がると、現場のリズムが乱れる。";
+    }
+    return "";
+  }
+
+  function turnLineOverlapsLearning(turnLine, learningRaw) {
+    const L = compactSpaces(learningRaw).toLowerCase();
+    const t = compactSpaces(turnLine).toLowerCase();
+    if (!L || L.length < 10) {
+      return false;
+    }
+    if (t.indexOf(L.slice(0, 14)) >= 0) {
+      return true;
+    }
+    if (L.indexOf(t.slice(0, 12)) >= 0 && t.length >= 10) {
+      return true;
+    }
+    return false;
+  }
+
+  function pickNoteTurnAlternateFallback(preset) {
+    const p = preset || "";
+    if (p === "strong") {
+      return "だが、ここで言い切ると、次の一手は一段と軽くなる。";
+    }
+    if (p === "soft") {
+      return "けれど、気づきは一行で足りることもある。";
+    }
+    if (p === "biz") {
+      return "でも、現場の話は、導線と仕組みに変換できる。";
+    }
+    return "でも、一段だけ視点を変える。";
+  }
+
+  function buildNoteTurnAndWhyLegacy(normalized) {
     const why = buildNoteWhy(normalized);
     const first = compactSpaces(why.split("。")[0] || "");
     const p = normalized.notePreset || "";
@@ -906,16 +1036,21 @@
     return connector + first + "。";
   }
 
-  function noteFinalClosingBundle(normalized) {
-    return compactSpaces(
-      (normalized.theme || "") +
-        " " +
-        (normalized.incident || "") +
-        " " +
-        (normalized.coreMain || "") +
-        " " +
-        (normalized.learning || "")
-    ).toLowerCase();
+  function buildNoteTurnAndWhy(normalized) {
+    const bundle = noteContextBundle(normalized);
+    const branch = classifyNoteMidBranch(bundle);
+    const p = normalized.notePreset || "";
+    if (branch === "default") {
+      return buildNoteTurnAndWhyLegacy(normalized);
+    }
+    let turn = pickNoteTurnMidBranch(branch, p);
+    if (normalized.learning && turnLineOverlapsLearning(turn, normalized.learning)) {
+      turn = pickNoteTurnAlternateFallback(p);
+    }
+    if (normalized.learning && turnLineOverlapsLearning(turn, normalized.learning)) {
+      return buildNoteTurnAndWhyLegacy(normalized);
+    }
+    return turn;
   }
 
   function pickReviewClosingBranchNoConclusion(bundle) {
