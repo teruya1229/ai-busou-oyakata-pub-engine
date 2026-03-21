@@ -19,7 +19,7 @@
 ## Kindle節素材プレビュー（実装メモ）
 
 - **`buildKindleSectionPreview`**（`js/kindle-engine.js`）: **原稿下書き寄り**。note に **【実話】** がある場合は **■見出し付き**で本文を展開し、**outputStyle が Kindle向け**のときの意図が読み取りやすい。**※ 章組み用の短い見出しリスト**は従来の `bodyOutline` を末尾に残す（章プレビュー等の互換）
-- **本素材カテゴリ（仕分け）**: **`inferMaterialCategories`** がテーマ・現場・学び・芯から **顧客と導線／価格と客層／相性と契約判断／AI活用と仕組み化／現場改善と段取り／その他** を付与。**`buildKindleSectionMaterial`** に `materialCategoryPrimary` / `materialCategoryLabels` を追加。**章**は `chapterCategoryBlock`、**本**は `bookCategorySummary`（`buildBookCategorySummary`）
+- **本素材カテゴリ（仕分け）**: **`inferMaterialCategories`** がテーマ・現場・学び・芯から **顧客と導線／価格と客層／相性と契約判断／現場改善と段取り／AI活用と仕組み化／その他** を付与（**判定順**: 顧客 → 価格 → 契約 → **現場** → **AI**。現場ネタ＋AI の複合では主カテゴリが **現場** になりやすく、AI は副タグになりやすい）。キーワード例: **お客さん／お客／満足／安く・安い・単価／AIで・AIを・AIに／見える化（AI近傍）** など。**`buildEpisodeCategoryBlob`** は芯3項目を結合した語を **末尾にもう一度**足し、1行メモ展開時の芯の効きを少し上げる。**`buildKindleSectionMaterial`** に `materialCategoryPrimary` / `materialCategoryLabels` を追加。**章**は `chapterCategoryBlock`、**本**は `bookCategorySummary`（`buildBookCategorySummary`）
 
 ## Kindle章素材プレビュー（複数入力・実装メモ）
 
@@ -113,7 +113,8 @@
 ## 次にやるべき1手（プロダクト・入力 UX・2026-03-21 追記）
 
 - **実装済み**: **1行メモ超簡易**（`index.html` の先頭1行欄、`js/app.js` の `expandOneLineMemoParts`。`｜`/`|` で3分割、1行のみは theme と coreMain に同値）。フォームのテーマ／芯欄は非破壊（生成時のみ論理反映）
-- **次点**: **本素材カテゴリの自動付与**をキーワード・文脈でさらに強化（`inferMaterialCategories` 周辺の最小差分改善）
+- **実装済み（2026-03-21）**: **雑入力向けカテゴリ推定**（`js/kindle-engine.js` の `inferMaterialCategories` / `buildEpisodeCategoryBlob`。上記判定順・キーワード拡張・芯の二重付与）
+- **次点**: **本素材カテゴリ**のさらなる強化（代表ケースで誤分類が出たときにキーワードを足す）
 - **中長期**: **本シリーズ設計**や**章順の自動整理**（溜めた note / 章素材を一冊に並べる編集支援。提案型が安全）
 - **運用確認の継続**: 同一オリジンで **note → 4コマ画像 → 保存**の通し確認（**画像生成は費用配慮どおり必要最低限**。実施時は **使用した生成用プロンプト**も記録に残す）
 

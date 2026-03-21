@@ -333,23 +333,23 @@
   function inferMaterialCategories(blob) {
     const text = compactSpaces(blob || "");
     const labels = [];
-    if (/口コミ|顧客|導線|集客|レビュー|紹介|アンケート/.test(text)) {
+    if (/口コミ|顧客|お客さん|お客|導線|集客|レビュー|紹介|アンケート|満足/.test(text)) {
       labels.push("顧客と導線");
     }
-    if (/安売り|価格|客層|値引|安売/.test(text)) {
+    if (/安売り|価格|客層|値引|安売|安く|安い|単価/.test(text)) {
       labels.push("価格と客層");
     }
     if (/契約|定期|相性|解約|切る|定期契約/.test(text)) {
       labels.push("相性と契約判断");
     }
-    if (
-      /AI活用|ChatGPT|GPT|生成AI|プロンプト|仕組み化|自動化|テンプレ|ルール化|ノーコード|機械学習|API連携/.test(text) ||
-      /段取り[^。\n]{0,16}AI|AI[^。\n]{0,16}活用/.test(text)
-    ) {
-      labels.push("AI活用と仕組み化");
-    }
     if (/段取り|手戻り|朝礼|作業順|確認漏れ|手順ずれ|手順|現場改善|認識ずれ|写真共有/.test(text)) {
       labels.push("現場改善と段取り");
+    }
+    if (
+      /AI活用|ChatGPT|GPT|生成AI|プロンプト|仕組み化|自動化|テンプレ|ルール化|ノーコード|機械学習|API連携|AIで|AIを|AIに|AIの/.test(text) ||
+      /段取り[^。\n]{0,16}AI|AI[^。\n]{0,16}活用|AI[^。\n]{0,20}見える化|見える化[^。\n]{0,20}AI/.test(text)
+    ) {
+      labels.push("AI活用と仕組み化");
     }
     if (!labels.length) {
       return { primary: "その他／雑感", labels: ["その他／雑感"] };
@@ -358,14 +358,16 @@
   }
 
   function buildEpisodeCategoryBlob(model) {
-    return [
+    const core = compactSpaces(
+      [model.coreMain || "", model.corePhrase || "", model.coreConclusion || ""].join(" ")
+    );
+    const base = [
       model.titleTheme,
       model.incident,
       model.lesson,
-      model.coreMain || "",
-      model.corePhrase || "",
-      model.coreConclusion || "",
+      core,
     ].join(" ");
+    return core ? base + " " + core : base;
   }
 
   function formatCategoryLine(cat) {
