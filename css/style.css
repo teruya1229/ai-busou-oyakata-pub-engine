@@ -28,6 +28,11 @@ body {
   padding: 14px;
 }
 
+.note-posting-copy-card {
+  border-color: #c7d2fe;
+  background: #fafbff;
+}
+
 h1,
 h2 {
   margin: 0 0 8px;

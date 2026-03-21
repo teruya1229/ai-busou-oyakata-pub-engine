@@ -136,12 +136,9 @@
       <section class="card">
         <h2>用途別コピー（生成後）</h2>
         <p class="copy-hint">
-          よく使うブロックをここから一発コピーできます。<strong>スタイル向けにまとめてコピー</strong>は、出力スタイル（上のプルダウン）に合わせて本文・4コマ・統合・節素材を連結します（区切りは <code>---</code> 行）。
+          よく使うブロックをここから一発コピーできます。<strong>note を投稿する</strong>ときは、下の <strong>note投稿用コピー</strong>ブロックを使うと迷いにくいです（タイトル／本文／Markdown／投稿セット）。<strong>スタイル向けにまとめてコピー</strong>は、出力スタイルに合わせて 4コマ・統合・節素材などを連結します（区切りは <code>---</code> 行）。
         </p>
         <div class="actions">
-          <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">noteタイトル案をコピー</button>
-          <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文のみをコピー（投稿用）</button>
-          <button type="button" data-copy-target="note-output" class="copy-btn">note本文（H1付き）をコピー</button>
           <button type="button" data-copy-target="comic-output" class="copy-btn">4コマ構成をコピー</button>
           <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">4コマ統合プロンプトをコピー</button>
           <button type="button" data-copy-target="kindle-output" class="copy-btn">Kindle節素材をコピー</button>
@@ -283,13 +280,26 @@
         </div>
       </section>
 
+      <section class="card note-posting-copy-card">
+        <h2>note投稿用コピー</h2>
+        <p class="copy-hint">
+          <strong>note に貼る</strong>ときは、<strong>タイトル欄＝タイトル案</strong>から選ぶ／<strong>本文欄＝本文のみ</strong>。<strong>Markdown</strong>で控えたいときだけ <strong>H1付き全文</strong>。<strong>投稿セット</strong>はタイトル案と本文のみをまとめてコピーします（区切りは <code>---</code> 行）。
+        </p>
+        <div class="actions">
+          <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">タイトル案をコピー（タイトル欄）</button>
+          <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文のみをコピー（本文欄）</button>
+          <button type="button" data-copy-target="note-output" class="copy-btn">H1付き全文をコピー（Markdown保存）</button>
+          <button type="button" id="copy-note-posting-bundle-btn" class="copy-btn" data-copy-skip="1">note投稿セットをコピー（タイトル案＋本文のみ）</button>
+        </div>
+      </section>
+
       <section class="card">
         <div class="result-head">
           <h2>noteタイトル案</h2>
-          <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">タイトル案をコピー</button>
+          <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">タイトル欄用にコピー</button>
         </div>
         <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          本文とは別枠です。note のタイトル欄用に選んで貼り付けられます。
+          本文とは別枠です。一括コピーは <strong>note投稿用コピー</strong>の「投稿セット」を使えます。
         </p>
         <pre id="note-title-suggestions-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
@@ -297,11 +307,11 @@
       <section class="card">
         <div class="result-head">
           <h2>note記事本文</h2>
-          <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文のみをコピー</button>
-          <button type="button" data-copy-target="note-output" class="copy-btn">H1付きをコピー</button>
+          <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文欄用にコピー</button>
+          <button type="button" data-copy-target="note-output" class="copy-btn">Markdown用にコピー</button>
         </div>
         <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          <strong>本文のみ</strong>は note の本文欄へそのまま貼り付けやすい形です（先頭の <code># タイトル</code> 行なし）。<strong>H1付き</strong>は Markdown の見出し付きです。
+          <strong>本文のみ</strong>は note の本文欄へそのまま貼り付けやすい形です（先頭の <code># タイトル</code> 行なし）。<strong>H1付き全文</strong>は Markdown の見出し付きです。役割の整理は <strong>note投稿用コピー</strong>を参照してください。
         </p>
         <p style="margin: 0 0 6px; font-size: 13px; color: #374151">本文のみ（投稿用）</p>
         <pre id="note-body-only-output" class="output-block">ここに生成結果が表示されます。</pre>

@@ -890,6 +890,26 @@
     });
   }
 
+  function copyNotePostingBundle() {
+    const title = getOutputTextById("note-title-suggestions-output");
+    const body = getOutputTextById("note-body-only-output");
+    if (!title && !body) {
+      window.alert("コピーする内容がありません。先に「構成を生成」を押してください。");
+      return;
+    }
+    const parts = [];
+    if (title) {
+      parts.push(title);
+    }
+    if (body) {
+      parts.push(body);
+    }
+    const combined = parts.join(COPY_BUNDLE_SEPARATOR);
+    navigator.clipboard.writeText(combined).catch(function () {
+      window.alert("コピーに失敗しました。");
+    });
+  }
+
   function copyStyleBundle() {
     const data = new FormData(form);
     const style = (data.get("outputStyle") || "").trim();
@@ -1038,11 +1058,21 @@
   }
 
   document.querySelectorAll(".copy-btn").forEach(function (button) {
+    if (button.getAttribute("data-copy-skip")) {
+      return;
+    }
     button.addEventListener("click", function () {
       const targetId = button.getAttribute("data-copy-target");
       copyTextById(targetId);
     });
   });
+
+  const copyNotePostingBundleBtn = document.getElementById("copy-note-posting-bundle-btn");
+  if (copyNotePostingBundleBtn) {
+    copyNotePostingBundleBtn.addEventListener("click", function () {
+      copyNotePostingBundle();
+    });
+  }
 
   const copyStyleBundleBtn = document.getElementById("copy-style-bundle-btn");
   if (copyStyleBundleBtn) {
