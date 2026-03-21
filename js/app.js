@@ -5,6 +5,7 @@
     comicPrompt: document.getElementById("comic-prompt-output"),
     comicUnifiedPrompt: document.getElementById("comic-unified-prompt-output"),
     noteTitleSuggestions: document.getElementById("note-title-suggestions-output"),
+    noteBodyOnly: document.getElementById("note-body-only-output"),
     note: document.getElementById("note-output"),
     xPost: document.getElementById("x-output"),
     kindle: document.getElementById("kindle-output"),
@@ -209,6 +210,10 @@
       outputs.comicUnifiedPrompt = unifiedEl;
     }
     outputs.note.textContent = result.note;
+    if (outputs.noteBodyOnly) {
+      outputs.noteBodyOnly.textContent =
+        result.noteBodyOnly != null && result.noteBodyOnly !== "" ? result.noteBodyOnly : OUTPUT_PLACEHOLDER;
+    }
     if (outputs.noteTitleSuggestions) {
       outputs.noteTitleSuggestions.textContent =
         result.noteTitleSuggestions != null && result.noteTitleSuggestions !== ""
@@ -824,6 +829,9 @@
       outputs.comicUnifiedPrompt = unifiedClear;
     }
     outputs.note.textContent = placeholder;
+    if (outputs.noteBodyOnly) {
+      outputs.noteBodyOnly.textContent = placeholder;
+    }
     if (outputs.noteTitleSuggestions) {
       outputs.noteTitleSuggestions.textContent = placeholder;
     }
@@ -885,13 +893,13 @@
     const style = (data.get("outputStyle") || "").trim();
     let ids;
     if (style === "note") {
-      ids = ["note-title-suggestions-output", "note-output", "comic-output"];
+      ids = ["note-title-suggestions-output", "note-body-only-output", "comic-output"];
     } else if (style === "comic") {
       ids = ["note-title-suggestions-output", "comic-output", "comic-unified-prompt-output"];
     } else if (style === "kindle") {
-      ids = ["note-title-suggestions-output", "note-output", "kindle-output"];
+      ids = ["note-title-suggestions-output", "note-body-only-output", "kindle-output"];
     } else {
-      ids = ["note-title-suggestions-output", "note-output", "comic-output", "comic-unified-prompt-output"];
+      ids = ["note-title-suggestions-output", "note-body-only-output", "comic-output", "comic-unified-prompt-output"];
     }
     const parts = [];
     for (let i = 0; i < ids.length; i += 1) {

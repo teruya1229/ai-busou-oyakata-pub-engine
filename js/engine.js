@@ -1324,6 +1324,22 @@
     return ["【タイトル案】", "・言い切り: " + assertive, "・実話・違和感: " + discomfort, "・気づき・本質: " + essence].join("\n");
   }
 
+  function stripNoteLeadingHeading(noteText) {
+    const raw = (noteText || "").toString();
+    if (!raw) {
+      return "";
+    }
+    const lines = raw.split("\n");
+    let i = 0;
+    if (i < lines.length && /^\s*#\s+/.test(lines[i])) {
+      i += 1;
+      while (i < lines.length && lines[i] === "") {
+        i += 1;
+      }
+    }
+    return lines.slice(i).join("\n");
+  }
+
   function buildNoteShortSpaced(normalized, input, toneData, leadTitle, learningLine) {
     const parts = [
       `# ${leadTitle}`,
@@ -1459,11 +1475,13 @@
 
   function buildAllOutputs(input) {
     const normalized = normalizeInput(input);
+    const noteHeaded = buildNote(input);
     return {
       comic: buildComic(input),
       comicPrompt: buildComicPanelPrompts(input),
       comicUnifiedPrompt: buildUnifiedComicImagePrompt(input),
-      note: buildNote(input),
+      note: noteHeaded,
+      noteBodyOnly: stripNoteLeadingHeading(noteHeaded),
       noteTitleSuggestions: buildNoteTitleCandidateBlock(normalized),
       xPost: buildXPost(input),
     };
@@ -1476,6 +1494,7 @@
     buildUnifiedComicImagePrompt,
     buildNote,
     buildNoteTitleCandidateBlock,
+    stripNoteLeadingHeading,
     buildXPost,
     buildAllOutputs,
   };

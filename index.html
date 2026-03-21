@@ -131,7 +131,8 @@
         </p>
         <div class="actions">
           <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">noteタイトル案をコピー</button>
-          <button type="button" data-copy-target="note-output" class="copy-btn">note本文をコピー</button>
+          <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文のみをコピー（投稿用）</button>
+          <button type="button" data-copy-target="note-output" class="copy-btn">note本文（H1付き）をコピー</button>
           <button type="button" data-copy-target="comic-output" class="copy-btn">4コマ構成をコピー</button>
           <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">4コマ統合プロンプトをコピー</button>
           <button type="button" data-copy-target="kindle-output" class="copy-btn">Kindle節素材をコピー</button>
@@ -287,8 +288,15 @@
       <section class="card">
         <div class="result-head">
           <h2>note記事本文</h2>
-          <button type="button" data-copy-target="note-output" class="copy-btn">note本文をコピー</button>
+          <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文のみをコピー</button>
+          <button type="button" data-copy-target="note-output" class="copy-btn">H1付きをコピー</button>
         </div>
+        <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
+          <strong>本文のみ</strong>は note の本文欄へそのまま貼り付けやすい形です（先頭の <code># タイトル</code> 行なし）。<strong>H1付き</strong>は Markdown の見出し付きです。
+        </p>
+        <p style="margin: 0 0 6px; font-size: 13px; color: #374151">本文のみ（投稿用）</p>
+        <pre id="note-body-only-output" class="output-block">ここに生成結果が表示されます。</pre>
+        <p style="margin: 14px 0 6px; font-size: 13px; color: #374151">H1付き（Markdown）</p>
         <pre id="note-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
 
