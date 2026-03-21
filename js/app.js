@@ -125,7 +125,7 @@
       const left = compactOneLineMemo(conn[1]);
       const right = compactOneLineMemo(conn[2].replace(/^[、,]\s*/, ""));
       return {
-        theme: shortenTitleLike(left, 36),
+        theme: shortenTitleLike(left || full, 36),
         coreMain: full,
         coreConclusion: right || full,
       };
