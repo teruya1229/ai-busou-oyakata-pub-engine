@@ -38,7 +38,7 @@
 ## note記事本文（実装メモ）
 
 - 生成は `js/engine.js` の **`buildNote`**。見出しは **導入 / 現場で起きたこと / なぜそうなったか / 気づき / まとめ**（`## 学び` は廃止）
-- **冒頭ブロック `buildNoteOpeningBlock`**: `noteOpeningQuestionLine`（**theme/現場**に **口コミ** または **レビュー** が含まれるときだけ、プリセット別の**固定寄りの問い**を返す。それ以外は空）。**`coreMain` あり**のときは、問いがあれば **問い＋改行＋`coreMain`**、なければ **`coreMain` のみ**。**`coreMain` なし**のときは問い、またはトーンの **`noteLeadWithPreset`**（`noteLead`＋プリセット接尾）。**口コミ系の問い行は固定文っぽさが強い**（今後、多様化するなら `noteOpeningQuestionLine` 周辺が候補）
+- **冒頭ブロック `buildNoteOpeningBlock`**: `noteOpeningQuestionLine`（**テーマ・現場・芯・結論**を束ねた文字列に **口コミ**／**レビュー**／**評価** のいずれかがあるとき、プリセット別の**問い**を返す。分岐: **満足＋口コミ**／**仲良く・お客**／**レビュー・評価**／**その他**。**`coreMain` あり**のときは、問いがあれば **問い＋改行＋`coreMain`**、なければ **`coreMain` のみ**。**`coreMain` なし**のときは問い、またはトーンの **`noteLeadWithPreset`**。**`coreMain` と冒頭が先頭付近で重なる**ときは別パターンまたは汎用一行へ寄せる（`noteOpeningQuestionLine` 内）
 - トーン別の導入一文は `js/templates.js` の **`noteLead`**（分析・共有のメタ文ではなく読者向けに寄せた）
 - テーマ・現場に **口コミ** または **レビュー** が含まれる場合、導入・「なぜ」は **満足と口コミの別・タイミング**を説明する文に寄せる（題材の芯を保持）
 - Kindle の `extractNoteBodyOutline`（`js/kindle-engine.js`）は上記見出し名に追従

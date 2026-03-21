@@ -583,22 +583,122 @@
     });
   }
 
-  function noteOpeningQuestionLine(normalized) {
-    const src = (normalized.theme + " " + normalized.incident).toLowerCase();
-    if (src.indexOf("口コミ") >= 0 || src.indexOf("レビュー") >= 0) {
-      const p = normalized.notePreset || "";
-      if (p === "strong") {
-        return "満足のあとに口コミが増えないのなら、満足が足りないとは限らない。行動の設計がないだけだ。";
-      }
-      if (p === "soft") {
-        return "満足のあとに口コミが増えないのは、なぜなんだろう。";
-      }
-      if (p === "biz") {
-        return "満足のあとに口コミが増えないとき、まず見るのは「導線」と「客層の行動」のズレだ。";
-      }
-      return "満足のあとに口コミが増えないとしたら、それは本当に「満足していなかった」からだろうか。";
+  function reviewOpeningBundle(normalized) {
+    return compactSpaces(
+      (normalized.theme || "") +
+        " " +
+        (normalized.incident || "") +
+        " " +
+        (normalized.coreMain || "") +
+        " " +
+        (normalized.coreConclusion || "")
+    ).toLowerCase();
+  }
+
+  function classifyReviewOpeningBranch(bundle) {
+    if (bundle.indexOf("満足") >= 0 && bundle.indexOf("口コミ") >= 0) {
+      return "satisfactionKuchikomi";
     }
-    return "";
+    if (
+      bundle.indexOf("仲良く") >= 0 ||
+      bundle.indexOf("お客様") >= 0 ||
+      bundle.indexOf("お客さん") >= 0 ||
+      bundle.indexOf("お客") >= 0
+    ) {
+      return "relationCustomer";
+    }
+    if (bundle.indexOf("レビュー") >= 0 || bundle.indexOf("評価") >= 0) {
+      return "review";
+    }
+    return "default";
+  }
+
+  function openingTooSimilarToCore(question, coreMain) {
+    const q = compactSpaces(question).toLowerCase();
+    const c = compactSpaces(coreMain).toLowerCase();
+    if (!q || !c) {
+      return false;
+    }
+    if (q === c) {
+      return true;
+    }
+    const n = Math.min(14, c.length);
+    if (n >= 6 && q.indexOf(c.slice(0, n)) >= 0) {
+      return true;
+    }
+    const m = Math.min(14, q.length);
+    if (m >= 6 && c.indexOf(q.slice(0, m)) >= 0) {
+      return true;
+    }
+    return false;
+  }
+
+  function pickReviewOpeningByBranch(preset, branch) {
+    const p = preset || "";
+    const b = branch || "default";
+    if (p === "strong") {
+      if (b === "satisfactionKuchikomi") {
+        return "満足が足りないから口コミが増えない、と決めつける前に、タイミングと手間を減らす導線を見る。";
+      }
+      if (b === "relationCustomer") {
+        return "仲が良いことと、口コミ投稿は別物だ。どこを分けて設計する？";
+      }
+      if (b === "review") {
+        return "レビューと満足は、同じカードに並べない。混ぜると誤診が増える。";
+      }
+      return "満足のあとに口コミが増えないのなら、満足が足りないとは限らない。行動の設計がないだけだ。";
+    }
+    if (p === "soft") {
+      if (b === "satisfactionKuchikomi") {
+        return "満足したあと、口コミはなぜ動きにくいか。気持ちの話だけで終わらないか。";
+      }
+      if (b === "relationCustomer") {
+        return "仲良くなったのに、口コミが来ない。そこはどう感じる？";
+      }
+      if (b === "review") {
+        return "満足してくれたのに、レビューにはつながらない。なぜなんだろう。";
+      }
+      return "満足のあとに口コミが増えないのは、なぜなんだろう。";
+    }
+    if (p === "biz") {
+      if (b === "satisfactionKuchikomi") {
+        return "満足と口コミは別KPI。導線と客層の行動を、どこで見るか。";
+      }
+      if (b === "relationCustomer") {
+        return "関係性の質と、口コミ投稿の導線は、設計上のレイヤーが違う。";
+      }
+      if (b === "review") {
+        return "レビュー導線は、満足の直後の設計とセットで見る。";
+      }
+      return "満足のあとに口コミが増えないとき、まず見るのは「導線」と「客層の行動」のズレだ。";
+    }
+    if (b === "satisfactionKuchikomi") {
+      return "満足の瞬間と、口コミの動きは同じタイミングでは起きない。どこでズレる？";
+    }
+    if (b === "relationCustomer") {
+      return "関係が良くなっても、口コミに繋がるとは限らない。何が別問題だ？";
+    }
+    if (b === "review") {
+      return "レビューに繋がらない満足は、満足が足りないからだろうか。それとも別の話だろうか。";
+    }
+    return "満足のあとに口コミが増えないとしたら、それは本当に「満足していなかった」からだろうか。";
+  }
+
+  function noteOpeningQuestionLine(normalized) {
+    const bundle = reviewOpeningBundle(normalized);
+    if (bundle.indexOf("口コミ") < 0 && bundle.indexOf("レビュー") < 0 && bundle.indexOf("評価") < 0) {
+      return "";
+    }
+    const branch = classifyReviewOpeningBranch(bundle);
+    let q = pickReviewOpeningByBranch(normalized.notePreset, branch);
+    if (normalized.coreMain && openingTooSimilarToCore(q, normalized.coreMain)) {
+      q = pickReviewOpeningByBranch(normalized.notePreset, "default");
+      if (normalized.coreMain && openingTooSimilarToCore(q, normalized.coreMain)) {
+        q =
+          "満足と行動は別、と言われることがある。口コミやレビューは、そのどこに挟まるだろうか。";
+      }
+    }
+    return q;
   }
 
   function noteLeadWithPreset(toneData, preset) {
