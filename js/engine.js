@@ -50,6 +50,14 @@
       return "emotion";
     }
     if (
+      b.indexOf("人間関係") >= 0 ||
+      b.indexOf("礼儀") >= 0 ||
+      b.indexOf("人として") >= 0 ||
+      (b.indexOf("信頼") >= 0 && b.indexOf("お客") >= 0)
+    ) {
+      return "human_relation";
+    }
+    if (
       b.indexOf("弟子") >= 0 ||
       b.indexOf("協力会社") >= 0 ||
       b.indexOf("教育") >= 0 ||
@@ -61,14 +69,6 @@
     }
     if (b.indexOf("直営業") >= 0 || b.indexOf("営業") >= 0 || b.indexOf("集客") >= 0 || b.indexOf("問い合わせ") >= 0) {
       return "sales";
-    }
-    if (
-      b.indexOf("人間関係") >= 0 ||
-      b.indexOf("礼儀") >= 0 ||
-      b.indexOf("人として") >= 0 ||
-      (b.indexOf("信頼") >= 0 && b.indexOf("お客") >= 0)
-    ) {
-      return "human_relation";
     }
     if (b.indexOf("価格") >= 0 || b.indexOf("単価") >= 0 || b.indexOf("最安") >= 0 || b.indexOf("安値") >= 0 || b.indexOf("見積") >= 0) {
       return "price";
@@ -203,7 +203,7 @@
     const clipped = stem.length > 96 ? stem.slice(0, 96) + "…" : stem;
     const th = compactSpaces(theme || "");
     if (th) {
-      return ensurePeriod("「" + th + "」の話の場面で、" + clipped + "——ここが、会話の中心に残った。");
+      return ensurePeriod("この話の場面で、" + clipped + "——ここが、会話の中心に残った。");
     }
     if (ax === "alignment_comm") {
       return ensurePeriod(clipped + "——伝え方と受け取り方のズレが、その日の論点になった。");
@@ -1018,7 +1018,7 @@
     if (fr.length === 1) {
       let s = polishRoughIncidentClause(fr[0]);
       if (compactSpaces(s).length < 22 && normalized.coreMain) {
-        s = "「" + normalized.theme + "」の場面で、" + s + "——ここが、その日の出来事の芯だった。";
+        s = "この場面で、" + s + "——ここが、その日の出来事の芯だった。";
       }
       return ensurePeriod(s);
     }
@@ -1252,6 +1252,18 @@
       }
       return "でも、向き不向きは、前提の置き方で変わる。";
     }
+    if (axis === "general") {
+      if (p === "strong") {
+        return "だが、困っているのは「誰が・何を・どこまで」かが、まだ一枚に乗っていないときだ。";
+      }
+      if (p === "soft") {
+        return "けれど、いまの場面で一番重いのは、役割の線が曖昧な点だ。";
+      }
+      if (p === "biz") {
+        return "でも、論点を一つに言語化すると、説明の負担が下がる。";
+      }
+      return "でも、いまの場面で一番重いのは、役割の線が曖昧な点だ。";
+    }
     return "";
   }
 
@@ -1349,16 +1361,28 @@
       if (ax === "apprentice_education") {
         return "それでも、役割の境界は、関係が良いほど言葉にしておきたい。";
       }
+      if (ax === "alignment_comm") {
+        if (p === "strong") {
+          return "それでも、同じ出来事でも、見え方は人によって違う。";
+        }
+        if (p === "soft") {
+          return "ただ、同じ出来事でも、見え方は人によって違う。";
+        }
+        if (p === "biz") {
+          return "ただ、伝達を「誰が・いつ・何を」に落とすと、論点がぶれにくい。";
+        }
+        return "ただ、同じ出来事でも、見え方は人によって違う。";
+      }
       if (p === "strong") {
-        return "それでも、同じ出来事でも、見え方は人によって違う。";
+        return pickNoteTurnAlternateFallback(p);
       }
       if (p === "soft") {
-        return "ただ、同じ出来事でも、見え方は人によって違う。";
+        return pickNoteTurnAlternateFallback(p);
       }
       if (p === "biz") {
         return "ただ、論点を一つにすると、次の意思決定が早い。";
       }
-      return "ただ、同じ出来事でも、見え方は人によって違う。";
+      return pickNoteTurnAlternateFallback(p);
     }
     let connector = "でも、";
     if (p === "strong") {
@@ -1424,105 +1448,63 @@
     return "default";
   }
 
-  function buildNoteFinalTailLegacy(reviewish, p) {
-    let tail;
-    if (reviewish) {
-      if (p === "strong") {
-        tail =
-          "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
-      } else if (p === "soft") {
-        tail = "結果が見えるのは、論点が一つ言葉になったことの前進かもしれない。\n\n次の一枚、どう設計する？";
-      } else if (p === "biz") {
-        tail =
-          "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、導線と導入の設計をどうする？";
-      } else {
-        tail = "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、どう設計する？";
-      }
-    } else if (p === "strong") {
-      tail = "次の一歩は、一つに絞る。\n\nそれで十分です。";
-    } else if (p === "soft") {
-      tail = "次の一歩、一つだけ試してみる。\n\nそれで十分です。";
-    } else if (p === "biz") {
-      tail = "次の一歩は、短い手順の言語化を現場に置く。\n\nそれで十分です。";
-    } else {
-      tail = "次の一歩、一つだけ試す。\n\nそれで十分です。";
-    }
-    return tail;
-  }
-
-  function buildNoteFinalTailNoConclusion(reviewish, p, bundle) {
+  /**
+   * 結論欄が空のときの締め。本文は「今回の話」に接続し、4コマ向けの「次の一枚」や汎用の「それで十分」は出さない。
+   */
+  function buildNoteClosingNoConclusionTied(normalized, reviewish, p, bundle) {
+    const ax = normalized.topicAxis || inferTopicAxis(noteContextBundle(normalized));
     const rb = reviewish ? pickReviewClosingBranchNoConclusion(bundle) : "";
     const nb = !reviewish ? pickNonReviewClosingBranchNoConclusion(bundle) : "";
     if (reviewish) {
-      if (p === "strong") {
-        if (rb === "relation") {
-          return "関係が良くても、口コミは導線の勝負だ。次の一手は、最短の一歩を決める。\n\n次の一枚、どう設計する？ — ここで言い切る。";
-        }
-        if (rb === "guide") {
-          return "満足の直後に置く導線を、一つに言語化する。結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
-        }
-        return "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、どう設計する？ — ここで言い切る。";
-      }
-      if (p === "soft") {
-        if (rb === "relation") {
-          return "仲良くなっても、口コミは別の導線がいる。次の一枚、どう設計する？";
-        }
-        if (rb === "guide") {
-          return "満足のあとに動かないのは、気持ちだけの問題とは限らない。導線を一つに落とす。\n\n次の一枚、どう設計する？";
-        }
-        return "結果が見えるのは、論点が一つ言葉になったことの前進かもしれない。\n\n次の一枚、どう設計する？";
-      }
-      if (p === "biz") {
-        if (rb === "relation") {
-          return "関係性の良さと、口コミ導線はレイヤーが違う。次の一枚、導線と導入の設計をどうする？";
-        }
-        if (rb === "guide") {
-          return "満足と行動は別KPI。導線を一つ決めてから、導入の設計に落とす。\n\n次の一枚、導線と導入の設計をどうする？";
-        }
-        return "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、導線と導入の設計をどうする？";
-      }
       if (rb === "relation") {
-        return "関係が良くなっても、口コミは別の導線を持つ。次の一手は、満足の直後に置く一歩を決める。\n\n次の一枚、どう設計する？";
+        return "次の現場では、満足の直後に置く声かけを一つだけ決める。";
       }
       if (rb === "guide") {
-        return "満足のあとに動かないのは、気持ちが足りないからだとは限らない。導線を一つに落とす。\n\n次の一枚、どう設計する？";
+        return "次の現場では、満足の直後に置く導線を一つだけ言語化する。";
       }
-      return "結果が見えるのは、論点が一つ言葉になったことの前進でもある。\n\n次の一枚、どう設計する？";
-    }
-    if (p === "strong") {
-      if (nb === "contract") {
-        return "売上の見え方だけで、続け方の判断はしない。次の一歩は、一つに絞る。\n\nそれで十分です。";
-      }
-      if (nb === "price") {
-        return "価格は、集客だけでなく客層の作り方も変える。次の一歩は、一つに絞る。\n\nそれで十分です。";
-      }
-      return "次の一歩は、一つに絞る。\n\nそれで十分です。";
-    }
-    if (p === "soft") {
-      if (nb === "contract") {
-        return "続け方のしんどさは、売上だけでは説明しきれない。次の一歩、一つだけ試してみる。\n\nそれで十分です。";
-      }
-      if (nb === "price") {
-        return "安さの設計は、来る仕事の質にも効く。次の一歩、一つだけ試してみる。\n\nそれで十分です。";
-      }
-      return "次の一歩、一つだけ試してみる。\n\nそれで十分です。";
-    }
-    if (p === "biz") {
-      if (nb === "contract") {
-        return "契約の相性は、売上の伸びとは別レイヤーで見る。次の一歩は、短い手順の言語化を現場に置く。\n\nそれで十分です。";
-      }
-      if (nb === "price") {
-        return "価格と客層は、セットで設計する。次の一歩は、短い手順の言語化を現場に置く。\n\nそれで十分です。";
-      }
-      return "次の一歩は、短い手順の言語化を現場に置く。\n\nそれで十分です。";
+      return "次の現場では、試す一文を一つ決める。";
     }
     if (nb === "contract") {
-      return "売上の見え方だけで、続け方の判断はしない。次の一歩は、一つに絞る。\n\nそれで十分です。";
+      return "次の一件では、続け方の判断を売上の数字だけに寄せない。";
     }
     if (nb === "price") {
-      return "価格は、集客だけでなく客層の作り方も変える。次の一歩は、一つに絞る。\n\nそれで十分です。";
+      return "次の見積では、価格と客層の両方を一つだけ言葉にする。";
     }
-    return "次の一歩、一つだけ試す。\n\nそれで十分です。";
+    if (ax === "human_relation") {
+      return "次の現場では、人としての線引きを一つだけ先に決める。";
+    }
+    if (ax === "apprentice_education") {
+      return "次の現場では、誰の顧客に誰が触れるかを一つだけ約束する。";
+    }
+    if (ax === "sales") {
+      return "次の機会では、商流の筋道を一つだけ先に決める。";
+    }
+    if (ax === "alignment_comm") {
+      return "次の打ち合わせでは、伝える順と役割を一つだけ決める。";
+    }
+    if (ax === "site_ops") {
+      return "次の現場では、順番の確認を一つだけ共有する。";
+    }
+    if (ax === "emotion") {
+      return "次の同じ場面では、感情と判断を一行で分けてから動く。";
+    }
+    if (ax === "customer_fit") {
+      return "次の案件では、向き不向きを価格と期待の置き方で一度だけ見直す。";
+    }
+    if (p === "biz") {
+      return "次の現場では、短い手順を一つだけ現場に置く。";
+    }
+    if (p === "strong") {
+      return "次の現場では、いまの場面で一番重かった点を一つだけ言い切る。";
+    }
+    if (p === "soft") {
+      return "次の現場では、同じ場面で一つだけ試す。";
+    }
+    return "次の現場では、同じ場面で一つだけ試す。";
+  }
+
+  function buildNoteFinalTailNoConclusion(normalized, reviewish, p, bundle) {
+    return buildNoteClosingNoConclusionTied(normalized, reviewish, p, bundle);
   }
 
   function buildNoteFinalBlock(normalized) {
@@ -1538,7 +1520,7 @@
         : "次は、この結論を一つだけ行動に落とす。";
       return normalized.coreConclusion + "\n\n" + nextLine;
     }
-    return buildNoteFinalTailNoConclusion(reviewishBranch, p, bundle);
+    return buildNoteFinalTailNoConclusion(normalized, reviewishBranch, p, bundle);
   }
 
   function buildNoteWhy(normalized) {
@@ -1574,7 +1556,7 @@
     if (axis === "alignment_comm" || normalized.comicPattern === "誤解型") {
       return "起きやすいのは、言葉の当たり前が人それぞれだからです。伝えたつもりが伝わっておらず、同じ現場でも見え方が分かれると、手戻りは一気に膨らみます。";
     }
-    return "起きやすいのは、出来事の中心が、誰にとってどう映ったかで説明が変わるからです。ここを整理すると、次の一手が軽くなります。";
+    return "起きやすいのは、一度の場面に「正しさ」が複数あると、あとから説明が重くなるからです。役割の線を一文にすると、次の一手が決めやすくなります。";
   }
 
   function shortenTitlePart(s, maxLen) {
@@ -1892,6 +1874,62 @@
     return s.slice(0, idx).trim();
   }
 
+  function stripImakawaPrefix(s) {
+    return compactSpaces((s || "").replace(/^今回は[、,]\s*/, ""));
+  }
+
+  function shouldSkipSeparateOpening(story, opening) {
+    const st = stripImakawaPrefix(firstSentenceJapanese(storyFirstParagraphOnly(story)));
+    const os = stripImakawaPrefix(firstSentenceJapanese(opening));
+    if (!st || !os) {
+      return false;
+    }
+    if (st === os) {
+      return true;
+    }
+    const n = Math.min(16, st.length, os.length);
+    if (n >= 14 && st.slice(0, n) === os.slice(0, n)) {
+      return true;
+    }
+    if (st.length >= 12 && os.length >= 12 && (st.indexOf(os) >= 0 || os.indexOf(st) >= 0)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 1段目: 出来事。冒頭と実話が同じ言い換えにならないよう、重複時は story のみ。
+   */
+  function buildNoteIncidentBlockForArticle(normalized, toneData, story) {
+    const opening = buildNoteOpeningForArticle(normalized, toneData, story);
+    const st = compactSpaces(story);
+    if (!st) {
+      return compactSpaces(opening) || ensurePeriod(normalized.incident);
+    }
+    if (shouldSkipSeparateOpening(story, opening)) {
+      return story;
+    }
+    const o = compactSpaces(opening);
+    if (o && st.indexOf(o) < 0 && o.indexOf(st) < 0) {
+      return o + "\n\n" + story;
+    }
+    return story;
+  }
+
+  function dedupeLearningVersusTurn(learn, turn, normalized) {
+    const L = compactSpaces(learn);
+    const T = compactSpaces(turn);
+    if (!L || !T || !turnLineOverlapsLearning(T, L)) {
+      return learn;
+    }
+    const cm = compactSpaces(normalized.coreMain || "");
+    if (cm.length > 8) {
+      return ensurePeriod("この日の学びとして残したのは、「" + cm + "」という感覚だった。");
+    }
+    const one = L.split(/[。\n]/)[0];
+    return ensurePeriod(one || L);
+  }
+
   function buildNoteOpeningForArticle(normalized, toneData, story) {
     const theme = compactSpaces(normalized.theme || "");
     const core = compactSpaces(normalized.coreMain || "");
@@ -1917,24 +1955,37 @@
     return noteLeadWithPreset(toneData, normalized.notePreset);
   }
 
-  function shortenNoteOpeningForLength(normalized, toneData, story) {
-    const full = buildNoteOpeningForArticle(normalized, toneData, story);
-    return firstSentenceJapanese(full) || full;
-  }
-
   function shortenNoteFinalBlockForLength(normalized) {
     if (normalized.coreConclusion) {
       const phrase = compactSpaces(normalized.corePhrase || "");
       const nextLine = phrase ? "次は「" + phrase + "」を一つ。" : "次はこの結論を一つに落とす。";
       return normalized.coreConclusion + "\n\n" + nextLine;
     }
-    return "次の一歩、一つだけ試す。\nそれで十分です。";
+    const bundle = noteFinalClosingBundle(normalized);
+    const reviewishBranch = bundle.indexOf("口コミ") >= 0 || bundle.indexOf("レビュー") >= 0;
+    const p = normalized.notePreset || "";
+    return buildNoteFinalTailNoConclusion(normalized, reviewishBranch, p, bundle);
   }
 
-  function extendNoteStoryOrLearning(story, learningLine) {
+  function extendNoteStoryOrLearning(story, learningLine, normalized) {
+    const axis = normalized.topicAxis || inferTopicAxis(noteContextBundle(normalized));
+    let extra = "";
+    if (axis === "review") {
+      extra = "満足の瞬間を終わりにしないと、口コミは動きにくい。";
+    } else if (axis === "sales" || axis === "apprentice_education") {
+      extra = "商流の外で動くと、あとからの説明が重くなる。";
+    } else if (axis === "site_ops") {
+      extra = "順番の未共有が、小さな手戻りを増やす。";
+    } else if (axis === "human_relation") {
+      extra = "関係の良さだけでは、役割の外に出る問題は防げない。";
+    } else if (axis === "emotion") {
+      extra = "感情と判断を分けて書くと、次の一手が軽くなる。";
+    } else {
+      extra = "細部が積み上がると、現場の空気が変わる。";
+    }
     if (story.indexOf("\n\n") < 0) {
       return {
-        story: story + "\n\n" + "流れは早かったが、違和感は残った。",
+        story: story + "\n\n" + extra,
         learningLine,
       };
     }
@@ -1948,29 +1999,27 @@
   function buildNoteShortSpaced(normalized, input, toneData, leadTitle, learningLine) {
     const len = normalized.noteLengthPreset || "standard";
     let story = buildNoteStoryAndPhrase(normalized, input);
-    let opening = buildNoteOpeningForArticle(normalized, toneData, story);
+    let incidentBlock = buildNoteIncidentBlockForArticle(normalized, toneData, story);
     let turn = buildNoteTurnAndWhy(normalized);
-    let learn = learningLine;
+    let learn = dedupeLearningVersusTurn(learningLine, turn, normalized);
     let finalBlock = buildNoteFinalBlock(normalized);
 
     if (len === "short") {
-      opening = shortenNoteOpeningForLength(normalized, toneData, story);
-      story = storyFirstParagraphOnly(story);
+      incidentBlock = storyFirstParagraphOnly(incidentBlock);
       turn = firstSentenceJapanese(turn) || turn;
       learn = firstSentenceJapanese(learn) || learn;
       finalBlock = shortenNoteFinalBlockForLength(normalized);
     } else if (len === "extended") {
-      const ex = extendNoteStoryOrLearning(story, learn);
+      const ex = extendNoteStoryOrLearning(story, learn, normalized);
       story = ex.story;
       learn = ex.learningLine;
+      incidentBlock = buildNoteIncidentBlockForArticle(normalized, toneData, story);
     }
 
     const parts = [
       `# ${leadTitle}`,
       "",
-      opening,
-      "",
-      story,
+      incidentBlock,
       "",
       turn,
       "",
@@ -1978,11 +2027,7 @@
       "",
       finalBlock,
     ];
-    let body = parts.join("\n");
-    if (normalized.inputSparse && len !== "short") {
-      body += "\n\n" + "入力が短くても、決めるのは一つで十分。";
-    }
-    return body;
+    return parts.join("\n");
   }
 
   function buildNoteKindleStructured(normalized, input, toneData, leadTitle, learningLine) {
@@ -2019,9 +2064,6 @@
       "",
       "（章や本の中では、起きた事実→背景の整理→学び→次の一歩の順で読めるように使える。）",
     ].join("\n");
-    if (normalized.inputSparse) {
-      body += "\n\n" + "入力が短くても、決めるのは一つで十分。";
-    }
     return body;
   }
 
@@ -2033,9 +2075,6 @@
     }
     parts.push(story, "", learningLine, "", buildNoteFinalBlock(normalized));
     let body = parts.join("\n");
-    if (normalized.inputSparse) {
-      body += "\n\n" + "入力が短くても、決めるのは一つで十分。";
-    }
     return body;
   }
 

@@ -900,3 +900,13 @@
 
 ## 次にやるべきこと（題材軸後）
 - 「弟子が私のお客に直営業」などで **人間関係／弟子**が軸として拾われ、本文・4コマに無関係な「共通認識」が混ざらないか**ブラウザで1本確認**
+
+## 今日やったこと（2026-03-21：note本文の4段フロー再構築）
+- **`js/engine.js`**: **`buildNoteShortSpaced`** を **出来事／引っかかり／学び／次の一手** の4段に整理（**`buildNoteIncidentBlockForArticle`** で冒頭と実話の重複を回避、**`dedupeLearningVersusTurn`** で中盤と学びのかぶりを緩和）。**`buildNoteClosingNoConclusionTied`** で結論なしの締めを題材軸に接続し、**「次の一枚」「それで十分」** 等を除去。**`inferTopicAxis`** で **人間関係** を **弟子／教育** より先に判定。**`pickNoteTurnForTopicAxis`** に **general** 軸を追加。**`extendNoteStoryOrLearning`** を題材寄りに。**`入力が短くても〜` の本文追記**を廃止。**`deriveIncidentFromCore`／`recomposeIncidentMemo`** でタイトル文言の本文直複製を抑止
+- **`README.md`**・**`ops/handoff.md`**（本記録）を追記
+
+## 現在の状態（note本文フロー再構築後）
+- 短文余白は維持しつつ、**1本の出来事として前に進む**本文になりやすい
+
+## 次にやるべきこと（note本文確認）
+- 題材例（弟子の直営業・人間関係の芯・結論あり）で **4段の流れ**と **締めの着地**をブラウザで1本確認
