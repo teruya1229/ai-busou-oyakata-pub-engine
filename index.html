@@ -134,7 +134,7 @@
 
       <section class="card comic-primary-card">
         <p class="workflow-hint workflow-hint--primary">
-          <strong>主導線</strong>：入力 → <strong>漫画原稿</strong> → <strong>8コマ標準ネーム</strong>（現状は1〜4コマ相当の短縮版） → コマ別プロンプト → 統合プロンプト → <strong>note補助（導入・締め）</strong>
+          <strong>主導線</strong>：入力 → <strong>漫画原稿</strong> → <strong>8コマ標準ネーム</strong>（1/8〜8/8） → コマ別プロンプト → 統合プロンプト → <strong>note補助（導入・締め）</strong>
         </p>
         <div class="result-head">
           <h2>漫画原稿（一次ソース）</h2>
@@ -148,10 +148,10 @@
 
       <section class="card comic-primary-card">
         <div class="result-head">
-          <h2>8コマ標準ネーム（現状は1〜4コマ相当の短縮版）</h2>
+          <h2>8コマ標準ネーム（1/8〜8/8）</h2>
         </div>
         <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          レイアウトは旧4コマ連続を流用していますが、主役は<strong>8コマのネーム</strong>です。5〜8コマ分は今後の拡張枠（今は未生成）。
+          原稿の8ブロックをそのまま<strong>1コマずつ</strong>載せます（まずは圧縮せず、流れを追えることを優先）。旧4コマ短縮版は <code>buildAllOutputs</code> の <code>comicLegacy4</code> に残しています。
         </p>
         <h3 style="margin: 12px 0 6px; font-size: 1rem; font-weight: 600; color: #374151">タイトル</h3>
         <div class="result-head" style="margin-bottom: 6px">

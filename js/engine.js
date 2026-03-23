@@ -1,7 +1,20 @@
 (function () {
   const templates = window.AIBusouTemplates;
 
+  /** 主線ネーム：原稿8ブロックをそのまま 1/8〜8/8 に対応（短縮・再配置はしない） */
   const COMIC_PANEL_LABELS = {
+    p1: "1コマ目（1/8・導入）",
+    p2: "2コマ目（2/8・状況）",
+    p3: "3コマ目（3/8・事件の予兆）",
+    p4: "4コマ目（4/8・強い一言）",
+    p5: "5コマ目（5/8・当時の自分）",
+    p6: "6コマ目（6/8・今なら分かる）",
+    p7: "7コマ目（7/8・行動ルール）",
+    p8: "8コマ目（8/8・読者への問い）",
+  };
+
+  /** 旧4コマ短縮版（後方互換・`comicLegacy4` のみ） */
+  const COMIC_LEGACY4 = {
     p1: "1コマ目（1/8・状況）",
     p2: "2コマ目（2/8・違和感）",
     p3: "3コマ目（3/8・気づき）",
@@ -659,10 +672,14 @@
 
   function getComicPanelMetaForExtraction() {
     return [
-      { number: 1, start: COMIC_PANEL_LABELS.p1, next: COMIC_PANEL_LABELS.p2, name: "状況" },
-      { number: 2, start: COMIC_PANEL_LABELS.p2, next: COMIC_PANEL_LABELS.p3, name: "違和感" },
-      { number: 3, start: COMIC_PANEL_LABELS.p3, next: COMIC_PANEL_LABELS.p4, name: "気づき" },
-      { number: 4, start: COMIC_PANEL_LABELS.p4, next: "", name: "前進" },
+      { number: 1, start: COMIC_PANEL_LABELS.p1, next: COMIC_PANEL_LABELS.p2, name: "導入" },
+      { number: 2, start: COMIC_PANEL_LABELS.p2, next: COMIC_PANEL_LABELS.p3, name: "状況" },
+      { number: 3, start: COMIC_PANEL_LABELS.p3, next: COMIC_PANEL_LABELS.p4, name: "事件の予兆" },
+      { number: 4, start: COMIC_PANEL_LABELS.p4, next: COMIC_PANEL_LABELS.p5, name: "強い一言" },
+      { number: 5, start: COMIC_PANEL_LABELS.p5, next: COMIC_PANEL_LABELS.p6, name: "当時の自分" },
+      { number: 6, start: COMIC_PANEL_LABELS.p6, next: COMIC_PANEL_LABELS.p7, name: "今なら分かる" },
+      { number: 7, start: COMIC_PANEL_LABELS.p7, next: COMIC_PANEL_LABELS.p8, name: "行動ルール" },
+      { number: 8, start: COMIC_PANEL_LABELS.p8, next: "", name: "読者への問い" },
     ];
   }
 
@@ -891,8 +908,31 @@
     };
   }
 
-  /** 原稿を切り出してネーム枠（現状は1〜4コマ相当）に配置（要約ではなく再配置） */
+  /** 原稿8ブロックをそのまま 1/8〜8/8 に載せる（圧縮・賢い統合はしない） */
   function formatComicFromManuscript(normalized, manuscript) {
+    const sec = parseManuscriptSections(manuscript);
+    const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
+    const blocks = [
+      { label: COMIC_PANEL_LABELS.p1, text: sec.intro },
+      { label: COMIC_PANEL_LABELS.p2, text: sec.incident },
+      { label: COMIC_PANEL_LABELS.p3, text: sec.punch },
+      { label: COMIC_PANEL_LABELS.p4, text: sec.thenSelf },
+      { label: COMIC_PANEL_LABELS.p5, text: sec.nowKnow },
+      { label: COMIC_PANEL_LABELS.p6, text: sec.essence },
+      { label: COMIC_PANEL_LABELS.p7, text: sec.rule },
+      { label: COMIC_PANEL_LABELS.p8, text: sec.reader },
+    ];
+    const parts = [`【タイトル】${leadTitle}`, ""];
+    for (var i = 0; i < blocks.length; i++) {
+      const b = blocks[i];
+      const body = compactSpaces(b.text || "") || "（このブロックは空です）";
+      parts.push(b.label, body, "");
+    }
+    return parts.join("\n").trim();
+  }
+
+  /** 旧4コマ短縮ネーム（主線では使わない。比較・互換用） */
+  function formatFourPanelLegacyFromManuscript(normalized, manuscript) {
     const sec = parseManuscriptSections(manuscript);
     const toneData = templates.toneTemplates[normalized.tone];
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
@@ -912,18 +952,16 @@
     const oykLine = sec.essence
       ? clipComicLine(sec.essence, 44)
       : clipComicLine(oykataInsightFirstLine(normalized), 44);
-    // 主線のネームは親方の一行に寄せる（コパイロット常時セリフは出さない）
     const panel3Conversation = [`${protagonist}: ${oykLine}`];
-    // 読者への問いは原稿内に残し、最終コマのナレーションには混ぜない
     const forwardBody = compactSpaces(sec.rule);
     const forwardLine = "次に変える: " + clipComicLine(forwardBody, 100);
     const panel2PartnerLine = trimOptional(normalized.corePhrase)
       ? comicPanel2PartnerLineGrounded(normalized, toneData, partner, st)
       : "";
 
-    const panel1Lines = [COMIC_PANEL_LABELS.p1, `状況: ${situationText || clipComicLine(sec.incident || normalized.incident, 100)}`];
-    const panel3Lines = [COMIC_PANEL_LABELS.p3, insightLine].concat(panel3Conversation);
-    const panel2Block = [COMIC_PANEL_LABELS.p2, gapLine];
+    const panel1Lines = [COMIC_LEGACY4.p1, `状況: ${situationText || clipComicLine(sec.incident || normalized.incident, 100)}`];
+    const panel3Lines = [COMIC_LEGACY4.p3, insightLine].concat(panel3Conversation);
+    const panel2Block = [COMIC_LEGACY4.p2, gapLine];
     if (panel2PartnerLine) {
       panel2Block.push(panel2PartnerLine);
     }
@@ -937,7 +975,7 @@
       "",
       panel3Lines.join("\n"),
       "",
-      COMIC_PANEL_LABELS.p4,
+      COMIC_LEGACY4.p4,
       forwardLine,
     ].join("\n");
   }
@@ -1003,6 +1041,10 @@
       2: cs ? "お客様の表情・戸惑いが主役（依頼主の大人）" : "違和感が少し出る表情",
       3: cs && comicCopilotSilent(normalized) ? "親方の気づき・内省が伝わる表情" : "気づきが生まれる真剣な表情",
       4: "納得して前を向く表情",
+      5: "振り返り・内省が伝わる表情",
+      6: "理解が深まった表情",
+      7: "決意や次の一手が伝わる表情",
+      8: "読者に問いかける落ち着いた表情",
     };
     const compositionByPanel = {
       1: "中景、状況が伝わるカット",
@@ -1012,6 +1054,10 @@
           ? "親方中心、独白・内省が伝わる構図（対話でなくてもよい）"
           : "会話が読み取りやすい対話構図",
       4: "引き気味、前進で締める安定構図",
+      5: "振り返り・独白が読みやすい中景",
+      6: "理解の転換が伝わるカット",
+      7: "次の行動が伝わる構図",
+      8: "余韻・問いかけで締める構図",
     };
 
     return [
@@ -1037,11 +1083,11 @@
       return buildPanelPrompt(meta.number, meta.name, lines, normalized, styleGuide);
     });
 
-    const lines = ["【コマ別・描画プロンプト（8コマネームのうち1〜4コマ相当）】"];
+    const lines = ["【コマ別・描画プロンプト（8コマネーム・1/8〜8/8）】"];
     if (normalized.outputStyle) {
       lines.push(`出力スタイル: ${normalized.outputStyle}`);
     }
-    lines.push("（漫画原稿から切り出したネームを元に生成。5〜8コマは今後拡張）", "", panelBlocks.join("\n\n"));
+    lines.push("（漫画原稿から切り出したネームを元に生成）", "", panelBlocks.join("\n\n"));
     return lines.join("\n");
   }
 
@@ -1058,7 +1104,7 @@
     return "";
   }
 
-  /** 4コマ描画プロンプト用：顧客視点回は親方＋お客様を明示（コパイロット無音時は描かない） */
+  /** コマ別描画プロンプト用：顧客視点回は親方＋お客様を明示（コパイロット無音時は描かない） */
   function comicPromptCharacters(normalized) {
     const protagonist = templates.characterProfile.protagonist.name;
     const partner = templates.characterProfile.partner.name;
@@ -1155,10 +1201,10 @@
     const styleHint = unifiedStyleHintLine(normalized.outputStyle);
 
     return [
-      "【統合画像プロンプト（8コマネームのうち1〜4コマを1枚に収める想定）】",
+      "【統合画像プロンプト（8コマネームを1枚に収める想定）】",
       `【入力反映】${leadTitle}`,
       styleHint,
-      "1枚のキャンバスに現状は4分割（2x2）・枠で区切る・Z字読み。将来8コマへ拡張する前提。白黒ゆる線・背景は最小。ポスター一枚絵にしない。",
+      "1枚のキャンバスに8分割（例: 4x2 または 2x4）・枠で区切る・Z字読み。白黒ゆる線・背景は最小。ポスター一枚絵にしない。",
       castPack.lookLine,
       castPack.castLine,
       "画像内に文字・吹き出し・ロゴを入れない（下は作画意図のみ）。",
@@ -1187,7 +1233,7 @@
       normalized.coreMain ? `コアメッセージ: ${normalized.coreMain}` : "",
       normalized.corePhrase ? `必須フレーズ（台詞として描かず、情景で示す）: ${normalized.corePhrase}` : "",
       normalized.coreConclusion ? `絶対にズラさない結論（終盤コマで前進・改善へ）: ${normalized.coreConclusion}` : "",
-      "ネームの流れ: 出来事 → 引っかかり → 気づき → 次の一手。最終段は改善・前進の印象で締める。",
+      "ネームの流れ: 導入 → 状況 → 事件の予兆 → 強い一言 → 当時の自分 → 今なら分かる → 行動ルール → 読者への問い。最終段は余韻・問いで締める。",
     ].filter(function (line) {
       return line !== "";
     });
@@ -2643,6 +2689,7 @@
       comicManuscriptPost: manuscript,
       comicTitle: extractComicTitleLine(comicText),
       comic: comicText,
+      comicLegacy4: formatFourPanelLegacyFromManuscript(normalized, manuscript),
       comicPrompt: buildComicPanelPrompts(input, comicText),
       comicUnifiedPrompt: buildUnifiedComicImagePrompt(input, comicText),
       noteIntroAssist: noteIntroAssist,

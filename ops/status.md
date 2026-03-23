@@ -1097,3 +1097,14 @@
 - **`js/app.js`**: **`x-output` の描画・クリア**を削除。
 - **`css/style.css`**: **`.x-post-card`** を削除。
 - **`README.md` / `ops/status.md` / `ops/handoff.md`**: 方針を追記・更新。
+
+## 今日やったこと（2026-03-23：8コマ標準ネームのベースライン実装）
+
+### 方針
+
+- 原稿8ブロックを **1/8〜8/8 に1対1**で載せる（まずは圧縮・賢い統合はしない）。**コマ別プロンプト・統合画像プロンプト**も8コマに揃える。**旧4コマ短縮**は **`comicLegacy4`** に残す。
+
+### 実装
+
+- **`js/engine.js`**: **`COMIC_PANEL_LABELS`** を8コマに拡張。**`formatComicFromManuscript`** を8ブロック直出しに変更。**`formatFourPanelLegacyFromManuscript`**（旧 **`COMIC_LEGACY4`**）を追加。**`getComicPanelMetaForExtraction`**（8件）・**`buildPanelPrompt`**（表情・構図5〜8）・**`buildComicPanelPrompts` / `buildUnifiedComicImagePrompt`** の文言を8コマ前提に更新。**`buildAllOutputs`** に **`comicLegacy4`** を追加。
+- **`index.html` / `README.md` / `ops/handoff.md`**: 主表示が8コマであることを明記。
