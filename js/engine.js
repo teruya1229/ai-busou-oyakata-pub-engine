@@ -236,6 +236,9 @@
     const lr = clipComicLine(learning, 40);
     if (lr) {
       if (compactSpaces(learning).length > 22) {
+        if (axis === "human_relation") {
+          return clipComicLine("「先に、お客様の不安は聞けた？」", 36);
+        }
         return clipComicLine(toneData.copilotShort || toneData.copilotReaction || "次、どうする？", 36);
       }
       return lr;
@@ -2110,6 +2113,9 @@
   function dedupeLearningVersusTurn(learn, turn, normalized) {
     const L = compactSpaces(learn);
     const T = compactSpaces(turn);
+    if (L.indexOf("人としての線引き") >= 0 && T.indexOf("人としての線引き") >= 0) {
+      return ensurePeriod("説明の前に、お客様の不安を一言だけ聞く順番に変えたい、という学びに落ち着いた。");
+    }
     if (!L || !T || !turnLineOverlapsLearning(T, L)) {
       return learn;
     }

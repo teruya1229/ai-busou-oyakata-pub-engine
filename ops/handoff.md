@@ -104,6 +104,8 @@
 
 - **抽象テーマ・現場メモなし**（`js/engine.js` の **`pickOneConcreteScene`**）：**題材軸ごとに1シーン**を内部生成してから **4コマ**と **note** を組む。**2コマ目**は相手側の**引っかかり**（`frictionFromIncident`）、**3コマ目の親方**は「何がまずかったか」（`oykataInsightFirstLine`）。**結論の次行**は `buildNoteConclusionNextLine`（メタな「行動に落とす」系を避ける）。
 
+- **2026-03-21 追記（題材「業界の常識は顧客の非常識」・芯・結論あり・現場・学び空）**: Node 経由で `buildAllOutputs` 相当を確認。**問題なしをベース**に、**(1)** 長学び時の3コマ目コパイロットが **alignment_comm 寄りの短セリフ**に落ちるのを、`human_relation` 限定で **お客様不安** の一言に変更（`copilotSecondLineForTopic`）。**(2)** 反転と学びが **「人としての線引き」** で重なるときだけ学びを差し替え（`dedupeLearningVersusTurn`）。ブラウザ実機は **同一コード**のため未実施（必要なら `http://127.0.0.1:8787/` で再確認可）
+
 - **実施方法**: ブラウザと同一の `js/engine.js` を Node で読み込み、`normalizeInput` / `buildAllOutputs` で **題材A〜C** を通過確認（最短の再現。同一オリジン起動時も同じ出力）
 - **題材A（人間関係）**: 修正前後とも **`topicAxis=human_relation`**。4コマ2コマ目は **人間関係の引っかかり**で、汎用「ズレ」ラベルではない
 - **題材B（価格・客層）**: **修正前**は現場文の **「問い合わせ」** で **sales** に先走り。**修正後**は **`topicAxis=price`**（価格・客層を営業より先に判定）
