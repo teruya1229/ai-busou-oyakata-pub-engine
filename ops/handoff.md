@@ -2,7 +2,7 @@
 
 ## ワークフロー方針（2026-03-23）
 
-- **主導線**: **漫画原稿**（`comicManuscriptPost`）→ **8コマ標準ネーム（現状は1〜4コマ相当の短縮版）**（`comicTitle` / `comic`）→ **コマ別プロンプト**（`comicPrompt`）→ **統合画像プロンプト**（`comicUnifiedPrompt`）→ **note補助**（`noteIntroAssist` / `noteClosingAssist`）のみ。長文note・X・章メモ・Kindleは **`auxiliary-details`（その他）**で折りたたみ。
+- **主導線**: **漫画原稿**（`comicManuscriptPost`）→ **8コマ標準ネーム（現状は1〜4コマ相当の短縮版）**（`comicTitle` / `comic`）→ **コマ別プロンプト**（`comicPrompt`）→ **統合画像プロンプト**（`comicUnifiedPrompt`）→ **note補助**（`noteIntroAssist` / `noteClosingAssist`）のみ。長文note・章メモ・Kindleは **`auxiliary-details`（その他）**で折りたたみ。**X投稿は主線から撤去**（`buildAllOutputs` に含めない。必要なら note 公開後にリンクで回す）。**`buildXPost`** は **`kindle-engine.js` の節プレビュー**が参照するため **`window.AIBusouEngine` にのみ残置**。
 - **Kindle**は**将来の別モード**（蓄積素材の一冊化）。**「構成を生成」では `renderKindle*` を呼ばない**（プレビューは手動ボタンまたはその他内の操作で更新）。
 - **ネーム**は原稿の切り出し／再配置**。**読者への問い**は原稿の【読者への問い】に残し、**最終コマのナレーションには混ぜない**。**コパイロット**はネーム本文に常時出さない（必須表現があるときだけ相棒行を許可）。
 
@@ -179,7 +179,7 @@
 
 - フロントの大規模改修
 - 複数ベンダプロバイダの抽象層
-- Kindle 節・章・本プレビュー本体の大規模変更、X投稿の全面変更（※ note本文の素材再構成は `engine.js` の `buildNote` 系のみの最小差分で実施済み）
+- Kindle 節・章・本プレビュー本体の大規模変更（※ X投稿は主線から撤去済み。`buildXPost` は Kindle 節プレビュー内部向けに残置）
 
 ## 実装方針
 

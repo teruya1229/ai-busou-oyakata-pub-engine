@@ -13,7 +13,6 @@
     noteBodyOnly: document.getElementById("note-body-only-output"),
     notePrePublishCheck: document.getElementById("note-prepublish-check-output"),
     note: document.getElementById("note-output"),
-    xPost: document.getElementById("x-output"),
     kindle: document.getElementById("kindle-output"),
     kindleChapter: document.getElementById("kindle-chapter-output"),
     kindleBook: document.getElementById("kindle-book-output"),
@@ -271,7 +270,6 @@
           ? result.notePrePublishCheck
           : OUTPUT_PLACEHOLDER;
     }
-    outputs.xPost.textContent = result.xPost;
     updateComicImageReviewPanel();
   }
 
@@ -905,7 +903,6 @@
     if (outputs.notePrePublishCheck) {
       outputs.notePrePublishCheck.textContent = placeholder;
     }
-    outputs.xPost.textContent = placeholder;
     if (outputs.kindle) {
       outputs.kindle.textContent = placeholder;
     }

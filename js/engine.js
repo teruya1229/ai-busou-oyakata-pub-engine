@@ -2652,7 +2652,6 @@
       noteBodyOnly: noteBodyOnly,
       noteTitleSuggestions: noteTitleSuggestions,
       notePrePublishCheck: buildNotePrePublishCheck(normalized, noteBodyOnly, noteTitleSuggestions),
-      xPost: buildXPost(input),
     };
   }
 
