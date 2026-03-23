@@ -58,6 +58,17 @@
       return "human_relation";
     }
     if (
+      b.indexOf("協力会社") >= 0 &&
+      (b.indexOf("ミス") >= 0 ||
+        b.indexOf("手順") >= 0 ||
+        b.indexOf("マニュアル") >= 0 ||
+        b.indexOf("再発") >= 0 ||
+        b.indexOf("段取り") >= 0 ||
+        b.indexOf("手戻り") >= 0)
+    ) {
+      return "site_ops";
+    }
+    if (
       b.indexOf("弟子") >= 0 ||
       b.indexOf("協力会社") >= 0 ||
       b.indexOf("教育") >= 0 ||
@@ -67,14 +78,14 @@
     ) {
       return "apprentice_education";
     }
-    if (b.indexOf("直営業") >= 0 || b.indexOf("営業") >= 0 || b.indexOf("集客") >= 0 || b.indexOf("問い合わせ") >= 0) {
-      return "sales";
-    }
     if (b.indexOf("価格") >= 0 || b.indexOf("単価") >= 0 || b.indexOf("最安") >= 0 || b.indexOf("安値") >= 0 || b.indexOf("見積") >= 0) {
       return "price";
     }
     if (b.indexOf("客層") >= 0 || b.indexOf("相性") >= 0 || b.indexOf("向き不向き") >= 0) {
       return "customer_fit";
+    }
+    if (b.indexOf("直営業") >= 0 || b.indexOf("営業") >= 0 || b.indexOf("集客") >= 0 || b.indexOf("問い合わせ") >= 0) {
+      return "sales";
     }
     if (
       b.indexOf("契約") >= 0 ||
@@ -1169,6 +1180,24 @@
       return pickNoteTurnMidBranch("contract", p);
     }
     if (axis === "site_ops") {
+      const sb = noteContextBundle(normalized).toLowerCase();
+      if (
+        sb.indexOf("マニュアル") >= 0 ||
+        sb.indexOf("再発") >= 0 ||
+        (sb.indexOf("仕組み") >= 0 && sb.indexOf("ミス") >= 0) ||
+        (sb.indexOf("手順") >= 0 && sb.indexOf("ミス") >= 0)
+      ) {
+        if (p === "strong") {
+          return "だが、注意の声だけでは、同じミスは繰り返されやすい。";
+        }
+        if (p === "soft") {
+          return "けれど、手順が一枚にないと、次も同じ穴に落ちやすい。";
+        }
+        if (p === "biz") {
+          return "でも、再発防止は短いチェック項目に落とすと、運べる。";
+        }
+        return "でも、注意だけでは、同じミスは繰り返されやすい。";
+      }
       if (p === "strong") {
         return "だが、段取りのズレは、能力不足より「順番の未共有」で起きることが多い。";
       }
