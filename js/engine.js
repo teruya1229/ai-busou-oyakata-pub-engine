@@ -24,12 +24,45 @@
   }
 
   /**
+   * 顧客感覚・接客・説明まわり（price の「見積」より先に判定する）
+   */
+  function isCustomerSideBundle(b) {
+    if (!b) {
+      return false;
+    }
+    return (
+      b.indexOf("顧客目線") >= 0 ||
+      b.indexOf("お客様目線") >= 0 ||
+      b.indexOf("お客さん目線") >= 0 ||
+      b.indexOf("顧客感覚") >= 0 ||
+      b.indexOf("不親切") >= 0 ||
+      b.indexOf("接客") >= 0 ||
+      b.indexOf("説明不足") >= 0 ||
+      b.indexOf("誤解") >= 0 ||
+      b.indexOf("戸惑") >= 0 ||
+      b.indexOf("嫌が") >= 0 ||
+      (b.indexOf("不安") >= 0 && (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0)) ||
+      b.indexOf("勝手に進め") >= 0 ||
+      (b.indexOf("業界") >= 0 &&
+        b.indexOf("常識") >= 0 &&
+        (b.indexOf("顧客") >= 0 || b.indexOf("お客") >= 0 || b.indexOf("非常識") >= 0)) ||
+      (b.indexOf("非常識") >= 0 && (b.indexOf("顧客") >= 0 || b.indexOf("お客") >= 0)) ||
+      (b.indexOf("専門用語") >= 0 &&
+        (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0 || b.indexOf("説明") >= 0 || b.indexOf("見積") >= 0)) ||
+      (b.indexOf("省略") >= 0 && (b.indexOf("説明") >= 0 || b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0))
+    );
+  }
+
+  /**
    * 題材軸（コパイロットの「整理テンプレ」と独立。論点生成の分岐に使う）
    */
   function inferTopicAxis(bundleRaw) {
     const b = compactSpaces(bundleRaw || "").toLowerCase();
     if (b.indexOf("口コミ") >= 0 || b.indexOf("レビュー") >= 0) {
       return "review";
+    }
+    if (isCustomerSideBundle(b)) {
+      return "customer_side";
     }
     if (
       b.indexOf("共通認識") >= 0 ||
@@ -143,6 +176,11 @@
         "作業前説明を省き、お互いの前提がそろった確認を飛ばした。",
         "専門用語のまま説明が続き、相手の顔色を見ずに話を進めた。",
       ],
+      customer_side: [
+        "見積の説明で専門用語のまま押し切り、お客様に「自分のことは分かりません」と言われた。",
+        "説明を省いて先に進め、お客様の顔色が曇った。",
+        "こちらの当たり前の順番で話し、お客様が聞き返しを繰り返した。",
+      ],
       review: [
         "満足のあと、口コミの導線を置かずに現場を終えた。",
       ],
@@ -185,6 +223,9 @@
     if (axis === "alignment_comm") {
       return "ズレのポイント";
     }
+    if (axis === "customer_side") {
+      return "お客様の反応";
+    }
     if (axis === "site_ops") {
       return "現場の問題";
     }
@@ -217,6 +258,9 @@
     if (axis === "alignment_comm") {
       return "「" + ch + "」、いちばんズレたのはここ？";
     }
+    if (axis === "customer_side") {
+      return "「" + ch + "」、いちばん刺さったのはどこ？";
+    }
     if (axis === "human_relation" || axis === "apprentice_education") {
       return "「" + ch + "」、ここが一番しんどかった？";
     }
@@ -236,7 +280,7 @@
     const lr = clipComicLine(learning, 40);
     if (lr) {
       if (compactSpaces(learning).length > 22) {
-        if (axis === "human_relation") {
+        if (axis === "human_relation" || axis === "customer_side") {
           return clipComicLine("「先に、お客様の不安は聞けた？」", 36);
         }
         return clipComicLine(toneData.copilotShort || toneData.copilotReaction || "次、どうする？", 36);
@@ -265,6 +309,9 @@
     }
     if (ax === "price" || ax === "customer_fit") {
       return "価格は、集客だけでなく客層の作り方も変える。次の一歩を一つにする。";
+    }
+    if (ax === "customer_side") {
+      return "不安を先に一言聞く順番に変えたい、という感覚を学びとして残す。";
     }
     if (ax === "human_relation") {
       return "人としての線引きと、ルールを、まず短く言語化しておく。";
@@ -632,13 +679,22 @@
   function frictionFromIncident(axis, incident, normalized) {
     const inc = compactSpaces((incident || "").toLowerCase());
     if (inc.indexOf("専門用語") >= 0 || inc.indexOf("分かりません") >= 0) {
+      if (axis === "customer_side") {
+        return "お客様は「自分のことは分からない」と言い、表情が固くなった。";
+      }
       return "お客様の反応が固く、一歩引いた感じになった。";
     }
     if (inc.indexOf("弟子") >= 0 && (inc.indexOf("お客") >= 0 || inc.indexOf("営業") >= 0)) {
       return "お客様の返事が短く、空気が気まずくなった。";
     }
     if (inc.indexOf("安く") >= 0 || inc.indexOf("見積") >= 0) {
+      if (axis === "customer_side") {
+        return "お客様は言葉に詰まり、こちらの説明に追いつけていない様子だった。";
+      }
       return "相手の様子を見ずに、条件だけが先に押し出された。";
+    }
+    if (axis === "customer_side") {
+      return "お客様の表情が硬く、距離を取るような感じになった。";
     }
     if (inc.indexOf("協力会社") >= 0 && inc.indexOf("ミス") >= 0) {
       return "また同じ箇所で手戻りが出て、現場が止まった。";
@@ -686,7 +742,20 @@
     if (ax === "human_relation") {
       return "人としての筋より、自分の話の速さを優先していた。";
     }
+    if (ax === "customer_side") {
+      return (
+        clipComicLine(normalized.coreMain || "", 44) || "こちらの当たり前が、相手の不安より先に立っていた。"
+      );
+    }
     return clipComicLine(normalized.coreMain || "", 44);
+  }
+
+  /** 顧客感覚系ではコパイロットを無理に喋らせない（必須表現があるときだけ例外） */
+  function comicCopilotSilent(normalized) {
+    if (trimOptional(normalized.corePhrase)) {
+      return false;
+    }
+    return (normalized.topicAxis || "") === "customer_side";
   }
 
   function buildComicGapNarrative(normalized, incidentForComic, reviewMode) {
@@ -718,11 +787,14 @@
   }
 
   function comicPanel3DialogueFromInput(normalized, protagonist, partner, toneData, style) {
+    const a = clipComicLine(oykataInsightFirstLine(normalized), 44);
+    if (comicCopilotSilent(normalized)) {
+      return [`${protagonist}: ${a}`];
+    }
     if (style === "kindle") {
       return comicPanel3Dialogue(toneData, protagonist, partner, style);
     }
     const axis = normalized.topicAxis || "general";
-    const a = clipComicLine(oykataInsightFirstLine(normalized), 44);
     const b = clipComicLine(copilotSecondLineForTopic(axis, normalized.learning, toneData), 40);
     return [`${protagonist}: ${a}`, `${partner}: ${b}`];
   }
@@ -730,6 +802,9 @@
   function comicPanel2PartnerLineGrounded(normalized, toneData, partner, style) {
     if (normalized.corePhrase) {
       return `${partner}: 「${normalized.corePhrase}」`;
+    }
+    if (comicCopilotSilent(normalized)) {
+      return "";
     }
     const axis = normalized.topicAxis || "general";
     const probe = partnerProbeLine(axis, normalized.theme);
@@ -758,16 +833,19 @@
 
     const panel1Lines = [COMIC_PANEL_LABELS.p1, `状況: ${incidentForComic}`];
 
-    const panel3Lines = [COMIC_PANEL_LABELS.p3, insightLine, panel3Conversation[0], panel3Conversation[1]];
+    const panel3Lines = [COMIC_PANEL_LABELS.p3, insightLine].concat(panel3Conversation);
+
+    const panel2Block = [COMIC_PANEL_LABELS.p2, gapLine];
+    if (panel2PartnerLine) {
+      panel2Block.push(panel2PartnerLine);
+    }
 
     return [
       `【タイトル】${leadTitle}`,
       "",
       panel1Lines.join("\n"),
       "",
-      COMIC_PANEL_LABELS.p2,
-      gapLine,
-      panel2PartnerLine,
+      panel2Block.join("\n"),
       "",
       panel3Lines.join("\n"),
       "",
@@ -1346,6 +1424,18 @@
         return "でも、段取りは短い言語化で共有できる。";
       }
       return "でも、順番のズレが積み上がると、現場のリズムが乱れる。";
+    }
+    if (axis === "customer_side") {
+      if (p === "strong") {
+        return "だが、こちらの当たり前が、相手には冷たい順番に聞こえる。";
+      }
+      if (p === "soft") {
+        return "けれど、説明の前に不安を聞く余白がないと、距離が開く。";
+      }
+      if (p === "biz") {
+        return "でも、顧客感覚は「聞く順番」で変わることが多い。";
+      }
+      return "でも、こちらの常識が、相手には不親切に聞こえることがある。";
     }
     if (axis === "alignment_comm") {
       if (p === "strong") {
@@ -2173,6 +2263,8 @@
       extra = "商流の外で動くと、あとからの説明が重くなる。";
     } else if (axis === "site_ops") {
       extra = "順番の未共有が、小さな手戻りを増やす。";
+    } else if (axis === "customer_side") {
+      extra = "相手の不安より先に、こちらの説明順が立つと、距離が開きやすい。";
     } else if (axis === "human_relation") {
       extra = "関係の良さだけでは、役割の外に出る問題は防げない。";
     } else if (axis === "emotion") {

@@ -1008,3 +1008,17 @@
 ### 現在の状態
 
 - 上記題材では **4コマ／note** の観点は満たし、指摘2点は **狭く解消済み**
+
+## 今日やったこと（2026-03-21：4コマ・顧客反応優先とコパイロット無音）
+
+### 内容
+
+- **`inferTopicAxis`**: **顧客感覚系**を **`customer_side`** として追加（`isCustomerSideBundle`）。**`review` の直後**、`price`（見積）より先に判定
+- **`buildComic`**: `customer_side` では **`comicCopilotSilent`** により **2・3コマ目にコパイロット短セリフを入れない**（**必須表現**があるときのみ従来どおり）
+- **2コマ目**: `gapLabelForAxis` で **「お客様の反応」**、`frictionFromIncident` で **顧客の反応文を強化**
+- **note**: `pickNoteTurnForTopicAxis`・`extendNoteStoryOrLearning`・`buildFallbackLearning` に **最小限**の `customer_side` 分岐
+- **`README.md`**: 上記を1段落で追記
+
+### 確認題材
+
+- **業界の常識は顧客の非常識**（芯・結論あり・現場・学び空）: **`topicAxis=customer_side`**、2コマ目に **お客様のセリフ**、コパイロット **2・3コマ目に発話なし**
