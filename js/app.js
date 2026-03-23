@@ -38,7 +38,7 @@
   const COMIC_IMAGE_DOWNLOAD_FILENAME = "4koma-comic.png";
 
   const COMIC_PREVIEW_STATUS_IDLE =
-    "URL または data URL を入力し、「4コマ画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。";
+    "URL または data URL を入力し、「画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。";
   const COMIC_PREVIEW_STATUS_LOADING = "読み込み中…";
   const OUTPUT_PLACEHOLDER = "ここに生成結果が表示されます。";
   /* 将来APIの戻り（data URL 1本）を試す用: 1×1 PNG */
@@ -230,9 +230,9 @@
     }
     outputs.comic.textContent = result.comic;
     if (outputs.comicPrompt) {
-      outputs.comicPrompt.textContent = result.comicPrompt || "4コマ描画プロンプトを生成できませんでした。";
+      outputs.comicPrompt.textContent = result.comicPrompt || "コマ別描画プロンプトを生成できませんでした。";
     }
-    const unifiedText = result.comicUnifiedPrompt || "4コマ統合画像プロンプトを生成できませんでした。";
+    const unifiedText = result.comicUnifiedPrompt || "統合画像プロンプトを生成できませんでした。";
     const unifiedEl = document.getElementById("comic-unified-prompt-output");
     if (unifiedEl) {
       unifiedEl.textContent = unifiedText;
@@ -428,8 +428,8 @@
       return;
     }
     const text = (outputs.comicUnifiedPrompt.textContent || "").trim();
-    if (!text || text === OUTPUT_PLACEHOLDER || text.indexOf("4コマ統合画像プロンプトを生成できませんでした") >= 0) {
-      window.alert("先に「構成を生成」で4コマ統合画像プロンプトを表示してください。");
+    if (!text || text === OUTPUT_PLACEHOLDER || text.indexOf("統合画像プロンプトを生成できませんでした") >= 0) {
+      window.alert("先に「構成を生成」で統合画像プロンプトを表示してください。");
       return;
     }
     comicGenPromptDraft.value = outputs.comicUnifiedPrompt.textContent || "";
@@ -492,7 +492,7 @@
       return "";
     }
     const t = (outputs.comicUnifiedPrompt.textContent || "").trim();
-    if (!t || t === OUTPUT_PLACEHOLDER || t.indexOf("4コマ統合画像プロンプトを生成できませんでした") >= 0) {
+    if (!t || t === OUTPUT_PLACEHOLDER || t.indexOf("統合画像プロンプトを生成できませんでした") >= 0) {
       return "";
     }
     return outputs.comicUnifiedPrompt.textContent || "";
@@ -515,7 +515,7 @@
       return "note向け";
     }
     if (s === "comic") {
-      return "4コマ向け";
+      return "ネーム向け";
     }
     if (s === "kindle") {
       return "Kindle向け";
@@ -841,7 +841,7 @@
       return;
     }
     if (!hasVisibleComicImagePreview()) {
-      window.alert("先に4コマ画像を表示してください。");
+      window.alert("先に画像を表示してください。");
       return;
     }
     const src = comicImagePreview.src || "";
@@ -1010,7 +1010,6 @@
         "comic-output",
         "note-title-suggestions-output",
         "note-body-only-output",
-        "kindle-output",
       ];
     } else {
       ids = [
@@ -1047,8 +1046,6 @@
     const input = getInputFromForm();
     const result = window.AIBusouEngine.buildAllOutputs(input);
     renderOutputs(result);
-    renderKindlePreview(input);
-    renderKindleChapterPreview(input);
   });
 
   document.getElementById("example-btn").addEventListener("click", function () {

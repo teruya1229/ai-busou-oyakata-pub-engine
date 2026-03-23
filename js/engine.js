@@ -2,10 +2,10 @@
   const templates = window.AIBusouTemplates;
 
   const COMIC_PANEL_LABELS = {
-    p1: "1コマ目（状況）",
-    p2: "2コマ目（違和感）",
-    p3: "3コマ目（気づき）",
-    p4: "4コマ目（前進）",
+    p1: "1コマ目（1/8・状況）",
+    p2: "2コマ目（2/8・違和感）",
+    p3: "3コマ目（3/8・気づき）",
+    p4: "4コマ目（4/8・前進）",
   };
 
   function safeText(value, fallback) {
@@ -367,9 +367,7 @@
     if (!trimmed) {
       return "出来事のメモを一言足すと、具体が出やすい。";
     }
-    if (trimmed.length < 16) {
-      return ensurePeriod(trimmed) + " その結果、作業の流れに迷いが生まれた。";
-    }
+    // 実話入力が短くても、仮想の「その結果〜」を足して混ぜない（1本の出来事として扱う）
     return ensurePeriod(trimmed);
   }
 
@@ -893,7 +891,7 @@
     };
   }
 
-  /** 原稿を切り出して4コマ枠に配置（要約ではなく再配置） */
+  /** 原稿を切り出してネーム枠（現状は1〜4コマ相当）に配置（要約ではなく再配置） */
   function formatComicFromManuscript(normalized, manuscript) {
     const sec = parseManuscriptSections(manuscript);
     const toneData = templates.toneTemplates[normalized.tone];
@@ -914,19 +912,14 @@
     const oykLine = sec.essence
       ? clipComicLine(sec.essence, 44)
       : clipComicLine(oykataInsightFirstLine(normalized), 44);
-    let panel3Conversation;
-    if (comicCopilotSilent(normalized)) {
-      panel3Conversation = [`${protagonist}: ${oykLine}`];
-    } else if (st === "kindle") {
-      panel3Conversation = comicPanel3Dialogue(toneData, protagonist, partner, st);
-    } else {
-      const axis = normalized.topicAxis || "general";
-      const b = clipComicLine(copilotSecondLineForTopic(axis, normalized.learning, toneData), 40);
-      panel3Conversation = [`${protagonist}: ${oykLine}`, `${partner}: ${b}`];
-    }
-    const forwardBody = compactSpaces(sec.rule + " " + sec.reader);
+    // 主線のネームは親方の一行に寄せる（コパイロット常時セリフは出さない）
+    const panel3Conversation = [`${protagonist}: ${oykLine}`];
+    // 読者への問いは原稿内に残し、最終コマのナレーションには混ぜない
+    const forwardBody = compactSpaces(sec.rule);
     const forwardLine = "次に変える: " + clipComicLine(forwardBody, 100);
-    const panel2PartnerLine = comicPanel2PartnerLineGrounded(normalized, toneData, partner, st);
+    const panel2PartnerLine = trimOptional(normalized.corePhrase)
+      ? comicPanel2PartnerLineGrounded(normalized, toneData, partner, st)
+      : "";
 
     const panel1Lines = [COMIC_PANEL_LABELS.p1, `状況: ${situationText || clipComicLine(sec.incident || normalized.incident, 100)}`];
     const panel3Lines = [COMIC_PANEL_LABELS.p3, insightLine].concat(panel3Conversation);
@@ -1044,11 +1037,11 @@
       return buildPanelPrompt(meta.number, meta.name, lines, normalized, styleGuide);
     });
 
-    const lines = ["【4コマ描画プロンプト】"];
+    const lines = ["【コマ別・描画プロンプト（8コマネームのうち1〜4コマ相当）】"];
     if (normalized.outputStyle) {
       lines.push(`出力スタイル: ${normalized.outputStyle}`);
     }
-    lines.push("（投稿文（漫画原稿）から切り出した4コマ構成を元に生成）", "", panelBlocks.join("\n\n"));
+    lines.push("（漫画原稿から切り出したネームを元に生成。5〜8コマは今後拡張）", "", panelBlocks.join("\n\n"));
     return lines.join("\n");
   }
 
@@ -1057,7 +1050,7 @@
       return "【出力スタイル】note向け: 本文優先。絵は短文の補助（情景は最小限でもよい）。";
     }
     if (style === "comic") {
-      return "【出力スタイル】4コマ向け: 情景と短いセリフの気配を優先。伝わる一行を最優先。";
+      return "【出力スタイル】ネーム向け: 情景と短いセリフの気配を優先。伝わる一行を最優先。";
     }
     if (style === "kindle") {
       return "【出力スタイル】Kindle向け: 説明と流れを追える構図を優先（台詞は絵に書かない）。";
@@ -1155,17 +1148,17 @@
           ? d3.replace(/。$/, "") + "。親方の気づき・内省が伝わる（独白の気配でもよい）。"
           : "親方の気づき・内省が伝わる構図（独白の気配でもよい）。";
       }
-      return `${meta.number}コマ（${meta.name}）: ${summary || "今回の入力に沿った情景。"} — ねらい: ${sceneIntent}`;
+      return `${meta.number}/8（${meta.name}）: ${summary || "今回の入力に沿った情景。"} — ねらい: ${sceneIntent}`;
     });
 
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const styleHint = unifiedStyleHintLine(normalized.outputStyle);
 
     return [
-      "【4コマ統合画像プロンプト】",
+      "【統合画像プロンプト（8コマネームのうち1〜4コマを1枚に収める想定）】",
       `【入力反映】${leadTitle}`,
       styleHint,
-      "1枚のキャンバスに4コマ（2x2）・枠で区切る・Z字読み。白黒ゆる線・背景は最小。ポスター一枚絵にしない。",
+      "1枚のキャンバスに現状は4分割（2x2）・枠で区切る・Z字読み。将来8コマへ拡張する前提。白黒ゆる線・背景は最小。ポスター一枚絵にしない。",
       castPack.lookLine,
       castPack.castLine,
       "画像内に文字・吹き出し・ロゴを入れない（下は作画意図のみ）。",
@@ -1177,7 +1170,7 @@
     ])
       .concat(buildCoreLockUnifiedLines(normalized))
       .concat([
-        "最終: 4コマの境界と読み順が一目で分かる構図にする。",
+        "最終: コマの境界と読み順が一目で分かる構図にする。",
       ])
       .filter(function (line) {
         return line !== "";
@@ -1193,8 +1186,8 @@
       "【芯固定（作画は文字にせず、情景・表情・構図で示す）】",
       normalized.coreMain ? `コアメッセージ: ${normalized.coreMain}` : "",
       normalized.corePhrase ? `必須フレーズ（台詞として描かず、情景で示す）: ${normalized.corePhrase}` : "",
-      normalized.coreConclusion ? `絶対にズラさない結論（4コマ目で前進・改善へ）: ${normalized.coreConclusion}` : "",
-      "4コマの流れ: 出来事 → 引っかかり → 気づき → 次の一手。最終コマは改善・前進の印象で締める。",
+      normalized.coreConclusion ? `絶対にズラさない結論（終盤コマで前進・改善へ）: ${normalized.coreConclusion}` : "",
+      "ネームの流れ: 出来事 → 引っかかり → 気づき → 次の一手。最終段は改善・前進の印象で締める。",
     ].filter(function (line) {
       return line !== "";
     });

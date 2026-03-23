@@ -2,10 +2,9 @@
 
 ## ワークフロー方針（2026-03-23）
 
-- **主導線**: **漫画化前提の投稿文＝1本の原稿**（`comicManuscriptPost`）→ **コマ分解**（`comicTitle` / `comic`）→ **画像プロンプト**（`comicPrompt` / `comicUnifiedPrompt` → 画像）→ **note補助**（`noteIntroAssist` / `noteClosingAssist`・原稿の切り出し）→（任意）**タイトル案・Markdown**・**Kindle再編集**
-- **4コマ先行**ではなく、**原稿から切り出し／再配置**でコマを置く。**`buildAllOutputs` の `note` / `noteBodyOnly`** は **原稿本文**（H1 の有無のみ差）。**`buildNote`** は連載向け長文・Kindleプレビュー等の**別経路**（主導線で毎回二重生成しない）
-- **長文の別稿**（`buildNote`）の改善を最優先にはしない。画面では**折りたたみ**（`longform-note-details`）でタイトル案・投稿用ブロックを後段扱い
-- **将来**: コマ数可変の「漫画構成」へ拡張しやすいよう、表記は「現状4コマ」と明記
+- **主導線**: **漫画原稿**（`comicManuscriptPost`）→ **8コマ標準ネーム（現状は1〜4コマ相当の短縮版）**（`comicTitle` / `comic`）→ **コマ別プロンプト**（`comicPrompt`）→ **統合画像プロンプト**（`comicUnifiedPrompt`）→ **note補助**（`noteIntroAssist` / `noteClosingAssist`）のみ。長文note・X・章メモ・Kindleは **`auxiliary-details`（その他）**で折りたたみ。
+- **Kindle**は**将来の別モード**（蓄積素材の一冊化）。**「構成を生成」では `renderKindle*` を呼ばない**（プレビューは手動ボタンまたはその他内の操作で更新）。
+- **ネーム**は原稿の切り出し／再配置**。**読者への問い**は原稿の【読者への問い】に残し、**最終コマのナレーションには混ぜない**。**コパイロット**はネーム本文に常時出さない（必須表現があるときだけ相棒行を許可）。
 
 ## UI文言（参考）
 

@@ -56,13 +56,15 @@ body {
 }
 
 .longform-note-details,
-.kindle-preview-details {
+.kindle-preview-details,
+.auxiliary-details {
   padding: 0;
   overflow: hidden;
 }
 
 .longform-note-details__summary,
-.kindle-preview-details > summary {
+.kindle-preview-details > summary,
+.auxiliary-details > summary {
   cursor: pointer;
   font-weight: 600;
   font-size: 15px;
@@ -73,7 +75,8 @@ body {
 }
 
 .longform-note-details__summary::-webkit-details-marker,
-.kindle-preview-details > summary::-webkit-details-marker {
+.kindle-preview-details > summary::-webkit-details-marker,
+.auxiliary-details > summary::-webkit-details-marker {
   display: none;
 }
 
