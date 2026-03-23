@@ -34,7 +34,7 @@
   const comicImageGenerateBtn = document.getElementById("comic-image-generate-btn");
   const comicImageDownloadBtn = document.getElementById("comic-image-download-btn");
 
-  const COMIC_IMAGE_DOWNLOAD_FILENAME = "4koma-comic.png";
+  const COMIC_IMAGE_DOWNLOAD_FILENAME = "comic-8panel.png";
 
   const COMIC_PREVIEW_STATUS_IDLE =
     "URL または data URL を入力し、「画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。";

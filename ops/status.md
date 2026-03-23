@@ -1108,3 +1108,17 @@
 
 - **`js/engine.js`**: **`COMIC_PANEL_LABELS`** を8コマに拡張。**`formatComicFromManuscript`** を8ブロック直出しに変更。**`formatFourPanelLegacyFromManuscript`**（旧 **`COMIC_LEGACY4`**）を追加。**`getComicPanelMetaForExtraction`**（8件）・**`buildPanelPrompt`**（表情・構図5〜8）・**`buildComicPanelPrompts` / `buildUnifiedComicImagePrompt`** の文言を8コマ前提に更新。**`buildAllOutputs`** に **`comicLegacy4`** を追加。
 - **`index.html` / `README.md` / `ops/handoff.md`**: 主表示が8コマであることを明記。
+
+## 今日やったこと（2026-03-23：実機確認観点での文言・プロンプト整合）
+
+### 確認
+
+- 題材A/B（業界の常識は顧客の非常識／最安値の悲劇）を想定し、**原稿→8コマ**の情報欠落は前段実装の範囲で問題なし。**統合プロンプトの顧客視点**に旧「2コマ目」表記が残る点と、**コマ別プロンプトの3〜4コマ目**が旧4コマ時代の「気づき／前進」寄りだった点を最小修正。
+
+### 変更
+
+- **`js/engine.js`**: `buildUnifiedComicCastLines` の **2コマ目→2/8（状況）**。**`buildPanelPrompt`** の **3/8・4/8** の表情・構図ヒントを **事件の予兆／強い一言**に寄せる。`buildXPost` のハッシュタグ **#4コマ→#8コマネーム**（Kindle節向け残置関数の整合）。
+- **`index.html`**: 最終確認の **「ネーム（短縮版）」→8コマ全文であることが分かる表記**。
+- **`js/app.js`**: 保存ファイル名 **`4koma-comic.png`→`comic-8panel.png`**。
+- **`api/server.js`**: ファイル先頭コメント・ダミーPNG説明を **8コマ主線**に合わせる（ダミー画像の4帯仕様は疎通用として維持）。
+- **`README.md` / `ops/handoff.md`**: 起動手順・API説明の **4コマ表記を8コマネーム／統合画像**に更新。

@@ -12,11 +12,11 @@
 - **最小入力**: フォーム先頭は **タイトルテーマ / 一番伝えたいこと / ズラしたくない結論** のみ。**現場メモ・学び・必須表現・登場人物・トーン・出力スタイル・note寄せ方・章/本確認用**は **`#detailed-input`** の `<details>` 内（初期は閉）。**リセット**で詳細は閉じる。**入力例**で詳細を開く
 - **出力スタイル**（`index.html`）: **指定なし**は従来どおり。**note向け / 4コマ向け / Kindle向け**は `js/app.js` の `getInputFromForm()` で `outputStyle` を渡し、`js/engine.js` の `normalizeInput` → `buildNote` / `buildComic` / `buildUnifiedComicImagePrompt` の寄せ方が変わる
 - **用途別コピー**: 入力フォーム直下の **用途別コピー（生成後）** から **4コマ／統合／Kindle節**を個別コピー。**note 投稿**は出力側の **note投稿用コピー**カード（タイトル案／本文のみ／H1付き全文／**note投稿セット**＝タイトル案＋本文のみを `---` 区切りで連結。`copyNotePostingBundle()`）。**スタイル向けにまとめてコピー**は `copyStyleBundle()`（`outputStyle` に応じた連結）。各 note ブロック横のボタンは役割名（タイトル欄／本文欄／Markdown）に寄せている
-- **4コマ画像（有料API）**: 統合プロンプト欄の下に **最終確認**（入力要約・芯・出力スタイル・note寄せ方・4コマ構成・`getPromptTextForComicImageApi()` と同じ送信プロンプト）。ボタンは **この内容で4コマ画像を生成**。送信直前に **今回使った生成用プロンプト**欄へ同じ文字列を表示。`requestComicImage` / API 本文は未変更
+- **統合画像（有料API・8コマネーム）**: 統合プロンプト欄の下に **最終確認**（入力要約・芯・出力スタイル・note寄せ方・8コマネーム・`getPromptTextForComicImageApi()` と同じ送信プロンプト）。ボタンは **この内容で画像を生成**。送信直前に **今回使った生成用プロンプト**欄へ同じ文字列を表示。`requestComicImage` / API 本文は未変更
 - **note本文の寄せ方**（`notePreset`）: **出力スタイル（`outputStyle`）とは別**。`js/engine.js` の `normalizeInput` に `notePreset`（`strong` / `soft` / `biz`、未指定は標準）。`buildNote` 系の **導入・反転の接続・締め**と、口コミ系の **冒頭一文**、トーン導入の **短文サフィックス**だけを差し替え。4コマ・統合プロンプトは未変更
-- **「生成用入力へ転記」は任意**。`#comic-gen-prompt-draft` が**空**のときは、`js/app.js` の **`getPromptTextForComicImageApi()`** が **4コマ統合画像プロンプト**（`#comic-unified-prompt-output`）をそのまま **「4コマ画像を生成」** に渡す。**転記なしでAPIから画像まで進められる**（文言は `index.html` / `README.md` と整合）。
+- **「生成用入力へ転記」は任意**。`#comic-gen-prompt-draft` が**空**のときは、`js/app.js` の **`getPromptTextForComicImageApi()`** が **統合画像プロンプト**（`#comic-unified-prompt-output`）をそのまま **「この内容で画像を生成」** に渡す。**転記なしでAPIから画像まで進められる**（文言は `index.html` / `README.md` と整合）。
 
-## 4コマ統合画像プロンプト（実装メモ）
+## 統合画像プロンプト・8コマネーム（実装メモ）
 
 - **「構成を生成」** で `renderOutputs` が `#comic-unified-prompt-output` を更新する
 - 統合プロンプト本文は `js/engine.js` の **`buildUnifiedComicImagePrompt`**。**タイトルテーマ**は本文冒頭の **`【入力反映】` + タイトル（`leadTitle`）** 行で必ず変化する（テーマだけ変えた場合の「前回と同じ文字列」問題の対策）

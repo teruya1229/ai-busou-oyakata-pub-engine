@@ -1,5 +1,5 @@
 /**
- * 4コマ漫画画像生成API + 同一オリジンでリポジトリ直下の静的フロントを配信
+ * 漫画統合画像生成API（8コマネーム用プロンプト想定）+ 同一オリジンでリポジトリ直下の静的フロントを配信
  * USE_DUMMY=true: ダミーPNG（疎通用）
  * USE_DUMMY=false: OpenAI Images API（既定モデル gpt-image-1.5）
  *   失敗時（キー未設定・課金上限・quota・認証・上流5xx 等）はダミーPNGへフォールバック（導線確認用。本番では厳格化可）
@@ -64,7 +64,7 @@ function pngChunk(type, data) {
 
 /**
  * 視認しやすいダミーPNG（200x120）。1×1ではない。
- * 縦4帯の色分けで「4コマ漫画テスト」プレースホルダーとして疎通確認しやすい。
+ * 縦4帯の色分けの簡易プレースホルダー（本番プロンプトは8コマネーム。疎通確認用）。
  */
 function makeDummyComicPlaceholderDataUrl() {
   const width = 200;
