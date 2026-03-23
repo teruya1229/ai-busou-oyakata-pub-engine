@@ -831,14 +831,27 @@
   }
 
   /**
+   * 原稿【導入】：テーマで場に入る一文（【事件】の実話本文と役割を分ける）
+   */
+  function buildComicManuscriptIntroLine(normalized, toneData, story) {
+    const theme = compactSpaces(normalized.theme || "");
+    if (theme) {
+      return "今回は「" + theme + "」の話。";
+    }
+    return ensurePeriod(buildNoteOpeningForArticle(normalized, toneData, story));
+  }
+
+  /**
    * 漫画の単一原稿：投稿文＝以降のコマ・note の共通ソース（GPT貼り付け想定の区切り）
    */
   function buildComicManuscriptPost(normalized, input) {
     const toneData = templates.toneTemplates[normalized.tone];
     const story = buildNoteStoryAndPhrase(normalized, input);
-    const intro = buildNoteOpeningForArticle(normalized, toneData, story);
-    const incidentBlock = buildNoteIncidentBlockForArticle(normalized, toneData, story);
-    const incident = compactSpaces(incidentBlock.replace(/\n+/g, " ").trim()).slice(0, 420);
+    const intro = buildComicManuscriptIntroLine(normalized, toneData, story);
+    let incident = compactSpaces(story.replace(/\n+/g, " ").trim()).slice(0, 420);
+    if (!incident) {
+      incident = compactSpaces(ensureIncidentText(normalized.incident).replace(/\n+/g, " ").trim()).slice(0, 420);
+    }
     const punch = compactSpaces(normalized.coreMain || "") || "ここが、いちばん引っかかった。";
     const turn = buildNoteTurnAndWhy(normalized);
     const learningLine = dedupeLearningVersusTurn(
@@ -853,7 +866,7 @@
       compactSpaces(normalized.coreConclusion || normalized.coreMain || "") || "本質は、言葉にしてから動くところだ。";
     let ruleBlock = "";
     if (normalized.coreConclusion) {
-      ruleBlock = normalized.coreConclusion + "\n" + buildNoteConclusionNextLine(normalized);
+      ruleBlock = buildNoteConclusionNextLine(normalized);
     } else {
       ruleBlock = ensurePeriod(firstSentenceJapanese(learningLine) || learningLine) + "\n" + buildNoteConclusionNextLine(normalized);
     }
@@ -2355,8 +2368,18 @@
     if (!t) {
       return "";
     }
-    const m = t.match(/^[^。！？!?]+[。！？!?]?/);
-    return m ? m[0] : t;
+    let inQuote = false;
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (c === "「") {
+        inQuote = true;
+      } else if (c === "」") {
+        inQuote = false;
+      } else if (!inQuote && /[。！？!?]/.test(c)) {
+        return t.slice(0, i + 1);
+      }
+    }
+    return t;
   }
 
   function storyFirstParagraphOnly(story) {
