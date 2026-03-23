@@ -1034,3 +1034,17 @@
 ### 現在の状態
 
 - **4コマ構成**と**統合画像プロンプト**の「誰が主役か」が、**customer_side** で揃う
+
+## 今日やったこと（2026-03-23：漫画主導へのワークフロー転換）
+
+### 方針
+
+- **主役**: 実話**漫画**（タイトル・構成・コマ文・画像プロンプト）。**note**は**導入・締めの短文**を優先し、**長文本文**は折りたたみの「長文note・投稿用」に退避。**Kindle**系プレビューも折りたたみ（後段・再編集）。
+
+### 実装
+
+- **`js/engine.js`**: `buildAllOutputs` に **`comicTitle`**、**`noteIntroAssist`**、**`noteClosingAssist`**、**`comicEpisodeSummary`** を追加（長文 `note` / `noteBodyOnly` は維持）
+- **`index.html`**: 画面上部を **漫画タイトル→構成→描画プロンプト→統合画像**、続けて **note補助（導入・締め・1行要約）**。**用途別コピー**の説明を漫画優先に。**長文note**・**Kindle**を `<details>` で主導線から分離
+- **`js/app.js`**: 新出力の描画・クリア。**スタイル向けにまとめてコピー**の既定順を漫画優先に変更
+- **`css/style.css`**: `.comic-primary-card` / `.note-assist-card` / 折りたたみ用スタイル
+- **`README.md`** / **`ops/handoff.md`**: 方針を明記

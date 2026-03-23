@@ -1,9 +1,13 @@
 (function () {
   const form = document.getElementById("input-form");
   const outputs = {
+    comicTitle: document.getElementById("comic-title-output"),
     comic: document.getElementById("comic-output"),
     comicPrompt: document.getElementById("comic-prompt-output"),
     comicUnifiedPrompt: document.getElementById("comic-unified-prompt-output"),
+    noteIntroAssist: document.getElementById("note-intro-assist-output"),
+    noteClosingAssist: document.getElementById("note-closing-assist-output"),
+    comicEpisodeSummary: document.getElementById("comic-episode-summary-output"),
     noteTitleSuggestions: document.getElementById("note-title-suggestions-output"),
     noteBodyOnly: document.getElementById("note-body-only-output"),
     notePrePublishCheck: document.getElementById("note-prepublish-check-output"),
@@ -213,6 +217,10 @@
   }
 
   function renderOutputs(result) {
+    if (outputs.comicTitle) {
+      outputs.comicTitle.textContent =
+        result.comicTitle != null && result.comicTitle !== "" ? result.comicTitle : OUTPUT_PLACEHOLDER;
+    }
     outputs.comic.textContent = result.comic;
     if (outputs.comicPrompt) {
       outputs.comicPrompt.textContent = result.comicPrompt || "4コマ描画プロンプトを生成できませんでした。";
@@ -222,6 +230,22 @@
     if (unifiedEl) {
       unifiedEl.textContent = unifiedText;
       outputs.comicUnifiedPrompt = unifiedEl;
+    }
+    if (outputs.noteIntroAssist) {
+      outputs.noteIntroAssist.textContent =
+        result.noteIntroAssist != null && result.noteIntroAssist !== "" ? result.noteIntroAssist : OUTPUT_PLACEHOLDER;
+    }
+    if (outputs.noteClosingAssist) {
+      outputs.noteClosingAssist.textContent =
+        result.noteClosingAssist != null && result.noteClosingAssist !== ""
+          ? result.noteClosingAssist
+          : OUTPUT_PLACEHOLDER;
+    }
+    if (outputs.comicEpisodeSummary) {
+      outputs.comicEpisodeSummary.textContent =
+        result.comicEpisodeSummary != null && result.comicEpisodeSummary !== ""
+          ? result.comicEpisodeSummary
+          : OUTPUT_PLACEHOLDER;
     }
     outputs.note.textContent = result.note;
     if (outputs.noteBodyOnly) {
@@ -840,6 +864,9 @@
 
   function clearOutputs() {
     const placeholder = "ここに生成結果が表示されます。";
+    if (outputs.comicTitle) {
+      outputs.comicTitle.textContent = placeholder;
+    }
     outputs.comic.textContent = placeholder;
     if (outputs.comicPrompt) {
       outputs.comicPrompt.textContent = placeholder;
@@ -848,6 +875,15 @@
     if (unifiedClear) {
       unifiedClear.textContent = placeholder;
       outputs.comicUnifiedPrompt = unifiedClear;
+    }
+    if (outputs.noteIntroAssist) {
+      outputs.noteIntroAssist.textContent = placeholder;
+    }
+    if (outputs.noteClosingAssist) {
+      outputs.noteClosingAssist.textContent = placeholder;
+    }
+    if (outputs.comicEpisodeSummary) {
+      outputs.comicEpisodeSummary.textContent = placeholder;
     }
     outputs.note.textContent = placeholder;
     if (outputs.noteBodyOnly) {
@@ -937,13 +973,38 @@
     const style = (data.get("outputStyle") || "").trim();
     let ids;
     if (style === "note") {
-      ids = ["note-title-suggestions-output", "note-body-only-output", "comic-output"];
+      ids = [
+        "comic-title-output",
+        "comic-output",
+        "note-intro-assist-output",
+        "note-body-only-output",
+        "note-closing-assist-output",
+        "note-title-suggestions-output",
+      ];
     } else if (style === "comic") {
-      ids = ["note-title-suggestions-output", "comic-output", "comic-unified-prompt-output"];
+      ids = [
+        "comic-title-output",
+        "comic-output",
+        "comic-prompt-output",
+        "comic-unified-prompt-output",
+        "note-intro-assist-output",
+        "note-closing-assist-output",
+        "comic-episode-summary-output",
+      ];
     } else if (style === "kindle") {
-      ids = ["note-title-suggestions-output", "note-body-only-output", "kindle-output"];
+      ids = ["comic-title-output", "comic-output", "note-title-suggestions-output", "note-body-only-output", "kindle-output"];
     } else {
-      ids = ["note-title-suggestions-output", "note-body-only-output", "comic-output", "comic-unified-prompt-output"];
+      ids = [
+        "comic-title-output",
+        "comic-output",
+        "comic-prompt-output",
+        "comic-unified-prompt-output",
+        "note-intro-assist-output",
+        "note-closing-assist-output",
+        "comic-episode-summary-output",
+        "note-title-suggestions-output",
+        "note-body-only-output",
+      ];
     }
     const parts = [];
     for (let i = 0; i < ids.length; i += 1) {

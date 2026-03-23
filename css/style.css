@@ -28,6 +28,67 @@ body {
   padding: 14px;
 }
 
+.comic-primary-card {
+  border-color: #bfdbfe;
+  background: linear-gradient(180deg, #f8fafc 0%, #fff 48%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.workflow-hint--primary {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1e3a5f;
+  line-height: 1.55;
+  background: #eff6ff;
+  border-radius: 8px;
+  border: 1px solid #dbeafe;
+}
+
+.comic-title-output {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.note-assist-card {
+  border-color: #e9d5ff;
+  background: #faf5ff;
+}
+
+.longform-note-details,
+.kindle-preview-details {
+  padding: 0;
+  overflow: hidden;
+}
+
+.longform-note-details__summary,
+.kindle-preview-details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  color: #4b5563;
+  padding: 14px;
+  list-style: none;
+  border-radius: 10px;
+}
+
+.longform-note-details__summary::-webkit-details-marker,
+.kindle-preview-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.longform-note-details__body,
+.kindle-preview-details > .longform-note-details__body {
+  padding: 0 14px 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.x-post-card {
+  border-color: #e5e7eb;
+  background: #fafafa;
+}
+
 .note-posting-copy-card {
   border-color: #c7d2fe;
   background: #fafbff;

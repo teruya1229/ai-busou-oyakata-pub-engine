@@ -1,5 +1,11 @@
 # handoff
 
+## ワークフロー方針（2026-03-23）
+
+- **主導線**: **実話漫画**（`comicTitle` → `comic` → `comicPrompt` → `comicUnifiedPrompt` → 画像）→ **note補助**（`noteIntroAssist` / `noteClosingAssist`）→（任意）**長文note**・**Kindle再編集**
+- **長文note本文**の改善を最優先にはしない。画面では**折りたたみ**（`longform-note-details`）で後段扱い
+- **将来**: コマ数可変の「漫画構成」へ拡張しやすいよう、表記は「現状4コマ」と明記
+
 ## UI文言（参考）
 
 - **1行メモ（超簡易）**: フォーム最上段の **1行メモ** にだけ入力しても生成可能。`｜` または `|` で **テーマ｜伝えたいこと｜結論** と分割した場合は **その優先**（2分割＝テーマ＋伝えたいこと、3分割＝結論まで）。**1行のみ**（区切りなし）のときは、`js/app.js` の `expandSingleSegmentMemo` が **`。！？` の文区切り**、または **`けど` / `でも` / `のに` / `だから`** で **theme（題名向け短縮）／coreMain／coreConclusion** に軽く分ける（各入力欄の表示は変えず、`getInputFromForm` の論理値のみ）。**タイトルテーマ／一番伝えたいこと／結論の欄に文字があるときは、フォーム値を優先**し、1行メモは **空欄の項目の補助**（`getInputFromForm` の `mergeField`）。接続詞で **`left` が空**（例: 文頭が「だから」）のときは **`theme` に全文をフォールバック**（`shortenTitleLike(left || full, …)`）。空なら従来の最小入力3欄どおり

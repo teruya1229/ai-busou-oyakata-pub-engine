@@ -2490,15 +2490,58 @@
     ].join("\n");
   }
 
+  function extractComicTitleLine(comicText) {
+    const line = (comicText || "").split("\n")[0] || "";
+    return line.replace(/^【タイトル】\s*/, "").trim();
+  }
+
+  /** note補助：漫画の前に置く短い導入（長文本文とは別枠） */
+  function buildNoteIntroAssist(normalized, input) {
+    const toneData = templates.toneTemplates[normalized.tone];
+    const story = buildNoteStoryAndPhrase(normalized, input);
+    return buildNoteOpeningForArticle(normalized, toneData, story);
+  }
+
+  /** note補助：漫画の後に置く短い締め（長文本文とは別枠） */
+  function buildNoteClosingAssist(normalized) {
+    if (normalized.coreConclusion) {
+      return buildNoteFinalBlock(normalized);
+    }
+    const lr = compactSpaces(normalized.learning || "");
+    const lead = firstSentenceJapanese(lr) || lr || "いまの引っかかりを、次の現場で一つだけ変える。";
+    return ensurePeriod(lead) + "\n\n" + buildNoteConclusionNextLine(normalized);
+  }
+
+  /** 将来の章・本まとめ用：1行メタ（深掘りは後段） */
+  function buildComicEpisodeSummaryLine(normalized) {
+    const parts = [];
+    if (normalized.theme) {
+      parts.push("題材:「" + normalized.theme + "」");
+    }
+    if (normalized.coreMain) {
+      const cm = compactSpaces(normalized.coreMain);
+      parts.push("芯:「" + (cm.length > 96 ? cm.slice(0, 95) + "…" : cm) + "」");
+    }
+    if (normalized.learning) {
+      parts.push("学び:「" + (firstSentenceJapanese(normalized.learning) || normalized.learning) + "」");
+    }
+    return parts.join(" ");
+  }
+
   function buildAllOutputs(input) {
     const normalized = normalizeInput(input);
+    const comicText = buildComic(input);
     const noteHeaded = buildNote(input);
     const noteBodyOnly = stripNoteLeadingHeading(noteHeaded);
     const noteTitleSuggestions = buildNoteTitleCandidateBlock(normalized);
     return {
-      comic: buildComic(input),
+      comicTitle: extractComicTitleLine(comicText),
+      comic: comicText,
       comicPrompt: buildComicPanelPrompts(input),
       comicUnifiedPrompt: buildUnifiedComicImagePrompt(input),
+      noteIntroAssist: buildNoteIntroAssist(normalized, input),
+      noteClosingAssist: buildNoteClosingAssist(normalized),
+      comicEpisodeSummary: buildComicEpisodeSummaryLine(normalized),
       note: noteHeaded,
       noteBodyOnly: noteBodyOnly,
       noteTitleSuggestions: noteTitleSuggestions,

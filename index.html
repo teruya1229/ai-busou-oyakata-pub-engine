@@ -10,7 +10,9 @@
     <main class="container">
       <header class="page-header card">
         <h1>AI武装親方 出版エンジン</h1>
-        <p>現場の出来事から、4コマ構成・note本文・X投稿文を最小手順で生成するMVPです。</p>
+        <p>
+          <strong>主役は漫画（実話→構成→画像プロンプト）</strong>。noteは短い導入・締めの補助。長文note・Kindleは後段です（方針：<strong>漫画 → note補助 → Kindle再編集</strong>）。
+        </p>
       </header>
 
       <section class="card">
@@ -133,36 +135,37 @@
         </form>
       </section>
 
-      <section class="card">
-        <h2>用途別コピー（生成後）</h2>
-        <p class="copy-hint">
-          よく使うブロックをここから一発コピーできます。<strong>note を投稿する</strong>ときは、下の <strong>note投稿用コピー</strong>ブロックを使うと迷いにくいです（タイトル／本文／Markdown／投稿セット）。<strong>スタイル向けにまとめてコピー</strong>は、出力スタイルに合わせて 4コマ・統合・節素材などを連結します（区切りは <code>---</code> 行）。
+      <section class="card comic-primary-card">
+        <p class="workflow-hint workflow-hint--primary">
+          <strong>主出力（最優先）</strong>：漫画タイトル → 構成・コマ文 → 描画プロンプト → 統合画像プロンプト（→ 画像生成）
         </p>
-        <div class="actions">
-          <button type="button" data-copy-target="comic-output" class="copy-btn">4コマ構成をコピー</button>
-          <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">4コマ統合プロンプトをコピー</button>
-          <button type="button" data-copy-target="kindle-output" class="copy-btn">Kindle節素材をコピー</button>
-          <button type="button" id="copy-style-bundle-btn" class="subtle">スタイル向けにまとめてコピー</button>
+        <div class="result-head">
+          <h2>漫画タイトル</h2>
+          <button type="button" data-copy-target="comic-title-output" class="copy-btn">コピー</button>
         </div>
+        <pre id="comic-title-output" class="output-block comic-title-output">ここに生成結果が表示されます。</pre>
       </section>
 
-      <section class="card">
+      <section class="card comic-primary-card">
         <div class="result-head">
-          <h2>4コマ漫画構成</h2>
-          <button type="button" data-copy-target="comic-output" class="copy-btn">4コマ構成をコピー</button>
+          <h2>実話漫画構成（現状4コマ）</h2>
+          <button type="button" data-copy-target="comic-output" class="copy-btn">構成をコピー</button>
         </div>
+        <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
+          表記は「4コマ」ですが、思想は<strong>実話漫画の主出力</strong>です（将来コマ数を増やす前提）。
+        </p>
         <pre id="comic-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
 
-      <section class="card">
+      <section class="card comic-primary-card">
         <div class="result-head">
-          <h2>4コマ描画プロンプト</h2>
-          <button type="button" data-copy-target="comic-prompt-output" class="copy-btn">4コマ描画プロンプトをコピー</button>
+          <h2>漫画コマ別・描画プロンプト</h2>
+          <button type="button" data-copy-target="comic-prompt-output" class="copy-btn">コピー</button>
         </div>
         <pre id="comic-prompt-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
 
-      <section class="card">
+      <section class="card comic-primary-card">
         <p style="margin: 0 0 12px; font-size: 14px; color: #6b7280; line-height: 1.55">
           <strong style="color: #374151">流れ</strong>
           ：<strong style="color: #374151">「生成用入力へ転記」は任意</strong>（プロンプトを編集したいとき用）。<strong style="color: #374151"
@@ -174,8 +177,8 @@
           を下に貼り「4コマ画像を表示」。
         </p>
         <div class="result-head">
-          <h2>4コマ統合画像プロンプト</h2>
-          <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">4コマ統合プロンプトをコピー</button>
+          <h2>漫画・統合画像プロンプト（画像生成用）</h2>
+          <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">統合プロンプトをコピー</button>
         </div>
         <pre id="comic-unified-prompt-output" class="output-block">ここに生成結果が表示されます。</pre>
         <div class="actions" style="margin-top: 8px">
@@ -238,7 +241,7 @@
         <p style="margin: 12px 0 6px; font-size: 14px; font-weight: 600; color: #374151">今回使った生成用プロンプト（直近の生成）</p>
         <pre id="comic-image-last-used-prompt" class="output-block" style="min-height: 60px; font-size: 13px">まだ生成していません。</pre>
 
-        <h2 style="margin: 18px 0 8px">4コマ漫画プレビュー</h2>
+        <h2 style="margin: 18px 0 8px">漫画画像プレビュー（4コマ1枚想定）</h2>
         <p style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
           「この内容で4コマ画像を生成」で得た／または外部で得た4コマ1枚の画像URL、または <code style="font-size: 13px">data:image/...</code> を貼り、プレビューを確認します。
         </p>
@@ -280,61 +283,105 @@
         </div>
       </section>
 
-      <section class="card note-posting-copy-card">
-        <h2>note投稿用コピー</h2>
+      <section class="card note-assist-card">
+        <h2>補助（note・短文）</h2>
+        <p class="copy-hint" style="margin-bottom: 12px">
+          <strong>主役は上記の漫画ブロック</strong>。ここは投稿時の<strong>短い導入・締め</strong>。長文のnote本文は下の「長文note・投稿用」へ。
+        </p>
+        <p style="margin: 0 0 6px; font-size: 13px; font-weight: 600; color: #374151">note導入文（漫画の前）</p>
+        <div class="result-head" style="margin-bottom: 6px">
+          <button type="button" data-copy-target="note-intro-assist-output" class="copy-btn">導入文をコピー</button>
+        </div>
+        <pre id="note-intro-assist-output" class="output-block">ここに生成結果が表示されます。</pre>
+        <p style="margin: 14px 0 6px; font-size: 13px; font-weight: 600; color: #374151">note締め文（漫画の後）</p>
+        <div class="result-head" style="margin-bottom: 6px">
+          <button type="button" data-copy-target="note-closing-assist-output" class="copy-btn">締め文をコピー</button>
+        </div>
+        <pre id="note-closing-assist-output" class="output-block">ここに生成結果が表示されます。</pre>
+        <p style="margin: 14px 0 6px; font-size: 13px; font-weight: 600; color: #374151">章・本用メモ（1行・将来の再編集用）</p>
+        <div class="result-head" style="margin-bottom: 6px">
+          <button type="button" data-copy-target="comic-episode-summary-output" class="copy-btn">1行要約をコピー</button>
+        </div>
+        <pre id="comic-episode-summary-output" class="output-block">ここに生成結果が表示されます。</pre>
+      </section>
+
+      <section class="card">
+        <h2>用途別コピー（生成後）</h2>
         <p class="copy-hint">
-          <strong>note に貼る</strong>ときは、<strong>タイトル欄＝タイトル案</strong>から選ぶ／<strong>本文欄＝本文のみ</strong>。<strong>Markdown</strong>で控えたいときだけ <strong>H1付き全文</strong>。<strong>投稿セット</strong>はタイトル案と本文のみをまとめてコピーします（区切りは <code>---</code> 行）。
+          漫画主導のまとめコピーは<strong>スタイル向けにまとめてコピー</strong>（漫画タイトル〜統合プロンプト優先）。<strong>note を投稿する</strong>ときは <strong>note投稿用コピー</strong>または上の<strong>導入・締め</strong>。区切りは <code>---</code> 行。
         </p>
         <div class="actions">
-          <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">タイトル案をコピー（タイトル欄）</button>
-          <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文のみをコピー（本文欄）</button>
-          <button type="button" data-copy-target="note-output" class="copy-btn">H1付き全文をコピー（Markdown保存）</button>
-          <button type="button" id="copy-note-posting-bundle-btn" class="copy-btn" data-copy-skip="1">note投稿セットをコピー（タイトル案＋本文のみ）</button>
+          <button type="button" data-copy-target="comic-title-output" class="copy-btn">漫画タイトルをコピー</button>
+          <button type="button" data-copy-target="comic-output" class="copy-btn">漫画構成をコピー</button>
+          <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">統合プロンプトをコピー</button>
+          <button type="button" data-copy-target="kindle-output" class="copy-btn">Kindle節素材をコピー</button>
+          <button type="button" id="copy-style-bundle-btn" class="subtle">スタイル向けにまとめてコピー</button>
         </div>
       </section>
 
-      <section class="card">
-        <div class="result-head">
-          <h2>noteタイトル案</h2>
-          <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">タイトル欄用にコピー</button>
+      <details class="card longform-note-details">
+        <summary class="longform-note-details__summary">長文note・投稿用ブロック（主導線から外す・開く）</summary>
+        <div class="longform-note-details__body">
+          <section class="card note-posting-copy-card" style="margin-top: 12px">
+            <h2>note投稿用コピー（補助）</h2>
+            <p class="copy-hint">
+              長文本文・タイトル案まわり。<strong>短文中心の投稿</strong>なら上の<strong>導入・締め</strong>＋<strong>漫画タイトル</strong>で足りることもあります。
+            </p>
+            <div class="actions">
+              <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">タイトル案をコピー（タイトル欄）</button>
+              <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文のみをコピー（本文欄）</button>
+              <button type="button" data-copy-target="note-output" class="copy-btn">H1付き全文をコピー（Markdown保存）</button>
+              <button type="button" id="copy-note-posting-bundle-btn" class="copy-btn" data-copy-skip="1">note投稿セットをコピー（タイトル案＋本文のみ）</button>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="result-head">
+              <h2>noteタイトル案</h2>
+              <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">タイトル欄用にコピー</button>
+            </div>
+            <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
+              本文とは別枠です。一括コピーは <strong>note投稿用コピー</strong>の「投稿セット」を使えます。
+            </p>
+            <pre id="note-title-suggestions-output" class="output-block">ここに生成結果が表示されます。</pre>
+          </section>
+
+          <section class="card">
+            <div class="result-head">
+              <h2>note記事本文（長文）</h2>
+              <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文欄用にコピー</button>
+              <button type="button" data-copy-target="note-output" class="copy-btn">Markdown用にコピー</button>
+            </div>
+            <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
+              主役は漫画のときは<strong>必須ではない</strong>。<strong>本文のみ</strong>は note の本文欄向け（先頭の <code># タイトル</code> 行なし）。<strong>H1付き全文</strong>は Markdown 用。
+            </p>
+            <p style="margin: 0 0 6px; font-size: 13px; color: #374151">本文のみ（投稿用）</p>
+            <pre id="note-body-only-output" class="output-block">ここに生成結果が表示されます。</pre>
+            <p style="margin: 14px 0 6px; font-size: 13px; color: #374151">H1付き（Markdown）</p>
+            <pre id="note-output" class="output-block">ここに生成結果が表示されます。</pre>
+          </section>
+
+          <section class="card note-precheck-card">
+            <h2>投稿前の確認メモ</h2>
+            <p class="copy-hint" style="margin-bottom: 10px">
+              採点ではなく、貼る前の軽いチェックです。本文とタイトル案をもとに、メモ臭さ・硬さ・主語・タイトルとの顔合わせ・note向きの観点で目安を出します（コピー不要・画面で見るだけ）。
+            </p>
+            <pre id="note-prepublish-check-output" class="output-block">ここに生成結果が表示されます。</pre>
+          </section>
         </div>
-        <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          本文とは別枠です。一括コピーは <strong>note投稿用コピー</strong>の「投稿セット」を使えます。
-        </p>
-        <pre id="note-title-suggestions-output" class="output-block">ここに生成結果が表示されます。</pre>
-      </section>
+      </details>
 
-      <section class="card">
+      <section class="card x-post-card">
         <div class="result-head">
-          <h2>note記事本文</h2>
-          <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文欄用にコピー</button>
-          <button type="button" data-copy-target="note-output" class="copy-btn">Markdown用にコピー</button>
-        </div>
-        <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          <strong>本文のみ</strong>は note の本文欄へそのまま貼り付けやすい形です（先頭の <code># タイトル</code> 行なし）。<strong>H1付き全文</strong>は Markdown の見出し付きです。役割の整理は <strong>note投稿用コピー</strong>を参照してください。
-        </p>
-        <p style="margin: 0 0 6px; font-size: 13px; color: #374151">本文のみ（投稿用）</p>
-        <pre id="note-body-only-output" class="output-block">ここに生成結果が表示されます。</pre>
-        <p style="margin: 14px 0 6px; font-size: 13px; color: #374151">H1付き（Markdown）</p>
-        <pre id="note-output" class="output-block">ここに生成結果が表示されます。</pre>
-      </section>
-
-      <section class="card note-precheck-card">
-        <h2>投稿前の確認メモ</h2>
-        <p class="copy-hint" style="margin-bottom: 10px">
-          採点ではなく、貼る前の軽いチェックです。本文とタイトル案をもとに、メモ臭さ・硬さ・主語・タイトルとの顔合わせ・note向きの観点で目安を出します（コピー不要・画面で見るだけ）。
-        </p>
-        <pre id="note-prepublish-check-output" class="output-block">ここに生成結果が表示されます。</pre>
-      </section>
-
-      <section class="card">
-        <div class="result-head">
-          <h2>X投稿文</h2>
+          <h2>補助（X投稿文）</h2>
           <button type="button" data-copy-target="x-output" class="copy-btn">X投稿をコピー</button>
         </div>
         <pre id="x-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
 
+      <details class="card kindle-preview-details">
+        <summary class="longform-note-details__summary">Kindle系プレビュー（後段・再編集用・開く）</summary>
+        <div class="longform-note-details__body">
       <section class="card">
         <div class="result-head">
           <h2>Kindle節素材プレビュー</h2>
@@ -390,6 +437,8 @@
         </div>
         <pre id="kindle-manuscript-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
+        </div>
+      </details>
     </main>
 
     <script src="./js/templates.js"></script>
