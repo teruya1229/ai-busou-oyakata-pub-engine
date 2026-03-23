@@ -108,6 +108,8 @@
 
 - **2026-03-21 追記（4コマ・顧客反応・コパイロット無音）**: **`customer_side`** 題材では **2コマ目ラベル「お客様の反応」**、**コパイロットは「必須表現」なし時は 2・3コマ目で発話しない**（`comicCopilotSilent`）。**`inferTopicAxis`** は **顧客目線・不親切・業界の常識×顧客の非常識・専門用語×見積**などで **`customer_side`** を **`price` より先**に取る。`README.md` に概要を追記。
 
+- **2026-03-21 追記（統合画像プロンプト・登場人物）**: **`buildUnifiedComicImagePrompt`** は **`customer_side`** で **親方＋お客様**中心。**コパイロット無音時は画像指示でも登場させない**（`buildUnifiedComicCastLines`）。**4コマ描画プロンプト**（`buildPanelPrompt`）の **キャラ行**は `comicPromptCharacters` で **お客様**を明示。
+
 - **実施方法**: ブラウザと同一の `js/engine.js` を Node で読み込み、`normalizeInput` / `buildAllOutputs` で **題材A〜C** を通過確認（最短の再現。同一オリジン起動時も同じ出力）
 - **題材A（人間関係）**: 修正前後とも **`topicAxis=human_relation`**。4コマ2コマ目は **人間関係の引っかかり**で、汎用「ズレ」ラベルではない
 - **題材B（価格・客層）**: **修正前**は現場文の **「問い合わせ」** で **sales** に先走り。**修正後**は **`topicAxis=price`**（価格・客層を営業より先に判定）

@@ -889,7 +889,7 @@
   function buildPanelPrompt(panelNumber, panelName, lines, normalized, styleGuide) {
     const protagonist = templates.characterProfile.protagonist.name;
     const partner = templates.characterProfile.partner.name;
-    const characters = normalized.characters || `${protagonist}、${partner}`;
+    const characters = comicPromptCharacters(normalized);
     const situation = pickFirstLineStartWith(lines, "状況:");
     const narrativeLines = (lines || []).filter(function (line) {
       return line.indexOf("状況:") !== 0 && line.indexOf(`${protagonist}:`) !== 0 && line.indexOf(`${partner}:`) !== 0;
@@ -898,16 +898,20 @@
       return line.indexOf(`${protagonist}:`) === 0 || line.indexOf(`${partner}:`) === 0;
     });
 
+    const cs = normalized.topicAxis === "customer_side";
     const expressionByPanel = {
       1: "状況を受け止める表情、落ち着いた雰囲気",
-      2: "違和感が少し出る表情",
-      3: "気づきが生まれる真剣な表情",
+      2: cs ? "お客様の表情・戸惑いが主役（依頼主の大人）" : "違和感が少し出る表情",
+      3: cs && comicCopilotSilent(normalized) ? "親方の気づき・内省が伝わる表情" : "気づきが生まれる真剣な表情",
       4: "納得して前を向く表情",
     };
     const compositionByPanel = {
       1: "中景、状況が伝わるカット",
-      2: "やや寄り、引っかかりや緊張が分かる構図",
-      3: "会話が読み取りやすい対話構図",
+      2: cs ? "お客様の顔・視線を優先した寄り、緊張や距離が伝わる構図" : "やや寄り、引っかかりや緊張が分かる構図",
+      3:
+        cs && comicCopilotSilent(normalized)
+          ? "親方中心、独白・内省が伝わる構図（対話でなくてもよい）"
+          : "会話が読み取りやすい対話構図",
       4: "引き気味、前進で締める安定構図",
     };
 
@@ -955,6 +959,54 @@
     return "";
   }
 
+  /** 4コマ描画プロンプト用：顧客視点回は親方＋お客様を明示（コパイロット無音時は描かない） */
+  function comicPromptCharacters(normalized) {
+    const protagonist = templates.characterProfile.protagonist.name;
+    const partner = templates.characterProfile.partner.name;
+    const raw = normalized.characters || `${protagonist}、${partner}`;
+    if (normalized.topicAxis !== "customer_side") {
+      return raw;
+    }
+    if (comicCopilotSilent(normalized)) {
+      return `${protagonist}、お客様（一般の依頼主）。${partner}は画面に出さない`;
+    }
+    return `${protagonist}、お客様（一般の依頼主）、${partner}（端役・小さく）`;
+  }
+
+  /**
+   * 統合画像プロンプトの登場人物ブロック（既定は親方＋コパイロット2人固定、customer_side は親方＋お客様中心）
+   */
+  function buildUnifiedComicCastLines(normalized, protagonist, partner, uip, styleGuide) {
+    if (normalized.topicAxis !== "customer_side") {
+      const lookLine = uip
+        ? `見た目固定: ${protagonist}＝${uip.protagonistVisual}／${partner}＝${uip.partnerVisual}。トーン: ${uip.seriesTheme}・${uip.businessTone}。`
+        : "";
+      return {
+        lookLine,
+        castLine: `キャラ同一: ${protagonist}、${partner}（${normalized.characters || protagonist + "、" + partner}）。${styleGuide}`,
+        footLines: [],
+      };
+    }
+    const custHint =
+      "お客様（依頼主の大人）は、2コマ目で表情・戸惑い・距離感がいちばん伝わるように。全コマで同一人物として描く。";
+    const lookCs = uip
+      ? `見た目固定: ${protagonist}＝${uip.protagonistVisual}／お客様＝${custHint} ${partner}の見た目は${uip.partnerVisual}（この回は主役にしない）。トーン: ${uip.businessTone}。`
+      : `見た目: ${protagonist}（親方）とお客様（一般の依頼主）。${custHint}`;
+    let castLine;
+    if (comicCopilotSilent(normalized)) {
+      castLine = `登場人物（この回）: ${protagonist}（親方）とお客様のみ。${partner}（コパイロット）は登場させない。${styleGuide}`;
+    } else {
+      castLine = `登場人物（この回）: ${protagonist}（親方）とお客様を主役。${partner}は端・背景の小さな姿に留める。${styleGuide}`;
+    }
+    return {
+      lookLine: lookCs,
+      castLine,
+      footLines: [
+        "【顧客視点エピソード】主人公＋相棒の2人が常に画面を占める必要はない。2コマ目はお客様の顔・視線を最優先。",
+      ],
+    };
+  }
+
   function buildUnifiedComicImagePrompt(input) {
     const normalized = normalizeInput(input);
     const comicText = buildComic(input);
@@ -962,6 +1014,8 @@
     const protagonist = templates.characterProfile.protagonist.name;
     const partner = templates.characterProfile.partner.name;
     const panelMeta = getComicPanelMetaForExtraction();
+    const uip = templates.characterProfile.unifiedImagePrompt;
+    const castPack = buildUnifiedComicCastLines(normalized, protagonist, partner, uip, styleGuide);
 
     const panelSummaries = panelMeta.map(function (meta) {
       const lines = extractComicPanelBlock(comicText, meta.start, meta.next);
@@ -982,28 +1036,39 @@
           .replace(/^気づき:\s*/, "")
           .replace(/^ズレ:\s*/, "")
       );
-      const sceneIntent = dialogueLines.join(" / ") || "表情と構図で短い対話の気配を示す。";
+      let sceneIntent = dialogueLines.join(" / ") || "表情と構図で短い対話の気配を示す。";
+      if (normalized.topicAxis === "customer_side" && meta.number === 2) {
+        const dlg = dialogueLines.join(" / ");
+        sceneIntent = dlg
+          ? dlg + "。このコマの主役はお客様の表情・視線・戸惑い。"
+          : "お客様の表情・戸惑い・視線を最優先。ナレーションの気配で示す。";
+      }
+      if (normalized.topicAxis === "customer_side" && meta.number === 3 && comicCopilotSilent(normalized)) {
+        const d3 = dialogueLines.join(" / ");
+        sceneIntent = d3
+          ? d3.replace(/。$/, "") + "。親方の気づき・内省が伝わる（独白の気配でもよい）。"
+          : "親方の気づき・内省が伝わる構図（独白の気配でもよい）。";
+      }
       return `${meta.number}コマ（${meta.name}）: ${summary || "今回の入力に沿った情景。"} — ねらい: ${sceneIntent}`;
     });
 
-    const uip = templates.characterProfile.unifiedImagePrompt;
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const styleHint = unifiedStyleHintLine(normalized.outputStyle);
-    const lookLine = uip
-      ? `見た目固定: ${protagonist}＝${uip.protagonistVisual}／${partner}＝${uip.partnerVisual}。トーン: ${uip.seriesTheme}・${uip.businessTone}。`
-      : "";
 
     return [
       "【4コマ統合画像プロンプト】",
       `【入力反映】${leadTitle}`,
       styleHint,
       "1枚のキャンバスに4コマ（2x2）・枠で区切る・Z字読み。白黒ゆる線・背景は最小。ポスター一枚絵にしない。",
-      lookLine,
-      `キャラ同一: ${protagonist}、${partner}（${normalized.characters}）。${styleGuide}`,
+      castPack.lookLine,
+      castPack.castLine,
       "画像内に文字・吹き出し・ロゴを入れない（下は作画意図のみ）。",
+    ]
+      .concat(castPack.footLines)
+      .concat([
       "【今回のコマ（入力固有・重複なく）】",
       panelSummaries.join("\n"),
-    ]
+    ])
       .concat(buildCoreLockUnifiedLines(normalized))
       .concat([
         "最終: 4コマの境界と読み順が一目で分かる構図にする。",
