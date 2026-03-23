@@ -1048,3 +1048,15 @@
 - **`js/app.js`**: 新出力の描画・クリア。**スタイル向けにまとめてコピー**の既定順を漫画優先に変更
 - **`css/style.css`**: `.comic-primary-card` / `.note-assist-card` / 折りたたみ用スタイル
 - **`README.md`** / **`ops/handoff.md`**: 方針を明記
+
+## 今日やったこと（2026-03-23：投稿文＝漫画原稿への主軸切替）
+
+### 方針
+
+- **1本の原稿**（8ブロック）を **note・4コマ・画像の共通ソース**とする。**4コマ先行**ではなく **原稿→コマ分解**。**`buildAllOutputs` は `buildNote` を毎回呼ばない**（`buildComicPanelPrompts` / `buildUnifiedComicImagePrompt` は同一 `comic` を再利用）。
+
+### 実装
+
+- **`js/engine.js`**: **`buildComicManuscriptPost`**、**`parseManuscriptSections`**、**`formatComicFromManuscript`**、**`buildComicBundle`**。**`buildComic`** は原稿駆動。**`buildAllOutputs`**: **`comicManuscriptPost`**、**`note`/`noteBodyOnly`** を原稿ベース、**`noteIntroAssist`/`noteClosingAssist`** を原稿ブロック由来
+- **`index.html` / `js/app.js`**: 先頭に **漫画化前提の投稿文（原稿）**。**スタイル向けにまとめてコピー**に原稿を先頭追加
+- **`README.md` / `ops/handoff.md`**: 主軸と `buildNote` の位置づけを更新

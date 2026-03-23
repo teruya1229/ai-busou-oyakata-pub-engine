@@ -11,7 +11,7 @@
       <header class="page-header card">
         <h1>AI武装親方 出版エンジン</h1>
         <p>
-          <strong>主役は漫画（実話→構成→画像プロンプト）</strong>。noteは短い導入・締めの補助。長文note・Kindleは後段です（方針：<strong>漫画 → note補助 → Kindle再編集</strong>）。
+          <strong>主軸は「漫画化前提の投稿文（1本の原稿）」</strong>。そこからコマ分解・画像プロンプトへ一方向に展開します。noteは原稿の貼り付け＋短い前後付け、または漫画中心の補助。長文の別稿・Kindleは後段です（<strong>原稿 → コマ・画像 → note補助 → Kindle再編集</strong>）。
         </p>
       </header>
 
@@ -137,8 +137,19 @@
 
       <section class="card comic-primary-card">
         <p class="workflow-hint workflow-hint--primary">
-          <strong>主出力（最優先）</strong>：漫画タイトル → 構成・コマ文 → 描画プロンプト → 統合画像プロンプト（→ 画像生成）
+          <strong>主出力（最優先）</strong>：漫画化前提の投稿文（原稿）→ 漫画タイトル → コマ分解・構成 → 描画プロンプト → 統合画像プロンプト（→ 画像生成）
         </p>
+        <div class="result-head">
+          <h2>漫画化前提の投稿文（漫画原稿）</h2>
+          <button type="button" data-copy-target="comic-manuscript-post-output" class="copy-btn">原稿をコピー</button>
+        </div>
+        <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
+          GPT貼り付け想定の<strong>8ブロック構成</strong>（導入〜読者への問い）。ここが<strong>note本文・4コマ・画像の共通の元</strong>です。4コマはこの原稿の<strong>切り出し／再配置</strong>です。
+        </p>
+        <pre id="comic-manuscript-post-output" class="output-block">ここに生成結果が表示されます。</pre>
+      </section>
+
+      <section class="card comic-primary-card">
         <div class="result-head">
           <h2>漫画タイトル</h2>
           <button type="button" data-copy-target="comic-title-output" class="copy-btn">コピー</button>
@@ -286,7 +297,7 @@
       <section class="card note-assist-card">
         <h2>補助（note・短文）</h2>
         <p class="copy-hint" style="margin-bottom: 12px">
-          <strong>主役は上記の漫画ブロック</strong>。ここは投稿時の<strong>短い導入・締め</strong>。長文のnote本文は下の「長文note・投稿用」へ。
+          <strong>本文の芯は上の「漫画原稿」1本</strong>。ここは<strong>導入＋事件／行動ルール＋問い</strong>に分解した短い前後付け（原稿の先頭・末尾ブロック由来）。タイトル案・Markdown用は下の折りたたみへ。
         </p>
         <p style="margin: 0 0 6px; font-size: 13px; font-weight: 600; color: #374151">note導入文（漫画の前）</p>
         <div class="result-head" style="margin-bottom: 6px">
@@ -308,7 +319,7 @@
       <section class="card">
         <h2>用途別コピー（生成後）</h2>
         <p class="copy-hint">
-          漫画主導のまとめコピーは<strong>スタイル向けにまとめてコピー</strong>（漫画タイトル〜統合プロンプト優先）。<strong>note を投稿する</strong>ときは <strong>note投稿用コピー</strong>または上の<strong>導入・締め</strong>。区切りは <code>---</code> 行。
+          まとめコピーは<strong>スタイル向けにまとめてコピー</strong>（<strong>原稿</strong>→漫画タイトル〜統合プロンプト優先）。<strong>note を投稿する</strong>ときは <strong>note投稿用コピー</strong>（タイトル案＋原稿本文）または上の<strong>導入・締め</strong>＋原稿。区切りは <code>---</code> 行。
         </p>
         <div class="actions">
           <button type="button" data-copy-target="comic-title-output" class="copy-btn">漫画タイトルをコピー</button>
@@ -320,12 +331,12 @@
       </section>
 
       <details class="card longform-note-details">
-        <summary class="longform-note-details__summary">長文note・投稿用ブロック（主導線から外す・開く）</summary>
+        <summary class="longform-note-details__summary">note投稿用・タイトル案（主導線から外す・開く）</summary>
         <div class="longform-note-details__body">
           <section class="card note-posting-copy-card" style="margin-top: 12px">
             <h2>note投稿用コピー（補助）</h2>
             <p class="copy-hint">
-              長文本文・タイトル案まわり。<strong>短文中心の投稿</strong>なら上の<strong>導入・締め</strong>＋<strong>漫画タイトル</strong>で足りることもあります。
+              <strong>本文欄用の「本文のみ」は漫画原稿（8ブロック）と同一</strong>です。従来の長文連載向けの別生成は <code>buildNote</code>（Kindleプレビュー等が内部利用）で、主導線の重複生成は避けています。
             </p>
             <div class="actions">
               <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">タイトル案をコピー（タイトル欄）</button>
@@ -348,12 +359,12 @@
 
           <section class="card">
             <div class="result-head">
-              <h2>note記事本文（長文）</h2>
+              <h2>note用・原稿本文（8ブロック）</h2>
               <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文欄用にコピー</button>
               <button type="button" data-copy-target="note-output" class="copy-btn">Markdown用にコピー</button>
             </div>
             <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-              主役は漫画のときは<strong>必須ではない</strong>。<strong>本文のみ</strong>は note の本文欄向け（先頭の <code># タイトル</code> 行なし）。<strong>H1付き全文</strong>は Markdown 用。
+              <strong>本文のみ</strong>は note の本文欄向け（漫画原稿そのもの・H1なし）。<strong>H1付き全文</strong>は Markdown 用（タイトル行＋原稿）。
             </p>
             <p style="margin: 0 0 6px; font-size: 13px; color: #374151">本文のみ（投稿用）</p>
             <pre id="note-body-only-output" class="output-block">ここに生成結果が表示されます。</pre>

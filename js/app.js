@@ -1,6 +1,7 @@
 (function () {
   const form = document.getElementById("input-form");
   const outputs = {
+    comicManuscriptPost: document.getElementById("comic-manuscript-post-output"),
     comicTitle: document.getElementById("comic-title-output"),
     comic: document.getElementById("comic-output"),
     comicPrompt: document.getElementById("comic-prompt-output"),
@@ -217,6 +218,12 @@
   }
 
   function renderOutputs(result) {
+    if (outputs.comicManuscriptPost) {
+      outputs.comicManuscriptPost.textContent =
+        result.comicManuscriptPost != null && result.comicManuscriptPost !== ""
+          ? result.comicManuscriptPost
+          : OUTPUT_PLACEHOLDER;
+    }
     if (outputs.comicTitle) {
       outputs.comicTitle.textContent =
         result.comicTitle != null && result.comicTitle !== "" ? result.comicTitle : OUTPUT_PLACEHOLDER;
@@ -864,6 +871,9 @@
 
   function clearOutputs() {
     const placeholder = "ここに生成結果が表示されます。";
+    if (outputs.comicManuscriptPost) {
+      outputs.comicManuscriptPost.textContent = placeholder;
+    }
     if (outputs.comicTitle) {
       outputs.comicTitle.textContent = placeholder;
     }
@@ -974,6 +984,7 @@
     let ids;
     if (style === "note") {
       ids = [
+        "comic-manuscript-post-output",
         "comic-title-output",
         "comic-output",
         "note-intro-assist-output",
@@ -983,6 +994,7 @@
       ];
     } else if (style === "comic") {
       ids = [
+        "comic-manuscript-post-output",
         "comic-title-output",
         "comic-output",
         "comic-prompt-output",
@@ -992,9 +1004,17 @@
         "comic-episode-summary-output",
       ];
     } else if (style === "kindle") {
-      ids = ["comic-title-output", "comic-output", "note-title-suggestions-output", "note-body-only-output", "kindle-output"];
+      ids = [
+        "comic-manuscript-post-output",
+        "comic-title-output",
+        "comic-output",
+        "note-title-suggestions-output",
+        "note-body-only-output",
+        "kindle-output",
+      ];
     } else {
       ids = [
+        "comic-manuscript-post-output",
         "comic-title-output",
         "comic-output",
         "comic-prompt-output",

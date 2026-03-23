@@ -814,27 +814,121 @@
     return `${partner}: ${probe}`;
   }
 
-  function buildComic(input) {
-    const normalized = normalizeInput(input);
+  /**
+   * 漫画の単一原稿：投稿文＝以降のコマ・note の共通ソース（GPT貼り付け想定の区切り）
+   */
+  function buildComicManuscriptPost(normalized, input) {
+    const toneData = templates.toneTemplates[normalized.tone];
+    const story = buildNoteStoryAndPhrase(normalized, input);
+    const intro = buildNoteOpeningForArticle(normalized, toneData, story);
+    const incidentBlock = buildNoteIncidentBlockForArticle(normalized, toneData, story);
+    const incident = compactSpaces(incidentBlock.replace(/\n+/g, " ").trim()).slice(0, 420);
+    const punch = compactSpaces(normalized.coreMain || "") || "ここが、いちばん引っかかった。";
+    const turn = buildNoteTurnAndWhy(normalized);
+    const learningLine = dedupeLearningVersusTurn(
+      normalized.learning ||
+        ensureLearningText("", normalized.incident, normalized.theme, normalized.coreMain, normalized.coreConclusion),
+      turn,
+      normalized
+    );
+    const thenSelf = firstSentenceJapanese(turn) || turn.slice(0, 140);
+    const nowKnow = firstSentenceJapanese(learningLine) || learningLine.slice(0, 160);
+    const essence =
+      compactSpaces(normalized.coreConclusion || normalized.coreMain || "") || "本質は、言葉にしてから動くところだ。";
+    let ruleBlock = "";
+    if (normalized.coreConclusion) {
+      ruleBlock = normalized.coreConclusion + "\n" + buildNoteConclusionNextLine(normalized);
+    } else {
+      ruleBlock = ensurePeriod(firstSentenceJapanese(learningLine) || learningLine) + "\n" + buildNoteConclusionNextLine(normalized);
+    }
+    const readerQ = "次の一件で、あなたなら最初に変えるとしたら何ですか？";
+    return [
+      "【導入】" + intro,
+      "【事件】" + incident,
+      "【強い一言】" + punch,
+      "【当時の自分の認識】" + thenSelf,
+      "【今なら分かる】" + nowKnow,
+      "【本質】" + essence,
+      "【以後の行動ルール】" + ruleBlock,
+      "【読者への問い】" + readerQ,
+    ].join("\n\n");
+  }
+
+  function parseManuscriptSections(manuscript) {
+    const keys = [
+      "導入",
+      "事件",
+      "強い一言",
+      "当時の自分の認識",
+      "今なら分かる",
+      "本質",
+      "以後の行動ルール",
+      "読者への問い",
+    ];
+    const labels = keys.map(function (k) {
+      return "【" + k + "】";
+    });
+    const out = {};
+    for (var i = 0; i < labels.length; i++) {
+      const start = manuscript.indexOf(labels[i]);
+      if (start < 0) {
+        out[keys[i]] = "";
+        continue;
+      }
+      const from = start + labels[i].length;
+      const nextIdx = i < labels.length - 1 ? manuscript.indexOf(labels[i + 1], from) : -1;
+      const end = nextIdx >= 0 ? nextIdx : manuscript.length;
+      out[keys[i]] = manuscript.slice(from, end).trim();
+    }
+    return {
+      intro: out["導入"] || "",
+      incident: out["事件"] || "",
+      punch: out["強い一言"] || "",
+      thenSelf: out["当時の自分の認識"] || "",
+      nowKnow: out["今なら分かる"] || "",
+      essence: out["本質"] || "",
+      rule: out["以後の行動ルール"] || "",
+      reader: out["読者への問い"] || "",
+    };
+  }
+
+  /** 原稿を切り出して4コマ枠に配置（要約ではなく再配置） */
+  function formatComicFromManuscript(normalized, manuscript) {
+    const sec = parseManuscriptSections(manuscript);
     const toneData = templates.toneTemplates[normalized.tone];
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const protagonist = templates.characterProfile.protagonist.name;
     const partner = templates.characterProfile.partner.name;
     const reviewMode = isReviewComicContext(normalized);
-    const rawInc = trimOptional(input.incident);
-    const incidentForComic = rawInc ? ensurePeriod(rawInc) : normalized.incident;
     const st = normalized.outputStyle;
-    const learningForPanel4 = normalized.coreConclusion || normalized.learning;
-    const gapLine = buildComicGapNarrative(normalized, incidentForComic, reviewMode);
-    const insightLine = buildComicInsightNarrative(normalized);
-    const forwardLine = buildComicForwardNarrative(normalized, learningForPanel4);
-    const panel3Conversation = comicPanel3DialogueFromInput(normalized, protagonist, partner, toneData, st);
+    const axisKey = reviewMode ? "review" : normalized.topicAxis || "general";
+    const situationText = clipComicLine(compactSpaces(sec.intro + " " + sec.incident), 120);
+    const gapBody = compactSpaces(sec.punch + " " + sec.thenSelf);
+    const frictionFb = frictionFromIncident(axisKey, sec.incident || normalized.incident, normalized);
+    const gapLine =
+      gapLabelForAxis(axisKey) +
+      ": " +
+      clipComicLine(gapBody || frictionFb, 80);
+    const insightLine = "気づき: " + clipComicLine(sec.nowKnow, 84);
+    const oykLine = sec.essence
+      ? clipComicLine(sec.essence, 44)
+      : clipComicLine(oykataInsightFirstLine(normalized), 44);
+    let panel3Conversation;
+    if (comicCopilotSilent(normalized)) {
+      panel3Conversation = [`${protagonist}: ${oykLine}`];
+    } else if (st === "kindle") {
+      panel3Conversation = comicPanel3Dialogue(toneData, protagonist, partner, st);
+    } else {
+      const axis = normalized.topicAxis || "general";
+      const b = clipComicLine(copilotSecondLineForTopic(axis, normalized.learning, toneData), 40);
+      panel3Conversation = [`${protagonist}: ${oykLine}`, `${partner}: ${b}`];
+    }
+    const forwardBody = compactSpaces(sec.rule + " " + sec.reader);
+    const forwardLine = "次に変える: " + clipComicLine(forwardBody, 100);
     const panel2PartnerLine = comicPanel2PartnerLineGrounded(normalized, toneData, partner, st);
 
-    const panel1Lines = [COMIC_PANEL_LABELS.p1, `状況: ${incidentForComic}`];
-
+    const panel1Lines = [COMIC_PANEL_LABELS.p1, `状況: ${situationText || clipComicLine(sec.incident || normalized.incident, 100)}`];
     const panel3Lines = [COMIC_PANEL_LABELS.p3, insightLine].concat(panel3Conversation);
-
     const panel2Block = [COMIC_PANEL_LABELS.p2, gapLine];
     if (panel2PartnerLine) {
       panel2Block.push(panel2PartnerLine);
@@ -852,6 +946,17 @@
       COMIC_PANEL_LABELS.p4,
       forwardLine,
     ].join("\n");
+  }
+
+  function buildComicBundle(input) {
+    const normalized = normalizeInput(input);
+    const manuscript = buildComicManuscriptPost(normalized, input);
+    const comic = formatComicFromManuscript(normalized, manuscript);
+    return { normalized, manuscript, comic };
+  }
+
+  function buildComic(input) {
+    return buildComicBundle(input).comic;
   }
 
   function extractComicPanelBlock(comicText, panelStartLabel, nextPanelStartLabel) {
@@ -927,9 +1032,9 @@
     ].join("\n");
   }
 
-  function buildComicPanelPrompts(input) {
+  function buildComicPanelPrompts(input, cachedComicText) {
     const normalized = normalizeInput(input);
-    const comicText = buildComic(input);
+    const comicText = cachedComicText != null ? cachedComicText : buildComic(input);
     const styleGuide = templates.characterProfile.comicStyle.join("、");
     const panelMeta = getComicPanelMetaForExtraction();
 
@@ -942,7 +1047,7 @@
     if (normalized.outputStyle) {
       lines.push(`出力スタイル: ${normalized.outputStyle}`);
     }
-    lines.push("（既存の4コマ漫画構成を元に生成）", "", panelBlocks.join("\n\n"));
+    lines.push("（投稿文（漫画原稿）から切り出した4コマ構成を元に生成）", "", panelBlocks.join("\n\n"));
     return lines.join("\n");
   }
 
@@ -1007,9 +1112,9 @@
     };
   }
 
-  function buildUnifiedComicImagePrompt(input) {
+  function buildUnifiedComicImagePrompt(input, cachedComicText) {
     const normalized = normalizeInput(input);
-    const comicText = buildComic(input);
+    const comicText = cachedComicText != null ? cachedComicText : buildComic(input);
     const styleGuide = templates.characterProfile.comicStyle.join("、");
     const protagonist = templates.characterProfile.protagonist.name;
     const partner = templates.characterProfile.partner.name;
@@ -2529,18 +2634,25 @@
   }
 
   function buildAllOutputs(input) {
-    const normalized = normalizeInput(input);
-    const comicText = buildComic(input);
-    const noteHeaded = buildNote(input);
-    const noteBodyOnly = stripNoteLeadingHeading(noteHeaded);
+    const bundle = buildComicBundle(input);
+    const normalized = bundle.normalized;
+    const manuscript = bundle.manuscript;
+    const comicText = bundle.comic;
+    const sec = parseManuscriptSections(manuscript);
+    const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
+    const noteIntroAssist = compactSpaces(sec.intro + "\n\n" + sec.incident);
+    const noteClosingAssist = compactSpaces(sec.rule + "\n\n" + sec.reader);
+    const noteBodyOnly = manuscript;
+    const noteHeaded = "# " + leadTitle + "\n\n" + manuscript;
     const noteTitleSuggestions = buildNoteTitleCandidateBlock(normalized);
     return {
+      comicManuscriptPost: manuscript,
       comicTitle: extractComicTitleLine(comicText),
       comic: comicText,
-      comicPrompt: buildComicPanelPrompts(input),
-      comicUnifiedPrompt: buildUnifiedComicImagePrompt(input),
-      noteIntroAssist: buildNoteIntroAssist(normalized, input),
-      noteClosingAssist: buildNoteClosingAssist(normalized),
+      comicPrompt: buildComicPanelPrompts(input, comicText),
+      comicUnifiedPrompt: buildUnifiedComicImagePrompt(input, comicText),
+      noteIntroAssist: noteIntroAssist,
+      noteClosingAssist: noteClosingAssist,
       comicEpisodeSummary: buildComicEpisodeSummaryLine(normalized),
       note: noteHeaded,
       noteBodyOnly: noteBodyOnly,

@@ -2,8 +2,9 @@
 
 ## ワークフロー方針（2026-03-23）
 
-- **主導線**: **実話漫画**（`comicTitle` → `comic` → `comicPrompt` → `comicUnifiedPrompt` → 画像）→ **note補助**（`noteIntroAssist` / `noteClosingAssist`）→（任意）**長文note**・**Kindle再編集**
-- **長文note本文**の改善を最優先にはしない。画面では**折りたたみ**（`longform-note-details`）で後段扱い
+- **主導線**: **漫画化前提の投稿文＝1本の原稿**（`comicManuscriptPost`）→ **コマ分解**（`comicTitle` / `comic`）→ **画像プロンプト**（`comicPrompt` / `comicUnifiedPrompt` → 画像）→ **note補助**（`noteIntroAssist` / `noteClosingAssist`・原稿の切り出し）→（任意）**タイトル案・Markdown**・**Kindle再編集**
+- **4コマ先行**ではなく、**原稿から切り出し／再配置**でコマを置く。**`buildAllOutputs` の `note` / `noteBodyOnly`** は **原稿本文**（H1 の有無のみ差）。**`buildNote`** は連載向け長文・Kindleプレビュー等の**別経路**（主導線で毎回二重生成しない）
+- **長文の別稿**（`buildNote`）の改善を最優先にはしない。画面では**折りたたみ**（`longform-note-details`）でタイトル案・投稿用ブロックを後段扱い
 - **将来**: コマ数可変の「漫画構成」へ拡張しやすいよう、表記は「現状4コマ」と明記
 
 ## UI文言（参考）
@@ -43,9 +44,9 @@
 
 ## note記事本文（実装メモ）
 
-- 生成は `js/engine.js` の **`buildNote`**。見出しは **導入 / 現場で起きたこと / なぜそうなったか / 気づき / まとめ**（`## 学び` は廃止）
-- **タイトル案**は **`buildNoteTitleCandidateBlock(normalized)`** で生成し、**本文（`buildNote` の戻り）には含めない**。`buildAllOutputs` の **`noteTitleSuggestions`** と **`window.AIBusouEngine.buildNoteTitleCandidateBlock`** で同じ文字列を参照できる。**UI**は **`#note-title-suggestions-output`**（**noteタイトル案**カード）に表示し、**用途別コピー**／**スタイル向けにまとめてコピー**の先頭ブロックとして連結する
-- **note本文の二種**: **`buildNote` / `buildAllOutputs.note`** は先頭 **H1（`#`＋タイトル）** 付き。**本文のみ**（note 本文欄向け）は **`noteBodyOnly`**（**`stripNoteLeadingHeading(note)`**）。**UI**: **`#note-body-only-output`**（本文のみ）と **`#note-output`**（H1付き）。**まとめてコピー**（note／Kindle／未指定の note 本文部分）は **`note-body-only-output`**
+- **主導線の本文**: `js/engine.js` の **`buildComicManuscriptPost`** が **8ブロックの漫画原稿**を生成し、**`buildAllOutputs` の `noteBodyOnly`** はそれそのもの、**`note`** は **`# タイトル` + 原稿**。**UI**: **`#comic-manuscript-post-output`**（原稿）→ **`#note-body-only-output`** / **`#note-output`**（折りたたみ内）
+- **連載向け長文**: **`buildNote`**（見出しなしの読者向け連載文体・`buildNoteShortSpaced` 等）。**Kindle節プレビュー**（`js/kindle-engine.js`）は **`buildNote(rawInput)`** を参照。**主導線では `buildAllOutputs` から `buildNote` を毎回呼ばない**（変換回数削減）
+- **タイトル案**は **`buildNoteTitleCandidateBlock(normalized)`** で生成し、**原稿本文には含めない**。`buildAllOutputs` の **`noteTitleSuggestions`**。**UI**は **`#note-title-suggestions-output`**
 - **note本文の長さ**（`noteLengthPreset`・フォーム **`#note-length-preset`**）: **`normalizeInput`** で **`short` / `standard` / `extended`** に正規化。**`buildNoteShortSpaced`** だけが **短め**（導入は芯優先・実話は先頭段落のみ・反転・学びは一句・締め短縮・入力不足の補助行は付けない）／**少し厚め**（実話が一段なら一段追加、すでに段落分かれなら気づきに一行追加）を適用。**Kindle／4コマ向け note** は従来どおり
 - **投稿前の確認メモ**（`buildNotePrePublishCheck`・**`#note-prepublish-check-output`**）: **`buildAllOutputs`** の **`notePrePublishCheck`**。**本文のみ**と**タイトル案ブロック**・入力由来のテーマ／芯から、**良い点／気になる点／投稿前に1つだけ**の軽い目安（採点ではない）。コピー導線なし
 - **冒頭ブロック `buildNoteOpeningBlock`**: `noteOpeningQuestionLine`（**テーマ・現場・芯・結論**を束ねた文字列に **口コミ**／**レビュー**／**評価** のいずれかがあるとき、プリセット別の**問い**を返す。分岐: **満足＋口コミ**／**仲良く・お客**／**レビュー・評価**／**その他**。**`coreMain` あり**のときは、問いがあれば **問い＋改行＋`coreMain`**、なければ **`coreMain` のみ**。**`coreMain` なし**のときは問い、またはトーンの **`noteLeadWithPreset`**。**`coreMain` と冒頭が先頭付近で重なる**ときは別パターンまたは汎用一行へ寄せる（`noteOpeningQuestionLine` 内）
