@@ -304,7 +304,8 @@
     if (normalizedIncident.indexOf("改善") >= 0) {
       return "短文入力でも、改善点を一つ具体化して次の現場で試す。";
     }
-    if (normalizedIncident.indexOf("確認") >= 0 || normalizedIncident.indexOf("漏れ") >= 0) {
+    // 「仕様の確認が…」のように現場文に「確認」だけが出ると誤爆するため、確認漏れ／漏れに限定する
+    if (normalizedIncident.indexOf("確認漏れ") >= 0 || normalizedIncident.indexOf("漏れ") >= 0) {
       return "確認漏れは、作業前の声かけ一つで減らせる。";
     }
     if (ax === "price" || ax === "customer_fit") {

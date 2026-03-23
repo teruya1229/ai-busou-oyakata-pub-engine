@@ -46,6 +46,7 @@
 
 - **主導線の本文**: `js/engine.js` の **`buildComicManuscriptPost`** が **8ブロックの漫画原稿**を生成し、**`buildAllOutputs` の `noteBodyOnly`** はそれそのもの、**`note`** は **`# タイトル` + 原稿**。**UI**: **`#comic-manuscript-post-output`**（原稿）→ **`#note-body-only-output`** / **`#note-output`**（折りたたみ内）
 - **連載向け長文**: **`buildNote`**（見出しなしの読者向け連載文体・`buildNoteShortSpaced` 等）。**Kindle節プレビュー**（`js/kindle-engine.js`）は **`buildNote(rawInput)`** を参照。**主導線では `buildAllOutputs` から `buildNote` を毎回呼ばない**（変換回数削減）
+- **`buildFallbackLearning`（学びの補完・原稿の【今なら分かる】材料）**: 現場文に「仕様の確認が…」のように **「確認」だけ**が含まれると、旧条件では **「確認漏れは…」** に誤爆しうる。**`確認漏れ` または `漏れ`** に限定（価格・客層の題材で `inferTopicAxis` の **price** 側のフォールバックに届くようにする）
 - **タイトル案**は **`buildNoteTitleCandidateBlock(normalized)`** で生成し、**原稿本文には含めない**。`buildAllOutputs` の **`noteTitleSuggestions`**。**UI**は **`#note-title-suggestions-output`**
 - **note本文の長さ**（`noteLengthPreset`・フォーム **`#note-length-preset`**）: **`normalizeInput`** で **`short` / `standard` / `extended`** に正規化。**`buildNoteShortSpaced`** だけが **短め**（導入は芯優先・実話は先頭段落のみ・反転・学びは一句・締め短縮・入力不足の補助行は付けない）／**少し厚め**（実話が一段なら一段追加、すでに段落分かれなら気づきに一行追加）を適用。**Kindle／4コマ向け note** は従来どおり
 - **投稿前の確認メモ**（`buildNotePrePublishCheck`・**`#note-prepublish-check-output`**）: **`buildAllOutputs`** の **`notePrePublishCheck`**。**本文のみ**と**タイトル案ブロック**・入力由来のテーマ／芯から、**良い点／気になる点／投稿前に1つだけ**の軽い目安（採点ではない）。コピー導線なし

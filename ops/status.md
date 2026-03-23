@@ -1060,3 +1060,14 @@
 - **`js/engine.js`**: **`buildComicManuscriptPost`**、**`parseManuscriptSections`**、**`formatComicFromManuscript`**、**`buildComicBundle`**。**`buildComic`** は原稿駆動。**`buildAllOutputs`**: **`comicManuscriptPost`**、**`note`/`noteBodyOnly`** を原稿ベース、**`noteIntroAssist`/`noteClosingAssist`** を原稿ブロック由来
 - **`index.html` / `js/app.js`**: 先頭に **漫画化前提の投稿文（原稿）**。**スタイル向けにまとめてコピー**に原稿を先頭追加
 - **`README.md` / `ops/handoff.md`**: 主軸と `buildNote` の位置づけを更新
+
+## 今日やったこと（2026-03-23：実題材A/B・原稿→4コマ検証）
+
+### 確認（ブラウザと同一の `js/engine.js` を Node で実行）
+
+- **題材A**（業界の常識は顧客の非常識・芯・結論あり・現場メモなし）: 原稿は顧客側の違和感→学び→本質の流れが立つ。**note本文＝原稿**一致。**4コマ**は原稿ブロックの切り出しとして追える（導入と事件が近いのは既存の導入生成のため。今回は未改修）
+- **題材B**（最安値の悲劇・芯・結論あり・現場メモなし）: 初回出力で【今なら分かる】が「確認漏れは…」に**誤爆**（価格シーンの「仕様の**確認**」に `buildFallbackLearning` の「確認」条件が反応）。**`buildFallbackLearning`**: 「確認」単独マッチをやめ、**`確認漏れ` または `漏れ`** に限定。**修正後**は【今なら分かる】が価格・客層寄りに戻り、**3コマ目の気づき**も原稿と一致
+
+### コード
+
+- **`js/engine.js`**: `buildFallbackLearning` の上記最小修正のみ（他ファイル未変更）
