@@ -108,6 +108,79 @@
     return "general";
   }
 
+  /**
+   * 抽象テーマのみのとき、題材軸ごとに「今回の話を代表する1シーン」を立てる（入力欄は増やさない）
+   */
+  function concreteSceneBank(axis) {
+    const banks = {
+      human_relation: [
+        "弟子が先に話を進め、お客様の希望を聞く前に作業日を決めた。",
+        "挨拶もないままいきなり作業の話を詰め、空気が固くなった。",
+        "専門用語のまま説明が続き、お客様の表情が曇った。",
+      ],
+      apprentice_education: [
+        "弟子が筋を通さず、自分のお客様へ直接営業の話を持ち込んだ。",
+        "育成のつもりで現場に同席したが、役割の線が曖昧なまま話が進んだ。",
+      ],
+      price: [
+        "「安く」とだけ繰り返され、仕様の確認がまとまらないまま見積だけが行き来した。",
+        "安さ優先で話が雑になり、条件の確認が後回しになった。",
+      ],
+      customer_fit: [
+        "合わない層に合わせようとして、説明が空回りした。",
+        "単価の話だけが先に立ち、相手の様子を見る前に話が進んだ。",
+      ],
+      sales: [
+        "こちらの話ばかりが先に立ち、相手の不安は置き去りになった。",
+        "売ることばかり先に出て、相手の不安を聞く順番が後ろに回った。",
+      ],
+      site_ops: [
+        "注意だけ口頭で伝え、手順の一枚を共有しないまま同じ作業に入った。",
+        "協力会社の担当が同じ手順の抜けで、また同じ場所の確認が取れなかった。",
+        "マニュアルがなく、口頭の注意だけで次の現場に回った。",
+      ],
+      alignment_comm: [
+        "作業前説明を省き、お互いの前提がそろった確認を飛ばした。",
+        "専門用語のまま説明が続き、相手の顔色を見ずに話を進めた。",
+      ],
+      review: [
+        "満足のあと、口コミの導線を置かずに現場を終えた。",
+      ],
+      emotion: [
+        "気持ちを言葉にせずに判断だけを急ぎ、あとから自分でも引っかかった。",
+      ],
+      contract: [
+        "数字の話だけが先に立ち、続け方の負担は後回しにした。",
+      ],
+      general: [
+        "作業前の説明が短く、お客様の希望を聞く前に作業日を決めた。",
+        "勝手に設備を触り、止めてからの説明になった。",
+        "養生や手順の意味を説明せず、いきなり作業に入った。",
+      ],
+    };
+    return banks[axis] || banks.general;
+  }
+
+  function pickOneConcreteScene(axis, theme, coreMain, coreConclusion) {
+    const th = compactSpaces(theme || "");
+    const pack = compactSpaces((theme || "") + " " + (coreMain || "") + " " + (coreConclusion || "")).toLowerCase();
+    if ((pack.indexOf("業界") >= 0 && pack.indexOf("常識") >= 0) || th.indexOf("非常識") >= 0) {
+      return "見積の説明で専門用語のまま押し切り、お客様に「自分のことは分かりません」と言われた。";
+    }
+    if (th.indexOf("最安") >= 0 || pack.indexOf("最安") >= 0) {
+      return "「安く」とだけ繰り返され、仕様の確認がまとまらないまま見積だけが行き来した。";
+    }
+    if (pack.indexOf("人間関係") >= 0) {
+      return "挨拶と作業の話の順番が崩れ、いきなり作業日の話から入ってしまった。";
+    }
+    if (th.indexOf("協力会社") >= 0 || pack.indexOf("協力会社") >= 0) {
+      return "協力会社の担当が同じ手順の抜けで、また同じ場所の確認が取れなかった。";
+    }
+    const bank = concreteSceneBank(axis);
+    const idx = Math.abs(th.length * 13 + (coreMain || "").length * 3) % bank.length;
+    return bank[idx];
+  }
+
   function gapLabelForAxis(axis) {
     if (axis === "alignment_comm") {
       return "ズレのポイント";
@@ -162,6 +235,9 @@
   function copilotSecondLineForTopic(axis, learning, toneData) {
     const lr = clipComicLine(learning, 40);
     if (lr) {
+      if (compactSpaces(learning).length > 22) {
+        return clipComicLine(toneData.copilotShort || toneData.copilotReaction || "次、どうする？", 36);
+      }
       return lr;
     }
     if (axis === "alignment_comm") {
@@ -170,8 +246,10 @@
     return clipComicLine(toneData.copilotReaction || "一歩、試す？", 36);
   }
 
-  function buildFallbackLearning(incident) {
-    const normalizedIncident = compactSpaces(incident);
+  function buildFallbackLearning(incident, theme, coreMain, coreConclusion) {
+    const normalizedIncident = compactSpaces(
+      incident + " " + (theme || "") + " " + (coreMain || "") + " " + (coreConclusion || "")
+    );
     const ax = inferTopicAxis(normalizedIncident);
     if (normalizedIncident.indexOf("口コミ") >= 0 || normalizedIncident.indexOf("レビュー") >= 0) {
       return "満足と口コミは別。導線が要る、という感覚を学びとして残す。";
@@ -197,7 +275,7 @@
     if (ax === "alignment_comm") {
       return "伝え方と受け取り方のズレを、短い一文で切り分けておく。";
     }
-    return "今回の学びを、次の一歩に一つだけ落とす。";
+    return "次の現場では、いまの引っかかりを一文だけメモに残す。";
   }
 
   function deriveIncidentFromCore(theme, coreMain, coreConclusion) {
@@ -207,25 +285,22 @@
     if (lower.indexOf("口コミ") >= 0 || lower.indexOf("レビュー") >= 0) {
       return "関係は良くなった。喜んでもらえた。それでも口コミの導線は動かなかった。";
     }
+    const scene = pickOneConcreteScene(ax, theme, coreMain, coreConclusion);
+    if (scene) {
+      return ensurePeriod(scene);
+    }
     const stem = coreMain || coreConclusion || theme;
     if (!stem) {
       return "出来事のメモが短く、現場の輪郭だけが残った。";
     }
     const clipped = stem.length > 96 ? stem.slice(0, 96) + "…" : stem;
-    const th = compactSpaces(theme || "");
-    if (th) {
-      return ensurePeriod("この話の場面で、" + clipped + "——ここが、会話の中心に残った。");
-    }
-    if (ax === "alignment_comm") {
-      return ensurePeriod(clipped + "——伝え方と受け取り方のズレが、その日の論点になった。");
-    }
-    return ensurePeriod(clipped + "——この経験が、その日の話の中心になった。");
+    return ensurePeriod(clipped + "——その日の現場で、そこが引っかかりの中心になった。");
   }
 
-  function ensureLearningText(text, incident) {
+  function ensureLearningText(text, incident, theme, coreMain, coreConclusion) {
     const trimmed = compactSpaces(text);
     if (!trimmed) {
-      return buildFallbackLearning(incident);
+      return buildFallbackLearning(incident, theme, coreMain, coreConclusion);
     }
     if (trimmed.length < 6) {
       return `${trimmed}を開始前チェックに落とし込み、次の現場でも再現する。`;
@@ -347,16 +422,18 @@
     const coreConclusion = trimOptional(input.coreConclusion);
     const hasCoreLocks = !!(coreMain || corePhrase || coreConclusion);
 
+    let sceneGrounded = false;
     let incident = ensureIncidentText(input.incident);
     if (!trimOptional(input.incident) && (coreMain || coreConclusion)) {
       incident = deriveIncidentFromCore(theme, coreMain, coreConclusion);
+      sceneGrounded = true;
     }
 
     let learning;
     if (trimOptional(input.learning)) {
-      learning = ensureLearningText(input.learning, incident);
+      learning = ensureLearningText(input.learning, incident, theme, coreMain, coreConclusion);
     } else {
-      learning = ensureLearningText("", incident);
+      learning = ensureLearningText("", incident, theme, coreMain, coreConclusion);
     }
 
     const characters = normalizeCharacters(input.characters);
@@ -394,6 +471,7 @@
       notePreset,
       noteLengthPreset,
       topicAxis,
+      sceneGrounded,
     };
   }
 
@@ -547,23 +625,77 @@
     return t.length <= maxLen ? t : t.slice(0, maxLen - 1) + "…";
   }
 
+  /** 2コマ目の本文：抽象の芯そのものではなく、相手側の引っかかり */
+  function frictionFromIncident(axis, incident, normalized) {
+    const inc = compactSpaces((incident || "").toLowerCase());
+    if (inc.indexOf("専門用語") >= 0 || inc.indexOf("分かりません") >= 0) {
+      return "お客様の反応が固く、一歩引いた感じになった。";
+    }
+    if (inc.indexOf("弟子") >= 0 && (inc.indexOf("お客") >= 0 || inc.indexOf("営業") >= 0)) {
+      return "お客様の返事が短く、空気が気まずくなった。";
+    }
+    if (inc.indexOf("安く") >= 0 || inc.indexOf("見積") >= 0) {
+      return "相手の様子を見ずに、条件だけが先に押し出された。";
+    }
+    if (inc.indexOf("協力会社") >= 0 && inc.indexOf("ミス") >= 0) {
+      return "また同じ箇所で手戻りが出て、現場が止まった。";
+    }
+    if (axis === "review") {
+      return "満足はしてもらえているのに、口コミにはつながらない落差が残った。";
+    }
+    if (axis === "human_relation" || axis === "apprentice_education") {
+      return "お客様の表情が曇り、一歩引いた感じになった。";
+    }
+    if (axis === "price" || axis === "customer_fit") {
+      return "相手のペースが合わず、話がすれ違った。";
+    }
+    if (axis === "site_ops") {
+      return "また同じ手順の抜けが出て、確認が後追いになった。";
+    }
+    if (axis === "sales") {
+      return "こちらの話ばかりが先に立ち、相手の不安は置き去りだった。";
+    }
+    return "相手の反応が固く、一歩引いた感じになった。";
+  }
+
+  /** 3コマ目の親方1行目：何がまずかったか（抽象テーマの言い換えだけにしない） */
+  function oykataInsightFirstLine(normalized) {
+    const inc = compactSpaces((normalized.incident || "").toLowerCase());
+    const ax = normalized.topicAxis || "general";
+    if (inc.indexOf("専門用語") >= 0 || inc.indexOf("分かりません") >= 0) {
+      return "説明の順番が業者の当たり前で、相手の不安を置き去りにしていた。";
+    }
+    if (inc.indexOf("弟子") >= 0 && (inc.indexOf("お客") >= 0 || inc.indexOf("営業") >= 0)) {
+      return "自分の都合の話を先に立て、相手の筋を踏まずに進めていた。";
+    }
+    if (inc.indexOf("安く") >= 0 || inc.indexOf("見積") >= 0) {
+      return "安さの話だけが先に立ち、相手の様子を見る順番が後ろに回っていた。";
+    }
+    if (inc.indexOf("協力会社") >= 0 || inc.indexOf("マニュアル") >= 0 || inc.indexOf("手順") >= 0) {
+      return "注意だけでは、同じ抜けを繰り返しやすいところが残っていた。";
+    }
+    if (ax === "site_ops") {
+      return "手順が一枚に乗っていないと、同じミスが続きやすい。";
+    }
+    if (ax === "price" || ax === "customer_fit") {
+      return "価格の話だけが先に立ち、相性の確認が後回しになっていた。";
+    }
+    if (ax === "human_relation") {
+      return "人としての筋より、自分の話の速さを優先していた。";
+    }
+    return clipComicLine(normalized.coreMain || "", 44);
+  }
+
   function buildComicGapNarrative(normalized, incidentForComic, reviewMode) {
     const axisKey = reviewMode ? "review" : normalized.topicAxis || "general";
     const label = gapLabelForAxis(axisKey);
+    const cleanInc = compactSpaces(incidentForComic.replace(/^状況:\s*/, ""));
     if (reviewMode) {
-      const cm = compactSpaces(normalized.coreMain || "");
-      if (cm) {
-        return label + ": " + clipComicLine(cm, 72);
-      }
-      return label + ": 満足と口コミの導線が、別の話になっている。";
+      const friction = frictionFromIncident("review", cleanInc, normalized);
+      return label + ": " + clipComicLine(friction, 80);
     }
-    const cm = compactSpaces(normalized.coreMain || "");
-    if (cm) {
-      return label + ": " + clipComicLine(cm, 76);
-    }
-    const inc = compactSpaces(incidentForComic.replace(/^状況:\s*/, ""));
-    const first = inc.split(/[。！？!?]/)[0] || inc;
-    return label + ": " + clipComicLine(first, 76);
+    const friction = frictionFromIncident(axisKey, cleanInc, normalized);
+    return label + ": " + clipComicLine(friction, 80);
   }
 
   function buildComicInsightNarrative(normalized) {
@@ -587,7 +719,7 @@
       return comicPanel3Dialogue(toneData, protagonist, partner, style);
     }
     const axis = normalized.topicAxis || "general";
-    const a = clipComicLine(normalized.coreMain || normalized.theme, 40);
+    const a = clipComicLine(oykataInsightFirstLine(normalized), 44);
     const b = clipComicLine(copilotSecondLineForTopic(axis, normalized.learning, toneData), 40);
     return [`${protagonist}: ${a}`, `${partner}: ${b}`];
   }
@@ -1029,6 +1161,9 @@
     if (fr.length === 1) {
       let s = polishRoughIncidentClause(fr[0]);
       if (compactSpaces(s).length < 22 && normalized.coreMain) {
+        if (normalized.sceneGrounded) {
+          return ensurePeriod(s);
+        }
         s = "この場面で、" + s + "——ここが、その日の出来事の芯だった。";
       }
       return ensurePeriod(s);
@@ -1536,6 +1671,36 @@
     return buildNoteClosingNoConclusionTied(normalized, reviewish, p, bundle);
   }
 
+  function buildNoteConclusionNextLine(normalized) {
+    const ax = normalized.topicAxis || inferTopicAxis(noteContextBundle(normalized));
+    const phrase = compactSpaces(normalized.corePhrase || "");
+    if (phrase) {
+      return "次は「" + phrase + "」を、次の一件の接し方に一つだけ入れる。";
+    }
+    if (ax === "general" || ax === "sales" || ax === "alignment_comm") {
+      return "次は、話す前に相手の不安を一言だけ聞く時間を取る。";
+    }
+    if (ax === "human_relation" || ax === "apprentice_education") {
+      return "次は、人としての筋を先に置いてから、仕事の話を進める。";
+    }
+    if (ax === "price" || ax === "customer_fit") {
+      return "次は、価格の前に相手の様子を見る順番に変える。";
+    }
+    if (ax === "site_ops") {
+      return "次は、手順を一枚にして、同じ抜けを再発させない。";
+    }
+    if (ax === "review") {
+      return "次は、満足の直後に置く声かけを一つだけ決める。";
+    }
+    if (ax === "emotion") {
+      return "次は、感情を一行に書いてから、判断に移る。";
+    }
+    if (ax === "contract") {
+      return "次は、続け方の負担を数字だけで見ない。";
+    }
+    return "次は、いまの結論を次の応対の一つに組み込む。";
+  }
+
   function buildNoteFinalBlock(normalized) {
     const bundle = noteFinalClosingBundle(normalized);
     const srcLegacy = ((normalized.theme || "") + " " + (normalized.incident || "")).toLowerCase();
@@ -1543,10 +1708,7 @@
     const reviewishBranch = bundle.indexOf("口コミ") >= 0 || bundle.indexOf("レビュー") >= 0;
     const p = normalized.notePreset || "";
     if (normalized.coreConclusion) {
-      const phrase = compactSpaces(normalized.corePhrase || "");
-      const nextLine = phrase
-        ? "次は、「" + phrase + "」を一つだけ入れて試す。"
-        : "次は、この結論を一つだけ行動に落とす。";
+      const nextLine = buildNoteConclusionNextLine(normalized);
       return normalized.coreConclusion + "\n\n" + nextLine;
     }
     return buildNoteFinalTailNoConclusion(normalized, reviewishBranch, p, bundle);
@@ -1986,8 +2148,8 @@
 
   function shortenNoteFinalBlockForLength(normalized) {
     if (normalized.coreConclusion) {
-      const phrase = compactSpaces(normalized.corePhrase || "");
-      const nextLine = phrase ? "次は「" + phrase + "」を一つ。" : "次はこの結論を一つに落とす。";
+      const full = buildNoteConclusionNextLine(normalized);
+      const nextLine = firstSentenceJapanese(full) || full;
       return normalized.coreConclusion + "\n\n" + nextLine;
     }
     const bundle = noteFinalClosingBundle(normalized);
