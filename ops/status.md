@@ -1187,3 +1187,9 @@
 ### 内容
 
 - **`js/engine.js`**: 見積・専門用語系の **【事件】** 候補と **`frictionFromIncident`（customer_side）** の一文を、口語として不自然になりやすい台詞表現から **地の文**へ最小差分で調整。
+
+## 今日やったこと（2026-03-24：customer_side【今なら分かる】・行動ルール）
+
+### 内容
+
+- **`js/engine.js`**: **`buildFallbackLearning`**（`customer_side`）と **`buildNoteConclusionNextLine`**（`customer_side` 分岐追加）を、**5/8・7/8 相当の本文**が生成文っぽくならないよう最小調整。
