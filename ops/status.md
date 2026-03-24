@@ -1193,3 +1193,9 @@
 ### 内容
 
 - **`js/engine.js`**: **`buildFallbackLearning`**（`customer_side`）と **`buildNoteConclusionNextLine`**（`customer_side` 分岐追加）を、**5/8・7/8 相当の本文**が生成文っぽくならないよう最小調整。
+
+## 今日やったこと（2026-03-24：customer_side 原稿8ブロックの自然化）
+
+### 内容
+
+- **`js/engine.js`**: シーン・反転・学び・行動の **customer_side 経路**と、原稿の【強い一言】【本質】の **軽い整形**を追加し、題材A/D で **通しの文体**を実話寄りに寄せた。

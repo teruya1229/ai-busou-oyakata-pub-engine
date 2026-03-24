@@ -190,7 +190,7 @@
         "専門用語のまま説明が続き、相手の顔色を見ずに話を進めた。",
       ],
       customer_side: [
-        "見積の説明で専門用語のまま押し切り、お客様に置いていかれている空気になった。",
+        "見積の説明で専門用語のまま押し切ってしまい、お客様の返事が短くなった。",
         "説明を省いて先に進め、お客様の顔色が曇った。",
         "こちらの当たり前の順番で話し、お客様が聞き返しを繰り返した。",
       ],
@@ -216,7 +216,7 @@
     const th = compactSpaces(theme || "");
     const pack = compactSpaces((theme || "") + " " + (coreMain || "") + " " + (coreConclusion || "")).toLowerCase();
     if ((pack.indexOf("業界") >= 0 && pack.indexOf("常識") >= 0) || th.indexOf("非常識") >= 0) {
-      return "見積の説明で専門用語のまま押し切り、お客様に置いていかれている空気になった。";
+      return "見積の説明で専門用語のまま押し切ってしまい、お客様の返事が短くなった。";
     }
     if (th.indexOf("最安") >= 0 || pack.indexOf("最安") >= 0) {
       return "「安く」とだけ繰り返され、仕様の確認がまとまらないまま見積だけが行き来した。";
@@ -325,7 +325,7 @@
       return "価格は、集客だけでなく客層の作り方も変える。次の一歩を一つにする。";
     }
     if (ax === "customer_side") {
-      return "説明より先に、相手がどこで止まっているか聞くべきだった。";
+      return "あとから思うと、説明の前に、どこで止まっているか聞けばよかった。";
     }
     if (ax === "human_relation") {
       return "人としての線引きと、ルールを、まず短く言語化しておく。";
@@ -848,6 +848,40 @@
   }
 
   /**
+   * 原稿【強い一言】：customer_side のみ、入力の意味を保ちつつ実話寄りの短い一文に整える。
+   */
+  function polishCustomerSideManuscriptPunch(coreMain) {
+    const t = compactSpaces(coreMain || "");
+    if (!t) {
+      return t;
+    }
+    if (t.indexOf("専門用語") >= 0 && t.indexOf("押し切") >= 0) {
+      return "説明の速さが、相手の不安より先に立った。";
+    }
+    if (t.indexOf("当たり前") >= 0 && t.indexOf("早すぎ") >= 0) {
+      return "こちらの手順の当たり前が、相手には少し早かった。";
+    }
+    return t;
+  }
+
+  /**
+   * 原稿【本質】：customer_side のみ、標語調を弱めて短い実話の結論に寄せる。
+   */
+  function polishCustomerSideManuscriptEssence(conclusion, coreMain) {
+    const t = compactSpaces(conclusion || coreMain || "");
+    if (!t) {
+      return "";
+    }
+    if (t.indexOf("お客様の言葉") >= 0 && t.indexOf("言い直す") >= 0) {
+      return "お客様の言葉で一度言い直すと、伝わり方が変わる。";
+    }
+    if (t.indexOf("相手の言葉") >= 0 && t.indexOf("言い直す") >= 0) {
+      return "相手の言葉で一度言い直すと、伝わり方が変わる。";
+    }
+    return "";
+  }
+
+  /**
    * 原稿【導入】：テーマで場に入る一文（【事件】の実話本文と役割を分ける）
    */
   function buildComicManuscriptIntroLine(normalized, toneData, story) {
@@ -869,7 +903,10 @@
     if (!incident) {
       incident = compactSpaces(ensureIncidentText(normalized.incident).replace(/\n+/g, " ").trim()).slice(0, 420);
     }
-    const punch = compactSpaces(normalized.coreMain || "") || "ここが、いちばん引っかかった。";
+    let punch = compactSpaces(normalized.coreMain || "") || "ここが、いちばん引っかかった。";
+    if ((normalized.topicAxis || "") === "customer_side" && normalized.coreMain) {
+      punch = polishCustomerSideManuscriptPunch(normalized.coreMain);
+    }
     const turn = buildNoteTurnAndWhy(normalized);
     const learningLine = dedupeLearningVersusTurn(
       normalized.learning ||
@@ -879,8 +916,14 @@
     );
     const thenSelf = firstSentenceJapanese(turn) || turn.slice(0, 140);
     const nowKnow = firstSentenceJapanese(learningLine) || learningLine.slice(0, 160);
-    const essence =
+    let essence =
       compactSpaces(normalized.coreConclusion || normalized.coreMain || "") || "本質は、言葉にしてから動くところだ。";
+    if ((normalized.topicAxis || "") === "customer_side") {
+      const essPol = polishCustomerSideManuscriptEssence(normalized.coreConclusion, normalized.coreMain);
+      if (essPol) {
+        essence = essPol;
+      }
+    }
     let ruleBlock = "";
     if (normalized.coreConclusion) {
       ruleBlock = buildNoteConclusionNextLine(normalized);
@@ -1667,15 +1710,15 @@
     }
     if (axis === "customer_side") {
       if (p === "strong") {
-        return "だが、こちらの当たり前が、相手には冷たい順番に聞こえる。";
+        return "だが、こちらの当たり前が、相手には冷たい順番に聞こえていた。";
       }
       if (p === "soft") {
-        return "けれど、説明の前に不安を聞く余白がないと、距離が開く。";
+        return "けれど、説明の前に不安を聞く余白がなくて、距離が開いた。";
       }
       if (p === "biz") {
-        return "でも、顧客感覚は「聞く順番」で変わることが多い。";
+        return "でも、聞く順番を変えると、距離が縮まることが多い。";
       }
-      return "でも、こちらの常識が、相手には不親切に聞こえることがある。";
+      return "でも、こちらの当たり前が、相手には冷たく聞こえていた。";
     }
     if (axis === "alignment_comm") {
       if (p === "strong") {
@@ -2032,7 +2075,7 @@
       return "次は、続け方の負担を数字だけで見ない。";
     }
     if (ax === "customer_side") {
-      return "次からは、説明の前にまず不安を聞く。";
+      return "次からは、説明に入る前に、不安を聞く。";
     }
     return "次は、いまの結論を次の応対の一つに組み込む。";
   }

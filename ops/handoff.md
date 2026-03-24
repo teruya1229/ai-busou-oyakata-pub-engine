@@ -54,6 +54,10 @@
 
 - **`js/engine.js`**: `buildFallbackLearning` の **customer_side** 一文（学びフォールバック）と、`buildNoteConclusionNextLine` の **`customer_side` 専用分岐**（従来は汎用フォールバックに落ちていた）を、**口語に近い短い一文**へ最小調整。
 
+### customer_side 原稿8ブロックの自然化（2026-03-24）
+
+- **`js/engine.js`**: `concreteSceneBank` / `pickOneConcreteScene` の見積・業界×常識シーン、`pickNoteTurnForTopicAxis`（**customer_side**）、`buildFallbackLearning` / `buildNoteConclusionNextLine`（**customer_side**）を **実話の温度**に寄せて調整。**`buildComicManuscriptPost`** に **`polishCustomerSideManuscriptPunch` / `polishCustomerSideManuscriptEssence`** を追加し、典型パターンの【強い一言】【本質】を短く整える（**他軸・8/8 問い・UI は未変更**）。
+
 ## UI文言（参考）
 
 - **1行メモ（超簡易）**: フォーム最上段の **1行メモ** にだけ入力しても生成可能。`｜` または `|` で **テーマ｜伝えたいこと｜結論** と分割した場合は **その優先**（2分割＝テーマ＋伝えたいこと、3分割＝結論まで）。**1行のみ**（区切りなし）のときは、`js/app.js` の `expandSingleSegmentMemo` が **`。！？` の文区切り**、または **`けど` / `でも` / `のに` / `だから`** で **theme（題名向け短縮）／coreMain／coreConclusion** に軽く分ける（各入力欄の表示は変えず、`getInputFromForm` の論理値のみ）。**タイトルテーマ／一番伝えたいこと／結論の欄に文字があるときは、フォーム値を優先**し、1行メモは **空欄の項目の補助**（`getInputFromForm` の `mergeField`）。接続詞で **`left` が空**（例: 文頭が「だから」）のときは **`theme` に全文をフォールバック**（`shortenTitleLike(left || full, …)`）。空なら従来の最小入力3欄どおり
