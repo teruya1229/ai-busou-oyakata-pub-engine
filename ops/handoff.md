@@ -31,7 +31,7 @@
 ### 残る違和感（共通）
 
 - **2026-03-24 反映**: **3/8〜6/8** の表示ラベルを原稿ブロック（【強い一言】〜【本質】）に合わせて修正（`js/engine.js` の `COMIC_PANEL_LABELS`・`getComicPanelMetaForExtraction`・芯固定の「ネームの流れ」）。
-- **2026-03-24 追記**: 【読者への問い】は **`buildReaderQuestionForManuscript`** で **`topicAxis`**（`customer_side` / `price`・`customer_fit` / その他）ごとに **一文だけ**差し替え。上記以外の軸は **従来の汎用一文**のまま。
+- **2026-03-24 追記**: 【読者への問い】は **`buildReaderQuestionForManuscript`** で **`topicAxis`**（`customer_side` / `price`・`customer_fit` / **`site_ops`** / その他）ごとに **一文だけ**差し替え。上記以外の軸は **従来の汎用一文**のまま。
 
 ### 次回検討（別タスク・必要なら）
 

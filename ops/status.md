@@ -1175,3 +1175,9 @@
 ### 内容
 
 - **`js/engine.js`**: **`buildReaderQuestionForManuscript`** を追加。原稿の【読者への問い】のみを **`topicAxis`** に応じて一文に分岐（`customer_side`・`price` / `customer_fit`・その他フォールバック）。**他ブロックの生成ロジック・順序は未変更**。
+
+## 今日やったこと（2026-03-24：8/8 読者への問い・site_ops）
+
+### 内容
+
+- **`js/engine.js`**: **`buildReaderQuestionForManuscript`** に **`site_ops`** 分岐を **一文だけ**追加（手順・仕組み・再発防止に寄せる問い）。**他 `topicAxis`・1/8〜7/8 は未変更**。
