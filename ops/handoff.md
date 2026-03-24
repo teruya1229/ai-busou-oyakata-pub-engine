@@ -44,6 +44,10 @@
 - **`js/templates.js`**: `unifiedImagePrompt.panelArchetype` の「1〜4コマ目」表記を **1/8〜4/8（例）** に変更し、**8コマ主線**と矛盾しない参照用サンプルに整理（**未使用データ**のまま）。**`comicBaseTemplate.panel4`**（未使用）の「小さな学びで終わる」を **余韻・問い**に合わせた一文に変更。
 - **`js/engine.js`**: `buildNoteClosingNoConclusionTied` 付近の**コメント**のみ「4コマ向け」→「旧短縮ネーム向け」に置換。**挙動は変更なし**。
 
+### 主線外ドキュメント整合（2026-03-24 追記・`docs/` のみ）
+
+- **`docs/chapter-mapping-examples.md`**, **`evaluation-guide.md`**, **`evaluation-log.md`**, **`sample-section-drafts.md`**, **`sample-section-draft-v2.md`**, **`sample-kindle-chapter-outline.md`**, **`sample-kindle-chapter-draft-v1.md`**, **`sample-kindle-chapter-draft-v2.md`**: 「4コマが主役」「X が主線」「毎回 Kindle」と読める表記を **最小修正**し、**原稿・8コマネーム・note／旧 `comicLegacy4`／X 主線外／Kindle は将来の別モード** と整合。**README・`js/`・UI は未変更**。
+
 ## UI文言（参考）
 
 - **1行メモ（超簡易）**: フォーム最上段の **1行メモ** にだけ入力しても生成可能。`｜` または `|` で **テーマ｜伝えたいこと｜結論** と分割した場合は **その優先**（2分割＝テーマ＋伝えたいこと、3分割＝結論まで）。**1行のみ**（区切りなし）のときは、`js/app.js` の `expandSingleSegmentMemo` が **`。！？` の文区切り**、または **`けど` / `でも` / `のに` / `だから`** で **theme（題名向け短縮）／coreMain／coreConclusion** に軽く分ける（各入力欄の表示は変えず、`getInputFromForm` の論理値のみ）。**タイトルテーマ／一番伝えたいこと／結論の欄に文字があるときは、フォーム値を優先**し、1行メモは **空欄の項目の補助**（`getInputFromForm` の `mergeField`）。接続詞で **`left` が空**（例: 文頭が「だから」）のときは **`theme` に全文をフォールバック**（`shortenTitleLike(left || full, …)`）。空なら従来の最小入力3欄どおり

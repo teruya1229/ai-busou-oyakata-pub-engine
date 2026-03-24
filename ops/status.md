@@ -1151,3 +1151,14 @@
 - **`js/templates.js`**: **`unifiedImagePrompt.panelArchetype`** を **1/8〜4/8（例）** 表記に。**`comicBaseTemplate.panel4`**（未使用）の締め文を **余韻・問い**に合わせる。
 - **`js/engine.js`**: **`buildNoteClosingNoConclusionTied` 周辺コメント**のみ（**挙動変更なし**）。
 - **`ops/handoff.md` / `ops/status.md`**: 上記を追記。
+
+## 今日やったこと（2026-03-24：主線外 `docs/` 表記整合）
+
+### 内容
+
+- **対象**: `docs/chapter-mapping-examples.md`, `docs/evaluation-guide.md`, `docs/evaluation-log.md`, `docs/sample-section-drafts.md`, `docs/sample-section-draft-v2.md`, `docs/sample-kindle-chapter-outline.md`, `docs/sample-kindle-chapter-draft-v1.md`, `docs/sample-kindle-chapter-draft-v2.md`
+- **方針**: 「4コマが標準」「X が主線」「毎回 Kindle 同時生成」と読める説明だけを **最小差分**で、**漫画原稿＝一次ソース・8コマ標準ネーム・note 主線／旧4コマは旧形式／X は主線外／Kindle は将来の別モード** に合わせた。旧機能の記述そのものは削除していない。
+
+### 未変更
+
+- **`README.md`**、コード本体、**`index.html`／UI ラベル**は触っていない。
