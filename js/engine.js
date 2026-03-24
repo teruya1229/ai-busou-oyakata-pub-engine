@@ -831,6 +831,20 @@
   }
 
   /**
+   * 原稿【読者への問い】：8/8 のみ。題材軸に軽く寄せ、それ以外は従来の汎用一文。
+   */
+  function buildReaderQuestionForManuscript(normalized) {
+    const ax = normalized.topicAxis || "general";
+    if (ax === "customer_side") {
+      return "次の一件で、あなたなら説明より先に何を聞きますか？";
+    }
+    if (ax === "price" || ax === "customer_fit") {
+      return "次の一件で、あなたなら価格より先に何を見ますか？";
+    }
+    return "次の一件で、あなたなら最初に変えるとしたら何ですか？";
+  }
+
+  /**
    * 原稿【導入】：テーマで場に入る一文（【事件】の実話本文と役割を分ける）
    */
   function buildComicManuscriptIntroLine(normalized, toneData, story) {
@@ -870,7 +884,7 @@
     } else {
       ruleBlock = ensurePeriod(firstSentenceJapanese(learningLine) || learningLine) + "\n" + buildNoteConclusionNextLine(normalized);
     }
-    const readerQ = "次の一件で、あなたなら最初に変えるとしたら何ですか？";
+    const readerQ = buildReaderQuestionForManuscript(normalized);
     return [
       "【導入】" + intro,
       "【事件】" + incident,

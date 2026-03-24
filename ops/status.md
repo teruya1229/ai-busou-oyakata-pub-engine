@@ -1168,4 +1168,10 @@
 ### 内容
 
 - **`js/engine.js`**: **`COMIC_PANEL_LABELS`** の **p3〜p6**（3/8〜6/8）を、原稿の **【強い一言】【当時の自分の認識】【今なら分かる】【本質】** に対応する表現に変更。**`getComicPanelMetaForExtraction`** の **`name`**（描画・統合プロンプトの見出し用）と、**芯固定**の「ネームの流れ」一行を同趣旨で更新。
-- **未変更**: 原稿生成（`buildComicManuscriptPost`）、ブロック順、`formatComicFromManuscript` の割り当て、**8/8 問い**、**UI・README**。
+- **未変更**: 原稿生成の **1/8〜7/8**、ブロック順、`formatComicFromManuscript` の割り当て、**UI・README**。
+
+## 今日やったこと（2026-03-24：8/8 読者への問い・題材軸）
+
+### 内容
+
+- **`js/engine.js`**: **`buildReaderQuestionForManuscript`** を追加。原稿の【読者への問い】のみを **`topicAxis`** に応じて一文に分岐（`customer_side`・`price` / `customer_fit`・その他フォールバック）。**他ブロックの生成ロジック・順序は未変更**。
