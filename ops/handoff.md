@@ -58,6 +58,10 @@
 
 - **`js/engine.js`**: `concreteSceneBank` / `pickOneConcreteScene` の見積・業界×常識シーン、`pickNoteTurnForTopicAxis`（**customer_side**）、`buildFallbackLearning` / `buildNoteConclusionNextLine`（**customer_side**）を **実話の温度**に寄せて調整。**`buildComicManuscriptPost`** に **`polishCustomerSideManuscriptPunch` / `polishCustomerSideManuscriptEssence`** を追加し、典型パターンの【強い一言】【本質】を短く整える（**他軸・8/8 問い・UI は未変更**）。
 
+### customer_side 4/8・5/8・7/8 の自然化（確定文・2026-03-24）
+
+- **`js/engine.js` のみ（最小3箇所）**: **`pickNoteTurnForTopicAxis`（customer_side・標準プリセット）** の【当時の自分の認識】相当の既定一行、**`buildFallbackLearning`（customer_side）** の【今なら分かる】フォールバック、**`buildNoteConclusionNextLine`（customer_side）** の【以後の行動ルール】を、確定した自然化文案へ差し替え。**8/8・他軸・templates・UI は未変更**。
+
 ### customer_side【事件】〜【行動ルール】の再自然化（2026-03-24 追記）
 
 - **`js/engine.js`**: 【事件】は **相手の反応が見える地の文**に寄せ、`buildFallbackLearning` の **customer_side** は **後悔と気づきを一句**にまとめ（`firstSentenceJapanese` による **二文目欠落**を避ける）、【以後の行動ルール】は **自分への約束**調に。**`frictionFromIncident`（customer_side）`** を同趣味に。**他軸・UI・README は未変更**。

@@ -1211,3 +1211,8 @@
 - **`main`**: **`aadb5fe`** — `fix: make customer-side manuscript flow sound fully natural`（**origin/main** と一致想定。`git pull` 済みなら同一）
 - **customer_side**: 題材A/D 想定の **8ブロック／8コマネーム**で、**【事件】の反応描写**・**【今なら分かる】の一句化（5/8 欠落防止）**・**【以後の行動ルール】の自分への決め**まで反映済み
 - **次に見るなら（任意）**: 手入力の **学び** が長いときの **5/8**（`firstSentenceJapanese`）、**4/8・6/8** の追加微調整は別タスク
+
+## 今日やったこと（2026-03-24：customer_side 4/8・5/8・7/8 確定文）
+
+- **`js/engine.js`**: `pickNoteTurnForTopicAxis`（customer_side・標準）／`buildFallbackLearning`（customer_side）／`buildNoteConclusionNextLine`（customer_side）の **3箇所のみ**を確定文案へ差し替え（**8/8・他軸・templates・UI は未変更**）
+- **`ops/handoff.md` / `ops/status.md`**: 上記を最小追記
