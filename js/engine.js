@@ -190,7 +190,7 @@
         "専門用語のまま説明が続き、相手の顔色を見ずに話を進めた。",
       ],
       customer_side: [
-        "見積の説明で専門用語のまま押し切り、お客様に「自分のことは分かりません」と言われた。",
+        "見積の説明で専門用語のまま押し切り、お客様に置いていかれている空気になった。",
         "説明を省いて先に進め、お客様の顔色が曇った。",
         "こちらの当たり前の順番で話し、お客様が聞き返しを繰り返した。",
       ],
@@ -216,7 +216,7 @@
     const th = compactSpaces(theme || "");
     const pack = compactSpaces((theme || "") + " " + (coreMain || "") + " " + (coreConclusion || "")).toLowerCase();
     if ((pack.indexOf("業界") >= 0 && pack.indexOf("常識") >= 0) || th.indexOf("非常識") >= 0) {
-      return "見積の説明で専門用語のまま押し切り、お客様に「自分のことは分かりません」と言われた。";
+      return "見積の説明で専門用語のまま押し切り、お客様に置いていかれている空気になった。";
     }
     if (th.indexOf("最安") >= 0 || pack.indexOf("最安") >= 0) {
       return "「安く」とだけ繰り返され、仕様の確認がまとまらないまま見積だけが行き来した。";
@@ -696,7 +696,7 @@
     const inc = compactSpaces((incident || "").toLowerCase());
     if (inc.indexOf("専門用語") >= 0 || inc.indexOf("分かりません") >= 0) {
       if (axis === "customer_side") {
-        return "お客様は「自分のことは分からない」と言い、表情が固くなった。";
+        return "お客様の反応が止まり、表情が固くなった。";
       }
       return "お客様の反応が固く、一歩引いた感じになった。";
     }

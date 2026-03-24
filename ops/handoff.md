@@ -46,6 +46,10 @@
 
 - **`docs/chapter-mapping-examples.md`**, **`evaluation-guide.md`**, **`evaluation-log.md`**, **`sample-section-drafts.md`**, **`sample-section-draft-v2.md`**, **`sample-kindle-chapter-outline.md`**, **`sample-kindle-chapter-draft-v1.md`**, **`sample-kindle-chapter-draft-v2.md`**: 「4コマが主役」「X が主線」「毎回 Kindle」と読める表記を **最小修正**し、**原稿・8コマネーム・note／旧 `comicLegacy4`／X 主線外／Kindle は将来の別モード** と整合。**README・`js/`・UI は未変更**。
 
+### customer_side の【事件】表現（2026-03-24）
+
+- **`js/engine.js`**: `concreteSceneBank.customer_side` の見積・専門用語の1例と、`pickOneConcreteScene` の業界×常識オーバーライドを、**不自然なカギカッコ台詞**から **地の文（空気・反応）**へ。`frictionFromIncident` の **customer_side** 分岐も同趣旨で短縮。
+
 ## UI文言（参考）
 
 - **1行メモ（超簡易）**: フォーム最上段の **1行メモ** にだけ入力しても生成可能。`｜` または `|` で **テーマ｜伝えたいこと｜結論** と分割した場合は **その優先**（2分割＝テーマ＋伝えたいこと、3分割＝結論まで）。**1行のみ**（区切りなし）のときは、`js/app.js` の `expandSingleSegmentMemo` が **`。！？` の文区切り**、または **`けど` / `でも` / `のに` / `だから`** で **theme（題名向け短縮）／coreMain／coreConclusion** に軽く分ける（各入力欄の表示は変えず、`getInputFromForm` の論理値のみ）。**タイトルテーマ／一番伝えたいこと／結論の欄に文字があるときは、フォーム値を優先**し、1行メモは **空欄の項目の補助**（`getInputFromForm` の `mergeField`）。接続詞で **`left` が空**（例: 文頭が「だから」）のときは **`theme` に全文をフォールバック**（`shortenTitleLike(left || full, …)`）。空なら従来の最小入力3欄どおり
