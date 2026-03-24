@@ -8,7 +8,7 @@
 
 ## 8コマ主線の現状態と確認（2026-03-23 追記）
 
-- **記録上のコード位置**: 直近の主線まわりの整理は **`f03f95c`** を起点に読む（導入・原稿・統合プロンプトの最小修正を含む）。
+- **記録上のコード位置（2026-03-24 更新）**: **`main` の先端は `aadb5fe`**（customer_side の原稿 **2/8・3/8・5/8・7/8** を `concreteSceneBank` / `pickOneConcreteScene` / `frictionFromIncident` / `buildFallbackLearning` / `buildNoteConclusionNextLine` / `polishCustomerSideManuscriptPunch` で再調整済み）。それ以前の主線整理は **`f03f95c`** 付近を参照（導入・原稿・統合プロンプトの最小修正を含む）。
 - **2026-03-23 の確認タスク**: **コード変更なし**。`buildAllOutputs` の生成結果を題材A/Bで確認（ブラウザの「構成を生成」と同じエンジン出力。実機は Node 実行で代替）。
 
 ### 直近修正の反映状況（生成テキスト上）

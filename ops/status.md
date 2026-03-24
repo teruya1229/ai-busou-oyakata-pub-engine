@@ -1205,3 +1205,9 @@
 ### 内容
 
 - **`js/engine.js`**: **`concreteSceneBank` / `pickOneConcreteScene`**（相手の相づち・聞き返しの変化）、**`frictionFromIncident`（customer_side）`**、**`buildFallbackLearning`**（後悔と気づきを **一文**に収め `firstSentenceJapanese` で切られないよう句点を一つに）、**`buildNoteConclusionNextLine`**（自分への決め）、**`polishCustomerSideManuscriptPunch`**（体感寄りの短文）を **customer_side のみ**最小差分で調整。
+
+## 現在の状態（2026-03-24 更新）
+
+- **`main`**: **`aadb5fe`** — `fix: make customer-side manuscript flow sound fully natural`（**origin/main** と一致想定。`git pull` 済みなら同一）
+- **customer_side**: 題材A/D 想定の **8ブロック／8コマネーム**で、**【事件】の反応描写**・**【今なら分かる】の一句化（5/8 欠落防止）**・**【以後の行動ルール】の自分への決め**まで反映済み
+- **次に見るなら（任意）**: 手入力の **学び** が長いときの **5/8**（`firstSentenceJapanese`）、**4/8・6/8** の追加微調整は別タスク
