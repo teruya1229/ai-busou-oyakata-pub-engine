@@ -8,6 +8,20 @@
 
 ## 8コマ主線の現状態と確認（2026-03-23 追記）
 
+### customer_side・現状態（2026-03-24・ops 同期）
+
+- **記録の範囲**: **コード変更なし**。**`ops/handoff.md` / `ops/status.md`** に、直近の **customer_side** 自然化まで含めた **current state** を書き戻した（**2026-03-24**）。
+- **現状態**: 主線は **note 投稿**。投稿文＝**漫画原稿**（`comicManuscriptPost`）＝一次ソース。**標準は 8コマネーム**（旧 **4コマ** は `comicLegacy4` のみ）。**長文 note / Kindle / X** は主線外の扱い（変更なし）。
+- **直近で反映済み（実装・`ca3b90d`）**: `customer_side` の **4/8・5/8・7/8** を確定文案へ更新済み。関連コミット: **`fix: refine customer-side manuscript voice after naturalization pass`**（**`ca3b90d`**）。
+- **反映済み文案の要点**:
+  - **4/8【当時の自分の認識】**（標準プリセット・`pickNoteTurnForTopicAxis`）: こちらは普通に進めているつもりで、相手が止まっていることに気づいていなかった。
+  - **5/8【今なら分かる】**（学び空時フォールバック・`buildFallbackLearning`）: あのとき相手が止まっていたのは、説明じゃなくて不安だった。
+  - **7/8【以後の行動ルール】**（`coreConclusion` あり時の次行・`buildNoteConclusionNextLine`）: 説明より先に、不安を一言だけ聞く。それだけ決めた。
+- **確認済み**: 題材A・題材Dで、**漫画原稿と 8コマネームの対応**を **Node の `buildAllOutputs` 経路**で確認済み。
+- **未確認**: ブラウザ実機の **表示・折り返し**（従来どおり **未確認**）。
+- **次回候補（別タスク）**: **学び入力が長いときの 5/8** の扱い。必要なら **実機表示確認**。
+- **先端ハッシュ**: **`main` の先端**は **origin/main** と照合（**volatile な先端固定ハッシュは書かない**）。
+
 - **記録上のコード位置（2026-03-24 更新）**: customer_side の **4/8・5/8・7/8** 確定文案は **`ca3b90d`**。これに先立つ **2/8・3/8・5/8・7/8** 生成経路の再調整は `concreteSceneBank` / `pickOneConcreteScene` / `frictionFromIncident` / `buildFallbackLearning` / `buildNoteConclusionNextLine` / `polishCustomerSideManuscriptPunch` 等。**`main` の先端**は **origin/main** を参照。それ以前の主線整理は **`f03f95c`** 付近を参照（導入・原稿・統合プロンプトの最小修正を含む）。
 - **2026-03-23 の確認タスク**: **コード変更なし**。`buildAllOutputs` の生成結果を題材A/Bで確認（ブラウザの「構成を生成」と同じエンジン出力。実機は Node 実行で代替）。
 

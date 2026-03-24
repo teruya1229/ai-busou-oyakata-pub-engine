@@ -1216,3 +1216,11 @@
 
 - **`js/engine.js`**: `pickNoteTurnForTopicAxis`（customer_side・標準）／`buildFallbackLearning`（customer_side）／`buildNoteConclusionNextLine`（customer_side）の **3箇所のみ**を確定文案へ差し替え（**8/8・他軸・templates・UI は未変更**）
 - **`ops/handoff.md` / `ops/status.md`**: 上記を最小追記
+
+## 今日やったこと（2026-03-24：ops のみ・handoff/status 同期）
+
+### 内容
+
+- **コード変更なし**（**`js/`・UI・README・`docs/` は未変更**）
+- **`ops/handoff.md`**: **customer_side** 自然化の **current state** を追記。直近 **4/8・5/8・7/8** 確定文案の要点、題材A/D の **Node `buildAllOutputs` 確認**、次回候補（**学び長文時の 5/8**／**実機**）、**先端ハッシュ**は **origin/main 照合**で統一
+- **`ops/status.md`**: 本節を追記し、**現在の状態**ブロックと整合
