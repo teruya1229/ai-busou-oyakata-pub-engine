@@ -5,10 +5,10 @@
   const COMIC_PANEL_LABELS = {
     p1: "1コマ目（1/8・導入）",
     p2: "2コマ目（2/8・状況）",
-    p3: "3コマ目（3/8・事件の予兆）",
-    p4: "4コマ目（4/8・強い一言）",
-    p5: "5コマ目（5/8・当時の自分）",
-    p6: "6コマ目（6/8・今なら分かる）",
+    p3: "3コマ目（3/8・強い一言）",
+    p4: "4コマ目（4/8・当時の自分の認識）",
+    p5: "5コマ目（5/8・今なら分かる）",
+    p6: "6コマ目（6/8・本質）",
     p7: "7コマ目（7/8・行動ルール）",
     p8: "8コマ目（8/8・読者への問い）",
   };
@@ -674,10 +674,10 @@
     return [
       { number: 1, start: COMIC_PANEL_LABELS.p1, next: COMIC_PANEL_LABELS.p2, name: "導入" },
       { number: 2, start: COMIC_PANEL_LABELS.p2, next: COMIC_PANEL_LABELS.p3, name: "状況" },
-      { number: 3, start: COMIC_PANEL_LABELS.p3, next: COMIC_PANEL_LABELS.p4, name: "事件の予兆" },
-      { number: 4, start: COMIC_PANEL_LABELS.p4, next: COMIC_PANEL_LABELS.p5, name: "強い一言" },
-      { number: 5, start: COMIC_PANEL_LABELS.p5, next: COMIC_PANEL_LABELS.p6, name: "当時の自分" },
-      { number: 6, start: COMIC_PANEL_LABELS.p6, next: COMIC_PANEL_LABELS.p7, name: "今なら分かる" },
+      { number: 3, start: COMIC_PANEL_LABELS.p3, next: COMIC_PANEL_LABELS.p4, name: "強い一言" },
+      { number: 4, start: COMIC_PANEL_LABELS.p4, next: COMIC_PANEL_LABELS.p5, name: "当時の自分の認識" },
+      { number: 5, start: COMIC_PANEL_LABELS.p5, next: COMIC_PANEL_LABELS.p6, name: "今なら分かる" },
+      { number: 6, start: COMIC_PANEL_LABELS.p6, next: COMIC_PANEL_LABELS.p7, name: "本質" },
       { number: 7, start: COMIC_PANEL_LABELS.p7, next: COMIC_PANEL_LABELS.p8, name: "行動ルール" },
       { number: 8, start: COMIC_PANEL_LABELS.p8, next: "", name: "読者への問い" },
     ];
@@ -1246,7 +1246,7 @@
       normalized.coreMain ? `コアメッセージ: ${normalized.coreMain}` : "",
       normalized.corePhrase ? `必須フレーズ（台詞として描かず、情景で示す）: ${normalized.corePhrase}` : "",
       normalized.coreConclusion ? `絶対にズラさない結論（終盤コマで前進・改善へ）: ${normalized.coreConclusion}` : "",
-      "ネームの流れ: 導入 → 状況 → 事件の予兆 → 強い一言 → 当時の自分 → 今なら分かる → 行動ルール → 読者への問い。最終段は余韻・問いで締める。",
+      "ネームの流れ: 導入 → 状況 → 強い一言 → 当時の自分の認識 → 今なら分かる → 本質 → 行動ルール → 読者への問い。最終段は余韻・問いで締める。",
     ].filter(function (line) {
       return line !== "";
     });
