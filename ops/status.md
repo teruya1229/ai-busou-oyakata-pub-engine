@@ -1208,7 +1208,7 @@
 
 ## 現在の状態（2026-03-24 更新）
 
-- **`main`**: **`105ad39`**（customer_side **4/8・5/8・7/8** の文案反映コミットは **`ca3b90d`** `fix: refine customer-side manuscript voice after naturalization pass`）（**origin/main** と一致想定）
+- **`main`**: **origin/main** 先端に追従（customer_side **4/8・5/8・7/8** の文案反映は **`ca3b90d`** `fix: refine customer-side manuscript voice after naturalization pass`）
 - **customer_side**: 題材A/D 想定の **8ブロック／8コマネーム**で、**【事件】の反応描写**・**【今なら分かる】の一句化（5/8 欠落防止）**・**【以後の行動ルール】の自分への決め**まで反映済み
 - **次に見るなら（任意）**: 手入力の **学び** が長いときの **5/8**（`firstSentenceJapanese`）、**4/8・6/8** の追加微調整は別タスク
 

@@ -8,7 +8,7 @@
 
 ## 8コマ主線の現状態と確認（2026-03-23 追記）
 
-- **記録上のコード位置（2026-03-24 更新）**: **`main` の先端は `105ad39`**（`ca3b90d` で customer_side の **4/8・5/8・7/8** 確定文案を反映。これに先立つ **2/8・3/8・5/8・7/8** 生成経路の再調整は `concreteSceneBank` / `pickOneConcreteScene` / `frictionFromIncident` / `buildFallbackLearning` / `buildNoteConclusionNextLine` / `polishCustomerSideManuscriptPunch` 等）。それ以前の主線整理は **`f03f95c`** 付近を参照（導入・原稿・統合プロンプトの最小修正を含む）。
+- **記録上のコード位置（2026-03-24 更新）**: customer_side の **4/8・5/8・7/8** 確定文案は **`ca3b90d`**。これに先立つ **2/8・3/8・5/8・7/8** 生成経路の再調整は `concreteSceneBank` / `pickOneConcreteScene` / `frictionFromIncident` / `buildFallbackLearning` / `buildNoteConclusionNextLine` / `polishCustomerSideManuscriptPunch` 等。**`main` の先端**は **origin/main** を参照。それ以前の主線整理は **`f03f95c`** 付近を参照（導入・原稿・統合プロンプトの最小修正を含む）。
 - **2026-03-23 の確認タスク**: **コード変更なし**。`buildAllOutputs` の生成結果を題材A/Bで確認（ブラウザの「構成を生成」と同じエンジン出力。実機は Node 実行で代替）。
 
 ### 直近修正の反映状況（生成テキスト上）
