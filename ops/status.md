@@ -1199,3 +1199,9 @@
 ### 内容
 
 - **`js/engine.js`**: シーン・反転・学び・行動の **customer_side 経路**と、原稿の【強い一言】【本質】の **軽い整形**を追加し、題材A/D で **通しの文体**を実話寄りに寄せた。
+
+## 今日やったこと（2026-03-24：customer_side 2/8・3/8・5/8・7/8 生成経路の再調整）
+
+### 内容
+
+- **`js/engine.js`**: **`concreteSceneBank` / `pickOneConcreteScene`**（相手の相づち・聞き返しの変化）、**`frictionFromIncident`（customer_side）`**、**`buildFallbackLearning`**（後悔と気づきを **一文**に収め `firstSentenceJapanese` で切られないよう句点を一つに）、**`buildNoteConclusionNextLine`**（自分への決め）、**`polishCustomerSideManuscriptPunch`**（体感寄りの短文）を **customer_side のみ**最小差分で調整。
