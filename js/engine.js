@@ -1929,7 +1929,7 @@
   }
 
   /**
-   * 結論欄が空のときの締め。本文は「今回の話」に接続し、4コマ向けの「次の一枚」や汎用の「それで十分」は出さない。
+   * 結論欄が空のときの締め。本文は「今回の話」に接続し、旧短縮ネーム向けの「次の一枚」や汎用の「それで十分」は出さない。
    */
   function buildNoteClosingNoConclusionTied(normalized, reviewish, p, bundle) {
     const ax = normalized.topicAxis || inferTopicAxis(noteContextBundle(normalized));
