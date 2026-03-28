@@ -47,7 +47,7 @@
 
 ### customer_side 題材 G/H/F の 1/8・3/8・6/8 微調整（2026-03-28）
 
-- **`js/engine.js`（customer_side・テーマ条件のみ）**: **`buildComicManuscriptIntroLine`**（G: `説明を急いで`×`黙っ`×お客／F: テーマが **`説明の順番`** のみ）、**`polishCustomerSideManuscriptPunch`**（H: `順番を間違え`×`伝わらない` で 3/8 を実話の一言へ）、**`polishCustomerSideManuscriptEssence`**（G/H/F で 6/8 を「本質・気づき」に寄せ、7/8 行動ルールと役割分離）。**7/8**（**`次は、話し始める前に一言だけ聞く。そう決めた。`**）は **未変更**。
+- **`js/engine.js`（customer_side・テーマ条件のみ）**: **`buildComicManuscriptIntroLine`**（G: `説明を急いで`×`黙っ`×お客／F: テーマが **`説明の順番`** のみ → **「…お客様には届いていなかった」** で 2/8「聞き返し」と接続）、**`polishCustomerSideManuscriptPunch`**（H: `順番を間違え`×`伝わらない` で 3/8 を実話の一言へ）、**`polishCustomerSideManuscriptEssence`**（G/H/F で 6/8 を「本質・気づき」に寄せ、7/8 行動ルールと役割分離）。**7/8**（**`次は、話し始める前に一言だけ聞く。そう決めた。`**）は **未変更**。
 
 ### customer_side 追加題材耐性確認・軸判定拡張（2026-03-28）
 

@@ -1272,3 +1272,8 @@
 
 - **`js/engine.js`**: **`buildComicManuscriptIntroLine`** / **`polishCustomerSideManuscriptPunch`**（引数を `normalized` に統一）/ **`polishCustomerSideManuscriptEssence`**（第三引数 `normalized`）で、G/H/F のみ確定文案へ。**題材A** は **Node `buildAllOutputs`** で未変更を確認。
 - **`ops/handoff.md` / `ops/status.md`**: 本節を最小追記
+
+## 今日やったこと（2026-03-28：題材 F の 1/8 のみ）
+
+- **`js/engine.js`**: テーマ **`説明の順番`** の 1/8 を **「…お客様には届いていなかった」** に変更（2/8「聞き返し」と接続）。**G/H・7/8 は未変更**。
+- **`ops/handoff.md` / `ops/status.md`**: 本節を最小追記
