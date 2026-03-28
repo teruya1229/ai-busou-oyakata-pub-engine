@@ -1261,3 +1261,9 @@
 - **`js/engine.js`**: **`isCustomerSideBundle`** に複合パターン追加、**`polishCustomerSideManuscriptPunch` / `polishCustomerSideManuscriptEssence`** のフォールバックに **`ensurePeriod`**（**`fix: harden customer-side manuscript naturalization across additional cases`**）
 - **`ops/handoff.md` / `ops/status.md`**: 本節を最小追記
 - **確認**: 題材A・D・E・F・**Node `buildAllOutputs`**（**`topicAxis=customer_side`**）
+
+## 今日やったこと（2026-03-28：題材 F/G の customer_side 軸・G の【事件】分岐）
+
+- **`js/engine.js`**: **`isCustomerSideBundle`** に **`伝わらなかった` / `伝わらない` + お客・顧客**、**`黙る`/`黙っ` + お客・顧客**を追加（題材F・Gが `general` に落ちないようにする）。**`pickOneConcreteScene`** で **`順番`/`伝わらない` 系**と **`黙っ` 系**の具体シーンを分岐（G は「黙ったまま帰った」系）。
+- **`ops/handoff.md`**: 本節を最小追記
+- **確認**: 題材A・F・G・H・**Node `buildAllOutputs`**（2/8〜7/8 の通し）

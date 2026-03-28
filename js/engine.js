@@ -66,7 +66,10 @@
       (b.indexOf("伝えたつもり") >= 0 &&
         (b.indexOf("相手") >= 0 || b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0)) ||
       (b.indexOf("伝わっていなかった") >= 0 && (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0)) ||
-      (b.indexOf("説明したつもり") >= 0 && (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0))
+      (b.indexOf("伝わらなかった") >= 0 && (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0)) ||
+      (b.indexOf("伝わらない") >= 0 && (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0)) ||
+      (b.indexOf("説明したつもり") >= 0 && (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0)) ||
+      ((b.indexOf("黙る") >= 0 || b.indexOf("黙っ") >= 0) && (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0))
     );
   }
 
@@ -221,10 +224,12 @@
     const pack = compactSpaces((theme || "") + " " + (coreMain || "") + " " + (coreConclusion || "")).toLowerCase();
     if (
       pack.indexOf("順番を間違え") >= 0 ||
-      (pack.indexOf("伝わらない") >= 0 && (pack.indexOf("お客") >= 0 || pack.indexOf("顧客") >= 0)) ||
-      ((pack.indexOf("黙る") >= 0 || pack.indexOf("黙っ") >= 0) && (pack.indexOf("お客") >= 0 || pack.indexOf("顧客") >= 0))
+      (pack.indexOf("伝わらない") >= 0 && (pack.indexOf("お客") >= 0 || pack.indexOf("顧客") >= 0))
     ) {
       return "こちらの順番で話していたら、お客様が同じ場所を何度も聞き返してきた。";
+    }
+    if ((pack.indexOf("黙る") >= 0 || pack.indexOf("黙っ") >= 0) && (pack.indexOf("お客") >= 0 || pack.indexOf("顧客") >= 0)) {
+      return "こちらが話を進めるほど、お客様の返事が短くなって、最後は黙ったまま帰った。";
     }
     if ((pack.indexOf("業界") >= 0 && pack.indexOf("常識") >= 0) || th.indexOf("非常識") >= 0) {
       return "見積の説明で専門用語が続き、お客様は相づちばかりで、途中からは聞き返しもしなくなった。";
