@@ -62,7 +62,11 @@
       (b.indexOf("非常識") >= 0 && (b.indexOf("顧客") >= 0 || b.indexOf("お客") >= 0)) ||
       (b.indexOf("専門用語") >= 0 &&
         (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0 || b.indexOf("説明") >= 0 || b.indexOf("見積") >= 0)) ||
-      (b.indexOf("省略") >= 0 && (b.indexOf("説明") >= 0 || b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0))
+      (b.indexOf("省略") >= 0 && (b.indexOf("説明") >= 0 || b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0)) ||
+      (b.indexOf("伝えたつもり") >= 0 &&
+        (b.indexOf("相手") >= 0 || b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0)) ||
+      (b.indexOf("伝わっていなかった") >= 0 && (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0)) ||
+      (b.indexOf("説明したつもり") >= 0 && (b.indexOf("お客") >= 0 || b.indexOf("顧客") >= 0))
     );
   }
 
@@ -873,7 +877,7 @@
     if (t.indexOf("不親切") >= 0 && t.indexOf("見える") >= 0) {
       return "自分では普通の話が、相手には刺さっていた。";
     }
-    return t;
+    return ensurePeriod(t);
   }
 
   /**
@@ -890,7 +894,7 @@
     if (t.indexOf("相手の言葉") >= 0 && t.indexOf("言い直す") >= 0) {
       return "相手の言葉に一度寄せると、伝わり方が変わる。";
     }
-    return "";
+    return ensurePeriod(t);
   }
 
   /**

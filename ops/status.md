@@ -1249,3 +1249,9 @@
 - **`js/engine.js`**: **customer_side** の原稿 **2/8〜7/8** を最小差分で自然化（`buildCustomerSideThenSelf` 追加、`buildFallbackLearning` の題材分岐、場面文・パンチ・本質・行動の約束調など）。**1/8・8/8・学び入力ありの追加調整は未着手**
 - **`ops/handoff.md` / `ops/status.md`**: 本節を最小追記
 - **確認**: 題材A・題材D・**Node `buildAllOutputs`**。**実機は未確認**
+
+## 今日やったこと（2026-03-28：customer_side 追加題材耐性確認・軸判定拡張）
+
+- **`js/engine.js`**: **`isCustomerSideBundle`** に複合パターン追加、**`polishCustomerSideManuscriptPunch` / `polishCustomerSideManuscriptEssence`** のフォールバックに **`ensurePeriod`**（**`fix: harden customer-side manuscript naturalization across additional cases`**）
+- **`ops/handoff.md` / `ops/status.md`**: 本節を最小追記
+- **確認**: 題材A・D・E・F・**Node `buildAllOutputs`**（**`topicAxis=customer_side`**）

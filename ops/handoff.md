@@ -35,6 +35,14 @@
 
 - **`js/engine.js`**: **`polishCustomerSideNowKnow`** 関数を新設（**`buildComicManuscriptIntroLine`** 直前）。末尾パターン（**`〜だと分かった`** / **`〜べきだったと後から強く思った`** / **`〜方が大事だと分かった`**）を実感寄りの言い回しに微変換（**`べきだったと、後から気づかされた。`**／**`ことに、あとから気づいた`** 等）。**`buildComicManuscriptPost`** の **`nowKnow` 生成後**に **`customer_side` かつ学び入力あり**（`input.learning`）のときだけ適用。他 axis・学び空のフォールバック経路・**`firstSentenceJapanese` 本体**・2/8〜4/8・6/8〜8/8 は未変更。
 
+### customer_side 追加題材耐性確認・軸判定拡張（2026-03-28）
+
+- **`js/engine.js`**: 以下3点を customer_side のみ最小差分で修正。
+  - **`isCustomerSideBundle`**: `伝えたつもり` / `伝わっていなかった` / `説明したつもり` + `お客/顧客/相手` の複合パターンを追加（題材Eが `general` に落ちていた問題を解消）
+  - **`polishCustomerSideManuscriptPunch`**: フォールバックに `ensurePeriod` を追加（3/8 句点抜け解消）
+  - **`polishCustomerSideManuscriptEssence`**: フォールバックを `return ""` → `return ensurePeriod(t)` に変更（6/8 句点抜け・coreConclusion 素通り解消）
+- **確認済み題材**: A / D / E / F すべて customer_side 経路で正常出力を確認
+
 - **記録上のコード位置（2026-03-24 更新）**: customer_side の **4/8・5/8・7/8** 確定文案は **`ca3b90d`**。これに先立つ **2/8・3/8・5/8・7/8** 生成経路の再調整は `concreteSceneBank` / `pickOneConcreteScene` / `frictionFromIncident` / `buildFallbackLearning` / `buildNoteConclusionNextLine` / `polishCustomerSideManuscriptPunch` 等。**`main` の先端**は **origin/main** を参照。それ以前の主線整理は **`f03f95c`** 付近を参照（導入・原稿・統合プロンプトの最小修正を含む）。
 - **2026-03-23 の確認タスク**: **コード変更なし**。`buildAllOutputs` の生成結果を題材A/Bで確認（ブラウザの「構成を生成」と同じエンジン出力。実機は Node 実行で代替）。
 
