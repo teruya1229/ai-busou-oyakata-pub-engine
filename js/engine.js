@@ -222,6 +222,9 @@
   function pickOneConcreteScene(axis, theme, coreMain, coreConclusion) {
     const th = compactSpaces(theme || "");
     const pack = compactSpaces((theme || "") + " " + (coreMain || "") + " " + (coreConclusion || "")).toLowerCase();
+    if (th.indexOf("丁寧") >= 0 && th.indexOf("不親切") >= 0 && th.indexOf("見えた") >= 0) {
+      return "敬語で話していたつもりだった。それでも専門用語のまま畳み掛けて、お客様は途中から黙って頷くだけになった。";
+    }
     if (
       pack.indexOf("順番を間違え") >= 0 ||
       (pack.indexOf("伝わらない") >= 0 && (pack.indexOf("お客") >= 0 || pack.indexOf("顧客") >= 0))
@@ -902,6 +905,12 @@
   function polishCustomerSideManuscriptEssence(conclusion, coreMain, normalized) {
     if (normalized && (normalized.topicAxis || "") === "customer_side") {
       const th = compactSpaces(normalized.theme || "");
+      if (th.indexOf("見積") >= 0 && th.indexOf("専門用語") >= 0 && th.indexOf("引かれた") >= 0) {
+        return "本質は、説明の足りなさじゃなくて、相手の様子を見る順番が後ろに回っていたことだ。";
+      }
+      if (th.indexOf("丁寧") >= 0 && th.indexOf("不親切") >= 0 && th.indexOf("見えた") >= 0) {
+        return "正しさより先に、相手の言葉に寄せる。";
+      }
       if (th.indexOf("説明を急いで") >= 0 && th.indexOf("黙っ") >= 0 && (th.indexOf("お客") >= 0 || th.indexOf("顧客") >= 0)) {
         return "相手が黙るのは、説明が足りないからじゃない。";
       }
@@ -1074,7 +1083,7 @@
       let cut = maxChar;
       const head = rest.slice(0, maxChar + 1);
       let best = -1;
-      const candidates = ["。", "、", "，", " ", "で", "に", "は", "が"];
+      const candidates = ["。", "、", "，", " ", "は", "が"];
       for (let c = 0; c < candidates.length; c++) {
         const idx = head.lastIndexOf(candidates[c]);
         if (idx > maxChar * 0.35) {

@@ -1282,3 +1282,7 @@
 
 - **`js/engine.js`**: **`buildEightPanelBubbleScript`**（原稿 `parseManuscriptSections` から短行化）、**`buildAllOutputs`** に **`comicBubbleScript8`** を追加。**4コマ非対応**（主線は8コマのみ）。
 - **`index.html` / `js/app.js`**: **8コマ吹き出し台本**の表示・コピー。**スタイル向けにまとめてコピー**・用途別コピーに連結。**README.md** 主出力一覧を更新。
+
+## 今日やったこと（2026-03-28：吹き出し台本と確定原稿の整合）
+
+- **`js/engine.js`**: **`polishCustomerSideManuscriptEssence`** に **見積×専門用語×引かれた**／**丁寧×不親切×見えた** の **6/8 確定文**。**`pickOneConcreteScene`** に **丁寧×不親切×見えた** の **2/8【事件】確定文**。**`splitJapaneseTextToLines`** の区切りから **`で`/`に`** を外し、**「それでも」** 等の誤分割を抑制。
