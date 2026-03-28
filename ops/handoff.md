@@ -45,6 +45,10 @@
   - **`isCustomerSideBundle`**: `伝わらなかった` / `伝わらない` + `お客/顧客`、`黙る`/`黙っ` + `お客/顧客` を追加（題材F・Gが `general` に落ち、4/8〜7/8 が customer_side 経路外になる問題を解消）
   - **`pickOneConcreteScene`**: `順番`/`伝わらない` 系は従来の「聞き返し」一文のまま。**`黙っ`/`黙る`×お客・顧客**だけは **「黙ったまま帰った」** 系の別シーンに分岐（題材Gのタイトルと【事件】の整合）
 
+### customer_side 題材 G/H/F の 1/8・3/8・6/8 微調整（2026-03-28）
+
+- **`js/engine.js`（customer_side・テーマ条件のみ）**: **`buildComicManuscriptIntroLine`**（G: `説明を急いで`×`黙っ`×お客／F: テーマが **`説明の順番`** のみ）、**`polishCustomerSideManuscriptPunch`**（H: `順番を間違え`×`伝わらない` で 3/8 を実話の一言へ）、**`polishCustomerSideManuscriptEssence`**（G/H/F で 6/8 を「本質・気づき」に寄せ、7/8 行動ルールと役割分離）。**7/8**（**`次は、話し始める前に一言だけ聞く。そう決めた。`**）は **未変更**。
+
 ### customer_side 追加題材耐性確認・軸判定拡張（2026-03-28）
 
 - **`js/engine.js`**: 以下3点を customer_side のみ最小差分で修正。

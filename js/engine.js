@@ -875,10 +875,14 @@
   /**
    * 原稿【強い一言】：customer_side のみ、入力の意味を保ちつつ実話寄りの短い一文に整える。
    */
-  function polishCustomerSideManuscriptPunch(coreMain) {
-    const t = compactSpaces(coreMain || "");
+  function polishCustomerSideManuscriptPunch(normalized) {
+    const t = compactSpaces((normalized && normalized.coreMain) || "");
     if (!t) {
       return t;
+    }
+    const th = compactSpaces((normalized && normalized.theme) || "");
+    if (th.indexOf("順番を間違え") >= 0 && th.indexOf("伝わらない") >= 0) {
+      return "正しいことを言っていたのに、お客様だけが取り残されていた。";
     }
     if (t.indexOf("専門用語") >= 0 && t.indexOf("押し切") >= 0) {
       return "自分のペースで話しているうちに、相手の目が曇っていった。";
@@ -895,7 +899,19 @@
   /**
    * 原稿【本質】：customer_side のみ、標語調を弱めて短い実話の結論に寄せる。
    */
-  function polishCustomerSideManuscriptEssence(conclusion, coreMain) {
+  function polishCustomerSideManuscriptEssence(conclusion, coreMain, normalized) {
+    if (normalized && (normalized.topicAxis || "") === "customer_side") {
+      const th = compactSpaces(normalized.theme || "");
+      if (th.indexOf("説明を急いで") >= 0 && th.indexOf("黙っ") >= 0 && (th.indexOf("お客") >= 0 || th.indexOf("顧客") >= 0)) {
+        return "相手が黙るのは、説明が足りないからじゃない。";
+      }
+      if (th.indexOf("順番を間違え") >= 0 && th.indexOf("伝わらない") >= 0) {
+        return "何度も聞き返してきたのは、順番の問題じゃなくて不安だった。";
+      }
+      if (th === "説明の順番") {
+        return "正しさより先に、相手に何かが引っかかっていた。";
+      }
+    }
     const t = compactSpaces(conclusion || coreMain || "");
     if (!t) {
       return "";
@@ -947,6 +963,14 @@
    */
   function buildComicManuscriptIntroLine(normalized, toneData, story) {
     const theme = compactSpaces(normalized.theme || "");
+    if ((normalized.topicAxis || "") === "customer_side" && theme) {
+      if (theme.indexOf("説明を急いで") >= 0 && theme.indexOf("黙っ") >= 0 && (theme.indexOf("お客") >= 0 || theme.indexOf("顧客") >= 0)) {
+        return "今回は「話を進めるほど、お客様が黙っていった」の話。";
+      }
+      if (theme === "説明の順番") {
+        return "今回は「正しいことを言っても、お客様が黙った」の話。";
+      }
+    }
     if (theme) {
       return "今回は「" + theme + "」の話。";
     }
@@ -966,7 +990,7 @@
     }
     let punch = compactSpaces(normalized.coreMain || "") || "ここが、いちばん引っかかった。";
     if ((normalized.topicAxis || "") === "customer_side" && normalized.coreMain) {
-      punch = polishCustomerSideManuscriptPunch(normalized.coreMain);
+      punch = polishCustomerSideManuscriptPunch(normalized);
     }
     const turn = buildNoteTurnAndWhy(normalized);
     const learningLine = dedupeLearningVersusTurn(
@@ -990,7 +1014,7 @@
     let essence =
       compactSpaces(normalized.coreConclusion || normalized.coreMain || "") || "本質は、言葉にしてから動くところだ。";
     if ((normalized.topicAxis || "") === "customer_side") {
-      const essPol = polishCustomerSideManuscriptEssence(normalized.coreConclusion, normalized.coreMain);
+      const essPol = polishCustomerSideManuscriptEssence(normalized.coreConclusion, normalized.coreMain, normalized);
       if (essPol) {
         essence = essPol;
       }
