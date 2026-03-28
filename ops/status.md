@@ -1226,6 +1226,14 @@
 - **`ops/handoff.md`**: **customer_side** 自然化の **current state** を追記。直近 **4/8・5/8・7/8** 確定文案の要点、題材A/D の **Node `buildAllOutputs` 確認**、次回候補（**学び長文時の 5/8**／**実機**）、**先端ハッシュ**は **origin/main 照合**で統一
 - **`ops/status.md`**: 本節を追記し、**現在の状態**ブロックと整合
 
+## 今日やったこと（2026-03-28：customer_side 5/8 学び入力あり）
+
+### 内容
+
+- **`js/engine.js`**: **`polishCustomerSideNowKnow`** 新設、**`buildComicManuscriptPost`** で **customer_side**・**学び入力あり**時のみ **5/8** に適用
+- **`ops/handoff.md` / `ops/status.md`**: 本節を最小追記
+- **確認**: 題材A・題材D（学びあり）・学びなしフォールバック・**Node `buildAllOutputs`**
+
 ## 今日やったこと（2026-03-28：customer_side 全面自然化）
 
 ### 内容

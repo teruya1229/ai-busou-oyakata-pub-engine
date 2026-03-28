@@ -910,6 +910,23 @@
   }
 
   /**
+   * 原稿【今なら分かる】：customer_side のみ、学び入力ありのとき末尾を実感寄りに整える。
+   */
+  function polishCustomerSideNowKnow(text) {
+    let s = compactSpaces(text || "");
+    if (!s) {
+      return s;
+    }
+    if (/べきだったと後から強く思った/.test(s)) {
+      return s.replace(/べきだったと後から強く思った[。]?/, "べきだったと、後から気づかされた。");
+    }
+    if (/方が大事だと分かった/.test(s)) {
+      return ensurePeriod(s.replace(/方が大事だと分かった[。]?/, "ことに、あとから気づいた"));
+    }
+    return s;
+  }
+
+  /**
    * 原稿【導入】：テーマで場に入る一文（【事件】の実話本文と役割を分ける）
    */
   function buildComicManuscriptIntroLine(normalized, toneData, story) {
@@ -947,6 +964,13 @@
       thenSelf = buildCustomerSideThenSelf(normalized, turn);
     }
     const nowKnow = firstSentenceJapanese(learningLine) || learningLine.slice(0, 160);
+    let nowKnowFinal = nowKnow;
+    if (
+      (normalized.topicAxis || "") === "customer_side" &&
+      trimOptional(input && input.learning)
+    ) {
+      nowKnowFinal = polishCustomerSideNowKnow(nowKnow);
+    }
     let essence =
       compactSpaces(normalized.coreConclusion || normalized.coreMain || "") || "本質は、言葉にしてから動くところだ。";
     if ((normalized.topicAxis || "") === "customer_side") {
@@ -967,7 +991,7 @@
       "【事件】" + incident,
       "【強い一言】" + punch,
       "【当時の自分の認識】" + thenSelf,
-      "【今なら分かる】" + nowKnow,
+      "【今なら分かる】" + nowKnowFinal,
       "【本質】" + essence,
       "【以後の行動ルール】" + ruleBlock,
       "【読者への問い】" + readerQ,
