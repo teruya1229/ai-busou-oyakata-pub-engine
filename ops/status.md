@@ -1277,3 +1277,8 @@
 
 - **`js/engine.js`**: テーマ **`説明の順番`** の 1/8 を **「…お客様には届いていなかった」** に変更（2/8「聞き返し」と接続）。**G/H・7/8 は未変更**。
 - **`ops/handoff.md` / `ops/status.md`**: 本節を最小追記
+
+## 今日やったこと（2026-03-28：8コマ吹き出し台本）
+
+- **`js/engine.js`**: **`buildEightPanelBubbleScript`**（原稿 `parseManuscriptSections` から短行化）、**`buildAllOutputs`** に **`comicBubbleScript8`** を追加。**4コマ非対応**（主線は8コマのみ）。
+- **`index.html` / `js/app.js`**: **8コマ吹き出し台本**の表示・コピー。**スタイル向けにまとめてコピー**・用途別コピーに連結。**README.md** 主出力一覧を更新。

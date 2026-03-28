@@ -4,6 +4,7 @@
     comicManuscriptPost: document.getElementById("comic-manuscript-post-output"),
     comicTitle: document.getElementById("comic-title-output"),
     comic: document.getElementById("comic-output"),
+    comicBubbleScript8: document.getElementById("comic-bubble-script-8-output"),
     comicPrompt: document.getElementById("comic-prompt-output"),
     comicUnifiedPrompt: document.getElementById("comic-unified-prompt-output"),
     noteIntroAssist: document.getElementById("note-intro-assist-output"),
@@ -228,6 +229,12 @@
         result.comicTitle != null && result.comicTitle !== "" ? result.comicTitle : OUTPUT_PLACEHOLDER;
     }
     outputs.comic.textContent = result.comic;
+    if (outputs.comicBubbleScript8) {
+      outputs.comicBubbleScript8.textContent =
+        result.comicBubbleScript8 != null && result.comicBubbleScript8 !== ""
+          ? result.comicBubbleScript8
+          : OUTPUT_PLACEHOLDER;
+    }
     if (outputs.comicPrompt) {
       outputs.comicPrompt.textContent = result.comicPrompt || "コマ別描画プロンプトを生成できませんでした。";
     }
@@ -876,6 +883,9 @@
       outputs.comicTitle.textContent = placeholder;
     }
     outputs.comic.textContent = placeholder;
+    if (outputs.comicBubbleScript8) {
+      outputs.comicBubbleScript8.textContent = placeholder;
+    }
     if (outputs.comicPrompt) {
       outputs.comicPrompt.textContent = placeholder;
     }
@@ -984,6 +994,7 @@
         "comic-manuscript-post-output",
         "comic-title-output",
         "comic-output",
+        "comic-bubble-script-8-output",
         "note-intro-assist-output",
         "note-body-only-output",
         "note-closing-assist-output",
@@ -994,6 +1005,7 @@
         "comic-manuscript-post-output",
         "comic-title-output",
         "comic-output",
+        "comic-bubble-script-8-output",
         "comic-prompt-output",
         "comic-unified-prompt-output",
         "note-intro-assist-output",
@@ -1005,6 +1017,7 @@
         "comic-manuscript-post-output",
         "comic-title-output",
         "comic-output",
+        "comic-bubble-script-8-output",
         "note-title-suggestions-output",
         "note-body-only-output",
       ];
@@ -1013,6 +1026,7 @@
         "comic-manuscript-post-output",
         "comic-title-output",
         "comic-output",
+        "comic-bubble-script-8-output",
         "comic-prompt-output",
         "comic-unified-prompt-output",
         "note-intro-assist-output",

@@ -8,6 +8,10 @@
 
 ## 8コマ主線の現状態と確認（2026-03-23 追記）
 
+### 8コマ吹き出し台本（2026-03-28）
+
+- **`buildAllOutputs` の `comicBubbleScript8`**: 漫画原稿8ブロックから **画像に載せる短文**（コマごと **ナレーション／モノローグ／行動ルール／問い** の種別付き）。**`buildEightPanelBubbleScript`** が `parseManuscriptSections` を再利用。**UI**: `#comic-bubble-script-8-output`・コピー。**4コマ**は従来どおり（吹き出し台本は8コマのみ）。
+
 ### customer_side・現状態（2026-03-24・ops 同期）
 
 - **記録の範囲**: **コード変更なし**。**`ops/handoff.md` / `ops/status.md`** に、直近の **customer_side** 自然化まで含めた **current state** を書き戻した（**2026-03-24**）。

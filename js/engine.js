@@ -1038,6 +1038,151 @@
     ].join("\n\n");
   }
 
+  function bubblePanelKindForIndex(n) {
+    if (n === 1) {
+      return "ナレーション";
+    }
+    if (n === 7) {
+      return "行動ルール";
+    }
+    if (n === 8) {
+      return "問い";
+    }
+    return "モノローグ";
+  }
+
+  function normalizeBubbleSourceText(text) {
+    return compactSpaces((text || "").replace(/\n+/g, " ").trim());
+  }
+
+  function splitJapaneseTextToLines(text, maxLines, maxChar) {
+    const t = compactSpaces(text);
+    if (!t) {
+      return [];
+    }
+    if (t.length <= maxChar) {
+      return [t];
+    }
+    const lines = [];
+    let rest = t;
+    while (rest && lines.length < maxLines) {
+      if (rest.length <= maxChar) {
+        lines.push(rest);
+        rest = "";
+        break;
+      }
+      let cut = maxChar;
+      const head = rest.slice(0, maxChar + 1);
+      let best = -1;
+      const candidates = ["。", "、", "，", " ", "で", "に", "は", "が"];
+      for (let c = 0; c < candidates.length; c++) {
+        const idx = head.lastIndexOf(candidates[c]);
+        if (idx > maxChar * 0.35) {
+          best = Math.max(best, idx);
+        }
+      }
+      if (best >= 0) {
+        cut = best + 1;
+      }
+      const line = rest.slice(0, cut).trim();
+      lines.push(line);
+      rest = rest.slice(cut).trim();
+    }
+    if (rest) {
+      if (lines.length < maxLines) {
+        lines.push(rest);
+      } else {
+        const last = lines[lines.length - 1];
+        lines[lines.length - 1] = last.replace(/[。！？!?]+$/, "") + "…";
+      }
+    }
+    return lines;
+  }
+
+  function formatIntroBubbleLines(intro) {
+    const t = compactSpaces(intro);
+    const m = /^今回は「(.+?)」の話[。]?$/.exec(t);
+    if (!m) {
+      return splitJapaneseTextToLines(t, 3, 28);
+    }
+    const inner = m[1];
+    if (inner.length <= 16) {
+      return [`今回は「${inner}」の話。`];
+    }
+    let splitAt = -1;
+    for (let i = Math.min(inner.length - 1, 20); i >= 6; i -= 1) {
+      if (inner[i] === "で") {
+        splitAt = i + 1;
+        break;
+      }
+    }
+    if (splitAt < 0) {
+      for (let i = Math.min(inner.length - 1, 18); i >= 6; i -= 1) {
+        if (inner[i] === "、") {
+          splitAt = i + 1;
+          break;
+        }
+      }
+    }
+    if (splitAt < 0) {
+      splitAt = Math.floor(inner.length / 2);
+    }
+    const a = inner.slice(0, splitAt);
+    const b = inner.slice(splitAt);
+    return ["今回は", "「" + a, b + "」の話。"];
+  }
+
+  function formatPanelBubbleLines(panelNum, rawText) {
+    const text = normalizeBubbleSourceText(rawText);
+    if (!text) {
+      return ["（空）"];
+    }
+    if (panelNum === 1) {
+      return formatIntroBubbleLines(rawText);
+    }
+    if (panelNum === 8) {
+      return splitJapaneseTextToLines(text, 2, 36);
+    }
+    if (panelNum === 7) {
+      return splitJapaneseTextToLines(text, 3, 30);
+    }
+    if (panelNum >= 2 && panelNum <= 6) {
+      return splitJapaneseTextToLines(text, 4, 28);
+    }
+    return splitJapaneseTextToLines(text, 3, 28);
+  }
+
+  /**
+   * 8コマ吹き出し台本：原稿8ブロックから画像載せ用の短行に整形（4コマ非対応）
+   */
+  function buildEightPanelBubbleScript(manuscript) {
+    const sec = parseManuscriptSections(manuscript);
+    const blocks = [
+      { n: 1, text: sec.intro },
+      { n: 2, text: sec.incident },
+      { n: 3, text: sec.punch },
+      { n: 4, text: sec.thenSelf },
+      { n: 5, text: sec.nowKnow },
+      { n: 6, text: sec.essence },
+      { n: 7, text: sec.rule },
+      { n: 8, text: sec.reader },
+    ];
+    const parts = [];
+    for (let i = 0; i < blocks.length; i += 1) {
+      const b = blocks[i];
+      const kind = bubblePanelKindForIndex(b.n);
+      const lines = formatPanelBubbleLines(b.n, b.text);
+      parts.push(String(b.n) + "/8（" + kind + "）");
+      for (let j = 0; j < lines.length; j += 1) {
+        parts.push(lines[j]);
+      }
+      if (i < blocks.length - 1) {
+        parts.push("");
+      }
+    }
+    return parts.join("\n").trim();
+  }
+
   function parseManuscriptSections(manuscript) {
     const keys = [
       "導入",
@@ -2880,6 +3025,7 @@
       noteBodyOnly: noteBodyOnly,
       noteTitleSuggestions: noteTitleSuggestions,
       notePrePublishCheck: buildNotePrePublishCheck(normalized, noteBodyOnly, noteTitleSuggestions),
+      comicBubbleScript8: buildEightPanelBubbleScript(manuscript),
     };
   }
 
@@ -2894,5 +3040,6 @@
     buildNotePrePublishCheck,
     buildXPost,
     buildAllOutputs,
+    buildEightPanelBubbleScript,
   };
 })();
