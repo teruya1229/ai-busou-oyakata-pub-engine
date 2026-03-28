@@ -1250,6 +1250,12 @@
 - **`ops/handoff.md` / `ops/status.md`**: 本節を最小追記
 - **確認**: 題材A・題材D・**Node `buildAllOutputs`**。**実機は未確認**
 
+## 今日やったこと（2026-03-28：customer_side 追加投稿候補・pickOneConcreteScene）
+
+- **`js/engine.js`**: **`pickOneConcreteScene`** に **G/H 系**オーバーライドを追加（**`fix: polish customer-side phrasing for additional post candidates`**）。**`黙っていった`** 対応で **`黙っ`** を **`黙る`** と OR。
+- **`ops/handoff.md` / `ops/status.md`**: 本節を最小追記
+- **確認**: 題材A・D・E・F・G・H・**Node `buildAllOutputs`**（2/8・【事件】）
+
 ## 今日やったこと（2026-03-28：customer_side 追加題材耐性確認・軸判定拡張）
 
 - **`js/engine.js`**: **`isCustomerSideBundle`** に複合パターン追加、**`polishCustomerSideManuscriptPunch` / `polishCustomerSideManuscriptEssence`** のフォールバックに **`ensurePeriod`**（**`fix: harden customer-side manuscript naturalization across additional cases`**）
