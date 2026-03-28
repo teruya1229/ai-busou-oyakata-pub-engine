@@ -27,6 +27,10 @@
 - **`js/engine.js`（customer_side のみ）**: **2/8** は `concreteSceneBank` / `pickOneConcreteScene` / `frictionFromIncident` で場面文を一本化。**3/8** は `polishCustomerSideManuscriptPunch`。**4/8** は **`buildCustomerSideThenSelf`（新規）** で当時の感覚の一文。**5/8** は `buildFallbackLearning` を **テーマ・芯・結論の束ね**で分岐し、**題材A と 題材D で同一文に潰れない**ようにした。**6/8** は `polishCustomerSideManuscriptEssence` を軽く。**7/8** は `buildNoteConclusionNextLine` を約束調に。コミット: **`fix: fully naturalize customer-side manuscript phrasing`**。
 - **確認**: 題材A・題材Dで **Node `buildAllOutputs`** 経路を確認済み。**ブラウザ実機は未確認**のまま。
 
+### customer_side 7/8【以後の行動ルール】微調整（2026-03-28）
+
+- **`js/engine.js`**: **`buildNoteConclusionNextLine`** の **customer_side** 分岐を **`それだけ決めた` → `そう決めた`** に沿う一文へ整理（**`次は、話し始める前に一言だけ聞く。そう決めた。`**）。他分岐・他 axis・2/8〜6/8・8/8 は未変更。
+
 ### customer_side 5/8【今なら分かる】学び入力ありケースの自然化（2026-03-28）
 
 - **`js/engine.js`**: **`polishCustomerSideNowKnow`** 関数を新設（**`buildComicManuscriptIntroLine`** 直前）。末尾パターン（**`〜だと分かった`** / **`〜べきだったと後から強く思った`** / **`〜方が大事だと分かった`**）を実感寄りの言い回しに微変換（**`べきだったと、後から気づかされた。`**／**`ことに、あとから気づいた`** 等）。**`buildComicManuscriptPost`** の **`nowKnow` 生成後**に **`customer_side` かつ学び入力あり**（`input.learning`）のときだけ適用。他 axis・学び空のフォールバック経路・**`firstSentenceJapanese` 本体**・2/8〜4/8・6/8〜8/8 は未変更。
