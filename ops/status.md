@@ -1224,3 +1224,11 @@
 - **コード変更なし**（**`js/`・UI・README・`docs/` は未変更**）
 - **`ops/handoff.md`**: **customer_side** 自然化の **current state** を追記。直近 **4/8・5/8・7/8** 確定文案の要点、題材A/D の **Node `buildAllOutputs` 確認**、次回候補（**学び長文時の 5/8**／**実機**）、**先端ハッシュ**は **origin/main 照合**で統一
 - **`ops/status.md`**: 本節を追記し、**現在の状態**ブロックと整合
+
+## 今日やったこと（2026-03-28：customer_side 全面自然化）
+
+### 内容
+
+- **`js/engine.js`**: **customer_side** の原稿 **2/8〜7/8** を最小差分で自然化（`buildCustomerSideThenSelf` 追加、`buildFallbackLearning` の題材分岐、場面文・パンチ・本質・行動の約束調など）。**1/8・8/8・学び入力ありの追加調整は未着手**
+- **`ops/handoff.md` / `ops/status.md`**: 本節を最小追記
+- **確認**: 題材A・題材D・**Node `buildAllOutputs`**。**実機は未確認**

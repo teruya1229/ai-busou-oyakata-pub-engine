@@ -22,6 +22,11 @@
 - **次回候補（別タスク）**: **学び入力が長いときの 5/8** の扱い。必要なら **実機表示確認**。
 - **先端ハッシュ**: **`main` の先端**は **origin/main** と照合（**volatile な先端固定ハッシュは書かない**）。
 
+### customer_side・全面自然化（2026-03-28）
+
+- **`js/engine.js`（customer_side のみ）**: **2/8** は `concreteSceneBank` / `pickOneConcreteScene` / `frictionFromIncident` で場面文を一本化。**3/8** は `polishCustomerSideManuscriptPunch`。**4/8** は **`buildCustomerSideThenSelf`（新規）** で当時の感覚の一文。**5/8** は `buildFallbackLearning` を **テーマ・芯・結論の束ね**で分岐し、**題材A と 題材D で同一文に潰れない**ようにした。**6/8** は `polishCustomerSideManuscriptEssence` を軽く。**7/8** は `buildNoteConclusionNextLine` を約束調に。コミット: **`fix: fully naturalize customer-side manuscript phrasing`**。
+- **確認**: 題材A・題材Dで **Node `buildAllOutputs`** 経路を確認済み。**ブラウザ実機は未確認**のまま。
+
 - **記録上のコード位置（2026-03-24 更新）**: customer_side の **4/8・5/8・7/8** 確定文案は **`ca3b90d`**。これに先立つ **2/8・3/8・5/8・7/8** 生成経路の再調整は `concreteSceneBank` / `pickOneConcreteScene` / `frictionFromIncident` / `buildFallbackLearning` / `buildNoteConclusionNextLine` / `polishCustomerSideManuscriptPunch` 等。**`main` の先端**は **origin/main** を参照。それ以前の主線整理は **`f03f95c`** 付近を参照（導入・原稿・統合プロンプトの最小修正を含む）。
 - **2026-03-23 の確認タスク**: **コード変更なし**。`buildAllOutputs` の生成結果を題材A/Bで確認（ブラウザの「構成を生成」と同じエンジン出力。実機は Node 実行で代替）。
 

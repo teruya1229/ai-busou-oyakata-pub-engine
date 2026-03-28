@@ -190,7 +190,7 @@
         "専門用語のまま説明が続き、相手の顔色を見ずに話を進めた。",
       ],
       customer_side: [
-        "見積の説明で専門用語が続き、お客様は相づちだけになって、途中から聞き返しもしなくなった。",
+        "見積の説明で専門用語が続き、お客様は相づちばかりで、途中からは聞き返しもしなくなった。",
         "説明を省いて先に進め、お客様は眉を寄せて、言葉を選ぶように黙った。",
         "こちらの当たり前の順番で話し、お客様は同じところだけを繰り返し聞き返した。",
       ],
@@ -216,7 +216,7 @@
     const th = compactSpaces(theme || "");
     const pack = compactSpaces((theme || "") + " " + (coreMain || "") + " " + (coreConclusion || "")).toLowerCase();
     if ((pack.indexOf("業界") >= 0 && pack.indexOf("常識") >= 0) || th.indexOf("非常識") >= 0) {
-      return "見積の説明で専門用語が続き、お客様は相づちだけになって、途中から聞き返しもしなくなった。";
+      return "見積の説明で専門用語が続き、お客様は相づちばかりで、途中からは聞き返しもしなくなった。";
     }
     if (th.indexOf("最安") >= 0 || pack.indexOf("最安") >= 0) {
       return "「安く」とだけ繰り返され、仕様の確認がまとまらないまま見積だけが行き来した。";
@@ -325,6 +325,15 @@
       return "価格は、集客だけでなく客層の作り方も変える。次の一歩を一つにする。";
     }
     if (ax === "customer_side") {
+      const pack = compactSpaces(
+        (theme || "") + " " + (coreMain || "") + " " + (coreConclusion || "")
+      ).toLowerCase();
+      if (pack.indexOf("置いていか") >= 0 || (pack.indexOf("早すぎ") >= 0 && pack.indexOf("手順") >= 0)) {
+        return "あとから思い返すと、止まっていたのは説明の内容ではなく、置いていかれる不安だった。";
+      }
+      if (pack.indexOf("非常識") >= 0 || pack.indexOf("不親切") >= 0) {
+        return "あとから思い返すと、相手が引いていたのは、こちらの正しさではなく、話の向きだった。";
+      }
       return "あのとき相手が止まっていたのは、説明じゃなくて不安だった。";
     }
     if (ax === "human_relation") {
@@ -696,7 +705,7 @@
     const inc = compactSpaces((incident || "").toLowerCase());
     if (inc.indexOf("専門用語") >= 0 || inc.indexOf("分かりません") >= 0) {
       if (axis === "customer_side") {
-        return "お客様は相づちだけになり、途中から聞き返しもしなくなった。";
+        return "お客様は相づちばかりで、途中からは聞き返しもしなくなった。";
       }
       return "お客様の反応が固く、一歩引いた感じになった。";
     }
@@ -859,7 +868,10 @@
       return "自分のペースで話しているうちに、相手の目が曇っていった。";
     }
     if (t.indexOf("当たり前") >= 0 && t.indexOf("早すぎ") >= 0) {
-      return "当たり前の順番で話しているのに、相手の表情だけが曇っていった。";
+      return "手順の当たり前で進めているのに、相手の表情だけが曇っていった。";
+    }
+    if (t.indexOf("不親切") >= 0 && t.indexOf("見える") >= 0) {
+      return "自分では普通の話が、相手には刺さっていた。";
     }
     return t;
   }
@@ -873,12 +885,28 @@
       return "";
     }
     if (t.indexOf("お客様の言葉") >= 0 && t.indexOf("言い直す") >= 0) {
-      return "お客様の言葉で一度言い直すと、伝わり方が変わる。";
+      return "お客様の言葉に一度寄せると、伝わり方が変わる。";
     }
     if (t.indexOf("相手の言葉") >= 0 && t.indexOf("言い直す") >= 0) {
-      return "相手の言葉で一度言い直すと、伝わり方が変わる。";
+      return "相手の言葉に一度寄せると、伝わり方が変わる。";
     }
     return "";
+  }
+
+  /**
+   * 原稿【当時の自分の認識】：customer_side のみ。当時の感覚として読める一文。
+   */
+  function buildCustomerSideThenSelf(normalized, turnFallback) {
+    const th = compactSpaces(normalized.theme || "");
+    const cm = compactSpaces(normalized.coreMain || "");
+    const full = compactSpaces(th + " " + cm).toLowerCase();
+    if (full.indexOf("置いていか") >= 0 || (cm.indexOf("早すぎ") >= 0 && cm.indexOf("当たり前") >= 0)) {
+      return "あのときは、こちらの順番が正しいと思っていて、相手の足が止まっているのに気づけなかった。";
+    }
+    if (full.indexOf("非常識") >= 0 || cm.indexOf("不親切") >= 0) {
+      return "そのときは、こちらの当たり前が通じていると思っていて、相手の表情の変化を拾い損ねていた。";
+    }
+    return firstSentenceJapanese(turnFallback) || turnFallback.slice(0, 140);
   }
 
   /**
@@ -914,7 +942,10 @@
       turn,
       normalized
     );
-    const thenSelf = firstSentenceJapanese(turn) || turn.slice(0, 140);
+    let thenSelf = firstSentenceJapanese(turn) || turn.slice(0, 140);
+    if ((normalized.topicAxis || "") === "customer_side") {
+      thenSelf = buildCustomerSideThenSelf(normalized, turn);
+    }
     const nowKnow = firstSentenceJapanese(learningLine) || learningLine.slice(0, 160);
     let essence =
       compactSpaces(normalized.coreConclusion || normalized.coreMain || "") || "本質は、言葉にしてから動くところだ。";
@@ -2075,7 +2106,7 @@
       return "次は、続け方の負担を数字だけで見ない。";
     }
     if (ax === "customer_side") {
-      return "説明より先に、不安を一言だけ聞く。それだけ決めた。";
+      return "次は、不安を先に一句だけ聞く、と自分に決めた。";
     }
     return "次は、いまの結論を次の応対の一つに組み込む。";
   }
