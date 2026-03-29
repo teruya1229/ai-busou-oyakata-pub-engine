@@ -36,8 +36,14 @@
   const comicImageApiStatus = document.getElementById("comic-image-api-status");
   const comicImageGenerateBtn = document.getElementById("comic-image-generate-btn");
   const comicImageDownloadBtn = document.getElementById("comic-image-download-btn");
+  const comicBubbleOverlayCanvas = document.getElementById("comic-bubble-overlay-canvas");
+  const comicBubbleOverlayWrap = document.getElementById("comic-bubble-overlay-wrap");
+  const comicBubbleOverlayStatus = document.getElementById("comic-bubble-overlay-status");
+  const comicBubbleOverlayGenerateBtn = document.getElementById("comic-bubble-overlay-generate-btn");
+  const comicBubbleOverlayDownloadBtn = document.getElementById("comic-bubble-overlay-download-btn");
 
   const COMIC_IMAGE_DOWNLOAD_FILENAME = "comic-8panel.png";
+  const COMIC_BUBBLE_OVERLAY_DOWNLOAD_FILENAME = "comic-8panel-with-bubbles.png";
 
   const COMIC_PREVIEW_STATUS_IDLE =
     "URL または data URL を入力し、「画像を表示」を押すか、入力欄で Ctrl+Enter（Mac は ⌘+Enter）で反映できます。";
@@ -220,6 +226,7 @@
   }
 
   function renderOutputs(result) {
+    resetBubbleOverlayPreview();
     if (outputs.comicManuscriptPost) {
       outputs.comicManuscriptPost.textContent =
         result.comicManuscriptPost != null && result.comicManuscriptPost !== ""
@@ -761,6 +768,7 @@
     if (comicImageGenerateBtn) {
       comicImageGenerateBtn.disabled = false;
     }
+    resetBubbleOverlayPreview();
   }
 
   function hideComicImagePreview() {
@@ -803,6 +811,7 @@
       }
       comicImagePreviewStatus.textContent = "画像を表示しています。";
       comicImagePreviewStatus.style.color = "#6b7280";
+      resetBubbleOverlayPreview();
     };
     comicImagePreview.onerror = function () {
       comicImagePreview.onload = null;
@@ -829,6 +838,315 @@
       return false;
     }
     return true;
+  }
+
+  function isOutputPlaceholderText(text) {
+    const t = (text || "").trim();
+    return !t || t === OUTPUT_PLACEHOLDER;
+  }
+
+  /** 8コマ吹き出し台本テキスト → 各コマの行配列（8件） */
+  function parseBubbleScript8(scriptText) {
+    const raw = (scriptText || "").trim();
+    if (!raw) {
+      return null;
+    }
+    const panels = [];
+    for (let i = 0; i < 8; i += 1) {
+      panels[i] = [];
+    }
+    const blocks = raw.split(/\n\n+/);
+    for (let b = 0; b < blocks.length; b += 1) {
+      const lines = blocks[b].split("\n");
+      if (!lines.length) {
+        continue;
+      }
+      const header = (lines[0] || "").trim();
+      const m = /^(\d)\/8[（(]/.exec(header);
+      if (!m) {
+        continue;
+      }
+      const idx = parseInt(m[1], 10) - 1;
+      if (idx < 0 || idx > 7) {
+        continue;
+      }
+      for (let j = 1; j < lines.length; j += 1) {
+        const L = (lines[j] || "").trim();
+        if (!L || L === "（空）") {
+          continue;
+        }
+        panels[idx].push(L);
+      }
+    }
+    return panels;
+  }
+
+  /** 8コマ吹き出し配置テキスト → 各コマの位置・サイズ */
+  function parseBubblePlacement8(placeText) {
+    const raw = (placeText || "").trim();
+    if (!raw) {
+      return null;
+    }
+    const panels = [];
+    for (let i = 0; i < 8; i += 1) {
+      panels[i] = { position: "上", size: "中" };
+    }
+    const blocks = raw.split(/\n\n+/);
+    for (let b = 0; b < blocks.length; b += 1) {
+      const lines = blocks[b].split("\n");
+      if (!lines.length) {
+        continue;
+      }
+      const header = (lines[0] || "").trim();
+      const m = /^(\d)\/8/.exec(header);
+      if (!m) {
+        continue;
+      }
+      const idx = parseInt(m[1], 10) - 1;
+      if (idx < 0 || idx > 7) {
+        continue;
+      }
+      for (let j = 1; j < lines.length; j += 1) {
+        const L = (lines[j] || "").trim();
+        if (L.indexOf("位置:") === 0) {
+          panels[idx].position = L.replace(/^位置:\s*/, "").trim() || "上";
+        }
+        if (L.indexOf("サイズ:") === 0) {
+          panels[idx].size = L.replace(/^サイズ:\s*/, "").trim() || "中";
+        }
+      }
+    }
+    return panels;
+  }
+
+  function wrapLinesForBubble(ctx, text, maxInnerWidth) {
+    const t = (text || "").trim();
+    if (!t) {
+      return [];
+    }
+    const chars = Array.from(t);
+    const out = [];
+    let line = "";
+    for (let i = 0; i < chars.length; i += 1) {
+      const test = line + chars[i];
+      if (ctx.measureText(test).width > maxInnerWidth && line.length > 0) {
+        out.push(line);
+        line = chars[i];
+      } else {
+        line = test;
+      }
+    }
+    if (line) {
+      out.push(line);
+    }
+    return out.length ? out : [t];
+  }
+
+  function drawComicBubbleOverlay(img, panels, placements) {
+    if (!comicBubbleOverlayCanvas || !img || !img.naturalWidth) {
+      return;
+    }
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    const canvas = comicBubbleOverlayCanvas;
+    const ctx = canvas.getContext("2d");
+    canvas.width = w;
+    canvas.height = h;
+    ctx.drawImage(img, 0, 0, w, h);
+    const cols = 4;
+    const cellW = w / cols;
+    const cellH = h / 2;
+    const fontFromCell = cellW * 0.042;
+
+    for (let idx = 0; idx < 8; idx += 1) {
+      const lines = panels[idx] || [];
+      if (!lines.length) {
+        continue;
+      }
+      const pos = (placements[idx] && placements[idx].position) || "上";
+      const sizeLabel = (placements[idx] && placements[idx].size) || "中";
+      let sizeMul = 1;
+      if (sizeLabel === "小") {
+        sizeMul = 0.88;
+      }
+      if (sizeLabel === "大") {
+        sizeMul = 1.12;
+      }
+
+      let baseFont = Math.max(10, Math.min(28, fontFromCell * sizeMul));
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      const cellX = col * cellW;
+      const cellY = row * cellH;
+      const margin = Math.max(4, cellW * 0.015);
+      const maxW = cellW - margin * 2 - 12;
+      const maxCellH = cellH * 0.88;
+      const padX = 6;
+      const padY = 5;
+
+      let drawLines = [];
+      let bubbleW = 0;
+      let bubbleH = 0;
+      let lineHeight = baseFont * 1.38;
+
+      for (let attempt = 0; attempt < 14; attempt += 1) {
+        ctx.font =
+          baseFont +
+          'px "Yu Gothic UI", "Hiragino Kaku Gothic ProN", "Meiryo", system-ui, sans-serif';
+        lineHeight = baseFont * 1.38;
+        drawLines = [];
+        for (let li = 0; li < lines.length; li += 1) {
+          const wrapped = wrapLinesForBubble(ctx, lines[li], maxW - padX * 2);
+          for (let j = 0; j < wrapped.length; j += 1) {
+            drawLines.push(wrapped[j]);
+          }
+        }
+        let maxLineW = 0;
+        for (let d = 0; d < drawLines.length; d += 1) {
+          maxLineW = Math.max(maxLineW, ctx.measureText(drawLines[d]).width);
+        }
+        bubbleW = Math.min(cellW - margin * 2, maxLineW + padX * 2);
+        bubbleH = drawLines.length * lineHeight + padY * 2;
+        if (bubbleH <= maxCellH) {
+          break;
+        }
+        baseFont *= 0.92;
+      }
+
+      let bx = cellX + margin;
+      let by = cellY + margin;
+      switch (pos) {
+        case "上中央":
+        case "上":
+          bx = cellX + (cellW - bubbleW) / 2;
+          by = cellY + margin;
+          break;
+        case "右上":
+          bx = cellX + cellW - bubbleW - margin;
+          by = cellY + margin;
+          break;
+        case "左上":
+          bx = cellX + margin;
+          by = cellY + margin;
+          break;
+        case "中央":
+          bx = cellX + (cellW - bubbleW) / 2;
+          by = cellY + (cellH - bubbleH) / 2;
+          break;
+        case "左下":
+          bx = cellX + margin;
+          by = cellY + cellH - bubbleH - margin;
+          break;
+        case "下":
+          bx = cellX + (cellW - bubbleW) / 2;
+          by = cellY + cellH - bubbleH - margin;
+          break;
+        default:
+          bx = cellX + (cellW - bubbleW) / 2;
+          by = cellY + margin;
+      }
+
+      const rr = Math.min(8, bubbleW * 0.08);
+      ctx.fillStyle = "rgba(255,255,255,0.94)";
+      ctx.strokeStyle = "#111111";
+      ctx.lineWidth = Math.max(1, w / 500);
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(bx, by, bubbleW, bubbleH, rr);
+      } else {
+        ctx.rect(bx, by, bubbleW, bubbleH);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#111111";
+      ctx.textBaseline = "top";
+      ctx.textAlign = "left";
+      let ty = by + padY;
+      for (let di = 0; di < drawLines.length; di += 1) {
+        ctx.fillText(drawLines[di], bx + padX, ty);
+        ty += lineHeight;
+      }
+    }
+  }
+
+  function setBubbleOverlayStatus(message, color) {
+    if (!comicBubbleOverlayStatus) {
+      return;
+    }
+    comicBubbleOverlayStatus.textContent = message || "";
+    comicBubbleOverlayStatus.style.color = color || "#6b7280";
+  }
+
+  function resetBubbleOverlayPreview() {
+    if (comicBubbleOverlayCanvas) {
+      const c = comicBubbleOverlayCanvas;
+      const ctx = c.getContext("2d");
+      if (ctx && c.width > 0) {
+        ctx.clearRect(0, 0, c.width, c.height);
+      }
+      c.width = 0;
+      c.height = 0;
+    }
+    if (comicBubbleOverlayWrap) {
+      comicBubbleOverlayWrap.style.display = "none";
+    }
+    setBubbleOverlayStatus(
+      "先に「構成を生成」と無字画像の表示を済ませてから押してください。",
+      "#6b7280"
+    );
+  }
+
+  function generateComicBubbleOverlayPreview() {
+    const scriptEl = document.getElementById("comic-bubble-script-8-output");
+    const placeEl = document.getElementById("comic-bubble-placement-8-output");
+    const scriptText = scriptEl ? scriptEl.textContent || "" : "";
+    const placeText = placeEl ? placeEl.textContent || "" : "";
+    if (isOutputPlaceholderText(scriptText) || isOutputPlaceholderText(placeText)) {
+      setBubbleOverlayStatus("先に「構成を生成」で吹き出し台本・配置が出た状態にしてください。", "#b45309");
+      return;
+    }
+    if (!comicImagePreview || !comicImagePreview.complete || !comicImagePreview.naturalWidth) {
+      setBubbleOverlayStatus("先に無字画像をプレビューに表示してください。", "#b45309");
+      return;
+    }
+    if (!hasVisibleComicImagePreview()) {
+      setBubbleOverlayStatus("先に無字画像をプレビューに表示してください。", "#b45309");
+      return;
+    }
+    const panels = parseBubbleScript8(scriptText);
+    const placements = parseBubblePlacement8(placeText);
+    if (!panels || !placements) {
+      setBubbleOverlayStatus("台本・配置の解析に失敗しました。", "#b91c1c");
+      return;
+    }
+    try {
+      drawComicBubbleOverlay(comicImagePreview, panels, placements);
+      if (comicBubbleOverlayWrap) {
+        comicBubbleOverlayWrap.style.display = "block";
+      }
+      setBubbleOverlayStatus("吹き出し付きプレビューを表示しています。", "#6b7280");
+    } catch (e) {
+      setBubbleOverlayStatus("描画に失敗しました。", "#b91c1c");
+    }
+  }
+
+  function downloadComicBubbleOverlay() {
+    if (!comicBubbleOverlayCanvas || !comicBubbleOverlayWrap) {
+      return;
+    }
+    if (comicBubbleOverlayWrap.style.display === "none" || comicBubbleOverlayCanvas.width < 1) {
+      window.alert("先に「吹き出し付きプレビューを生成」してください。");
+      return;
+    }
+    try {
+      const url = comicBubbleOverlayCanvas.toDataURL("image/png");
+      triggerDownloadFromHref(url, COMIC_BUBBLE_OVERLAY_DOWNLOAD_FILENAME);
+    } catch (e) {
+      window.alert(
+        "保存できませんでした。無字画像は data URL または同一オリジンのURLを使うと保存しやすいです。"
+      );
+    }
   }
 
   function triggerDownloadFromBlob(blob, filename) {
@@ -956,6 +1274,7 @@
     if (lastUsedClear) {
       lastUsedClear.textContent = "まだ生成していません。";
     }
+    resetBubbleOverlayPreview();
     updateComicImageReviewPanel();
   }
 
@@ -1160,11 +1479,25 @@
     requestComicImage: requestComicImage,
     generateComicImageFromPrompt: generateComicImageFromPrompt,
     downloadComicImageFromPreview: downloadComicImageFromPreview,
+    generateComicBubbleOverlayPreview: generateComicBubbleOverlayPreview,
+    downloadComicBubbleOverlay: downloadComicBubbleOverlay,
   };
 
   if (comicImageGenerateBtn) {
     comicImageGenerateBtn.addEventListener("click", function () {
       generateComicImageFromPrompt();
+    });
+  }
+
+  if (comicBubbleOverlayGenerateBtn) {
+    comicBubbleOverlayGenerateBtn.addEventListener("click", function () {
+      generateComicBubbleOverlayPreview();
+    });
+  }
+
+  if (comicBubbleOverlayDownloadBtn) {
+    comicBubbleOverlayDownloadBtn.addEventListener("click", function () {
+      downloadComicBubbleOverlay();
     });
   }
 

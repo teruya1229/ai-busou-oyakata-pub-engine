@@ -309,6 +309,21 @@
             style="max-width: 100%; height: auto; display: none"
           />
         </div>
+
+        <h2 style="margin: 18px 0 8px">吹き出し付きプレビュー（無字画像＋台本＋配置）</h2>
+        <p style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
+          無字の8コマ画像を上に表示したうえで、「構成を生成」済みの<strong>8コマ吹き出し台本</strong>と<strong>配置データ</strong>を読み、白地に黒文字の吹き出しを重ねたプレビューを出します（2×4の読み順想定）。
+        </p>
+        <div class="actions">
+          <button type="button" id="comic-bubble-overlay-generate-btn">吹き出し付きプレビューを生成</button>
+          <button type="button" id="comic-bubble-overlay-download-btn" class="subtle">吹き出し付き画像を保存</button>
+        </div>
+        <p id="comic-bubble-overlay-status" class="output-block" style="min-height: auto; margin-top: 8px; font-size: 14px; color: #6b7280">
+          先に「構成を生成」と無字画像の表示を済ませてから押してください。
+        </p>
+        <div id="comic-bubble-overlay-wrap" class="comic-bubble-overlay-wrap" style="display: none">
+          <canvas id="comic-bubble-overlay-canvas" class="comic-bubble-overlay-canvas"></canvas>
+        </div>
       </section>
 
       <section class="card note-assist-card">

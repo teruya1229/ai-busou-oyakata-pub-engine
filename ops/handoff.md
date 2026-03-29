@@ -8,6 +8,11 @@
 
 ## 8コマ主線の現状態と確認（2026-03-23 追記）
 
+### 吹き出し付きプレビュー（2026-03-29）
+
+- **`js/app.js`**: 無字画像プレビュー表示後、**8コマ吹き出し台本**（`#comic-bubble-script-8-output`）と**配置データ**（`#comic-bubble-placement-8-output`）をパースし、**Canvas** に白地・黒枠・黒文字で重ね表示（**2×4**・読み順想定）。**`AIBusouComicImageAdapter.generateComicBubbleOverlayPreview` / `downloadComicBubbleOverlay`**。保存ファイル名 **`comic-8panel-with-bubbles.png`**。**`index.html`**・**`css/style.css`** に最小 UI。
+- **注意**: 実画像のコマ境界と 2×4 の前提がずれると位置が合いにくい（最小オーバーレイのため）。
+
 ### 漫画RAG・自然さ補強（2026-03-29）
 
 - **`js/rag-data.js`**: Notion「漫画RAG素材庫」相当の **ローカル仮データ**（`source` / `section` / `tags` / `scene` / `badResponse` / `betterResponse` / `emotionShift`）。**電工ツール用RAGとは分離**。

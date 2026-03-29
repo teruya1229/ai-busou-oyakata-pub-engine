@@ -50,6 +50,21 @@ body {
   font-size: 15px;
 }
 
+.comic-bubble-overlay-wrap {
+  margin-top: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fafafa;
+  padding: 12px;
+  text-align: center;
+}
+
+.comic-bubble-overlay-canvas {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
 .note-assist-card {
   border-color: #e9d5ff;
   background: #faf5ff;
