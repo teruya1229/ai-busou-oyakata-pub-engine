@@ -4,7 +4,7 @@
 現場で起きた出来事を入力すると、まず **漫画原稿（一次ソース・8ブロック）** を出し、そこから **8コマ標準ネーム（1/8〜8/8・原稿ブロックと1対1）・コマ別プロンプト・統合画像プロンプト・note補助（導入・締め）** へ一方向に展開する静的Webツールです。**長文note本文やKindleを主導線の一次ソースにしません**。画面の主役は **原稿 → ネーム → プロンプト → note補助** です。**Kindle**は「蓄積済み素材を並べて一冊化する**将来の別モード**」として折りたたみに置き、**構成を生成のたびにプレビューを更新しません**。
 
 主出力（`buildAllOutputs`・主導線と対応）:
-- **漫画原稿**（`comicManuscriptPost`）、**タイトル**（`comicTitle`）、**ネーム本文**（`comic`・8コマ）、**8コマ吹き出し台本**（`comicBubbleScript8`・原稿から派生した画像載せ用の短行）、**コマ別描画プロンプト**（`comicPrompt`）、**統合画像プロンプト**（`comicUnifiedPrompt`）
+- **漫画原稿**（`comicManuscriptPost`）、**タイトル**（`comicTitle`）、**ネーム本文**（`comic`・8コマ）、**8コマ吹き出し台本**（`comicBubbleScript8`・原稿から派生した画像載せ用の短行）、**8コマ吹き出し配置データ**（`comicBubblePlacement8`・種別・推奨位置・サイズ・行数目安。無字画像への後載せ用）、**コマ別描画プロンプト**（`comicPrompt`）、**統合画像プロンプト**（`comicUnifiedPrompt`）
 - **漫画RAGデバッグ**（`comicRagDebug`・折りたたみ表示）：`js/rag-data.js` の仮素材をタグ照合で3〜5件拾い、**`customer_side`** の原稿 **2/8・3/8・5/8・6/8** に短文を軽く足す（Notion API 直結は後段。電工ツール用RAGとは分離）
 - **旧4コマ短縮ネーム**（`comicLegacy4`・比較・互換用。主表示は `comic`）
 - **note補助**（`noteIntroAssist` / `noteClosingAssist`）

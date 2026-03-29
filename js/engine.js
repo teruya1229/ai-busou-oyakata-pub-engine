@@ -1463,6 +1463,107 @@
     return parts.join("\n").trim();
   }
 
+  /**
+   * 8コマ吹き出し配置：後工程で画像に載せるための推奨位置・サイズ・行数目安（台本と同一の行分割を利用）
+   */
+  function bubblePlacementPosition(panelNum) {
+    switch (panelNum) {
+      case 1:
+        return "上中央";
+      case 2:
+        return "右上";
+      case 3:
+        return "上";
+      case 4:
+        return "左上";
+      case 5:
+        return "上";
+      case 6:
+        return "中央";
+      case 7:
+        return "左下";
+      case 8:
+        return "下";
+      default:
+        return "上";
+    }
+  }
+
+  function bubblePlacementSize(panelNum, rawLineCount) {
+    const lc = Math.min(3, Math.max(1, rawLineCount));
+    if (panelNum === 1) {
+      return lc <= 1 ? "小" : "中";
+    }
+    if (panelNum === 2) {
+      return lc >= 3 ? "大" : "中";
+    }
+    if (panelNum === 3) {
+      return lc <= 2 ? "小" : "中";
+    }
+    if (panelNum === 4 || panelNum === 5) {
+      return "中";
+    }
+    if (panelNum === 6) {
+      return lc >= 3 ? "大" : "中";
+    }
+    if (panelNum === 7) {
+      return "小";
+    }
+    if (panelNum === 8) {
+      return "中";
+    }
+    return "中";
+  }
+
+  function bubblePlacementKindDisplay(panelNum) {
+    const k = bubblePanelKindForIndex(panelNum);
+    if (k === "行動ルール") {
+      return "行動ルール";
+    }
+    if (k === "問い") {
+      return "問い";
+    }
+    if (k === "ナレーション") {
+      return "ナレーション";
+    }
+    return "モノローグ";
+  }
+
+  function buildEightPanelBubblePlacement(manuscript) {
+    const sec = parseManuscriptSections(manuscript);
+    const blocks = [
+      { n: 1, text: sec.intro },
+      { n: 2, text: sec.incident },
+      { n: 3, text: sec.punch },
+      { n: 4, text: sec.thenSelf },
+      { n: 5, text: sec.nowKnow },
+      { n: 6, text: sec.essence },
+      { n: 7, text: sec.rule },
+      { n: 8, text: sec.reader },
+    ];
+    const parts = [];
+    for (let i = 0; i < blocks.length; i += 1) {
+      const b = blocks[i];
+      const rawLines = formatPanelBubbleLines(b.n, b.text);
+      const lineHint = Math.min(3, Math.max(1, rawLines.length || 1));
+      const pos = bubblePlacementPosition(b.n);
+      const size = bubblePlacementSize(b.n, rawLines.length);
+      const kind = bubblePlacementKindDisplay(b.n);
+      parts.push(
+        String(b.n) +
+          "/8\n種別: " +
+          kind +
+          "\n位置: " +
+          pos +
+          "\nサイズ: " +
+          size +
+          "\n行数: " +
+          lineHint
+      );
+    }
+    return parts.join("\n\n").trim();
+  }
+
   function parseManuscriptSections(manuscript) {
     const keys = [
       "導入",
@@ -3309,6 +3410,7 @@
       noteTitleSuggestions: noteTitleSuggestions,
       notePrePublishCheck: buildNotePrePublishCheck(normalized, noteBodyOnly, noteTitleSuggestions),
       comicBubbleScript8: buildEightPanelBubbleScript(manuscript),
+      comicBubblePlacement8: buildEightPanelBubblePlacement(manuscript),
       comicRagDebug: buildComicRagDebugText(comicRagRanked),
     };
   }
@@ -3325,5 +3427,6 @@
     buildXPost,
     buildAllOutputs,
     buildEightPanelBubbleScript,
+    buildEightPanelBubblePlacement,
   };
 })();

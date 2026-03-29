@@ -1206,6 +1206,11 @@
 
 - **`js/engine.js`**: **`concreteSceneBank` / `pickOneConcreteScene`**（相手の相づち・聞き返しの変化）、**`frictionFromIncident`（customer_side）`**、**`buildFallbackLearning`**（後悔と気づきを **一文**に収め `firstSentenceJapanese` で切られないよう句点を一つに）、**`buildNoteConclusionNextLine`**（自分への決め）、**`polishCustomerSideManuscriptPunch`**（体感寄りの短文）を **customer_side のみ**最小差分で調整。
 
+## 今日やったこと（2026-03-29：8コマ吹き出し配置データ）
+
+- **`js/engine.js`**: **`buildEightPanelBubblePlacement`**・**`buildAllOutputs` の `comicBubblePlacement8`**（種別・位置・サイズ・行数目安）。
+- **`index.html` / `js/app.js`**: **`#comic-bubble-placement-8-output`**・コピー・**スタイル向けにまとめてコピー**に連結。
+
 ## 今日やったこと（2026-03-29：漫画RAG追記の重複・題材ズレ抑制）
 
 - **`js/engine.js`**: **`ragTextOverlapsCorpus`**（同文・先頭〜中盤の一致）と **`appendRagClauseIfMissing` の横断コーパス**で **3/8〜6/8** の重複追記を抑制。**`comicRagUserIntentBundle`**（テーマ・芯のみ）で **6/8** の専門用語追記ゲート、**5/8** の「順番・伝わらない」題材への **黙る**一般論スキップ。

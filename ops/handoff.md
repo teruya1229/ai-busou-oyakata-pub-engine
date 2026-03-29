@@ -18,6 +18,7 @@
 ### 8コマ吹き出し台本（2026-03-28）
 
 - **`buildAllOutputs` の `comicBubbleScript8`**: 漫画原稿8ブロックから **画像に載せる短文**（コマごと **ナレーション／モノローグ／行動ルール／問い** の種別付き）。**`buildEightPanelBubbleScript`** が `parseManuscriptSections` を再利用。**UI**: `#comic-bubble-script-8-output`・コピー。**4コマ**は従来どおり（吹き出し台本は8コマのみ）。
+- **8コマ吹き出し配置データ（2026-03-29）**: **`buildAllOutputs` の `comicBubblePlacement8`**。**`buildEightPanelBubblePlacement`** が台本と同じ **`formatPanelBubbleLines`** で行数を取り、コマごとに **種別・位置（上／下／左上 等）・サイズ（小／中／大）・行数目安（1〜3）** をテキスト出力。**UI**: `#comic-bubble-placement-8-output`・コピー。画像モデルが文字を描かない前提の **後載せオーバーレイ**用。
 - **確定文案との整合（2026-03-28 追記）**: 吹き出しは **原稿の短行化のみ**。ズレは **`buildComicManuscriptPost`** 側の【本質】／【事件】が題材によって未固定だったことが原因。**`polishCustomerSideManuscriptEssence`**／**`pickOneConcreteScene`** で **題材1（見積・専門用語）** の **6/8**、**題材2（丁寧なのに不親切）** の **2/8・6/8** を確定文へ。**改行**は `splitJapaneseTextToLines` で **`で`/`に`** による誤分割を避ける。
 
 ### customer_side・現状態（2026-03-24・ops 同期）
