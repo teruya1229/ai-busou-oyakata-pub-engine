@@ -1,10 +1,22 @@
 # handoff
 
+## 現行主線（2026-03-29・10コマ確定）
+
+- **主線**: **漫画原稿**（`comicManuscriptPost`・一次ソース）→ **10コマ標準ネーム（1/10〜10/10・`comicTitle` / `comic`）** → **コマ別プロンプト**（`comicPrompt`）→ **1コマずつ画像生成用プロンプト**（`comicSinglePanelPrompts10`）→ **ツール側で2列×5行合成** → **10コマ吹き出し台本**（`comicBubbleScript10`）/ **配置**（`comicBubblePlacement10`）でオーバーレイ → **note補助**（`noteIntroAssist` / `noteClosingAssist`）。**統合画像プロンプト**（`comicUnifiedPrompt`・1枚多コマ）は**補助導線**のまま残置。
+- **旧形式**: **4コマ**は `comicLegacy4`。**旧8コマ**は **`comicLegacy8`**・`comicBubbleScript8` / `comicBubblePlacement8` 等（**後方互換**。主表示・主出力は10コマ）。
+- **直近コミット（主線関連）**: **`5a3ff24`**（10コマ主線切替）・**`488c3e5`**（フォーム補助文・例文・placeholder 混入防止）・**`ddffa14`**（単一コマプロンプト文言を10コマ主線に整合）・**`c411bae`**（10コマ吹き出し短文化・終盤役割: **8/10=気づき・手前、9/10=決意、10/10=問い**）。
+- **品質認識**: テキスト主線はかなり整っている。Node / vm で10コマ経路の整合を確認済み。題材2（`customer_side`）は文面上かなり改善。実画像では10コマとして読める段階。**次のボトルネックは実ブラウザでの見え方確認**（特に **4/10・7/10・8/10・9/10・10/10** の読みやすさと役割差）。**4/10・7/10** にまだ説明感が残る可能性あり。
+- **次の一手**: **Claude in Chrome**（または同一オリジン）で**通常入力**と **placeholder** の両方を実機確認。必要なら最小修正。
+- 長文note・章メモ・Kindleは **`auxiliary-details`（その他）**。**X投稿は主線から撤去**（`buildXPost` は `kindle-engine.js` 節プレビュー向けに `window.AIBusouEngine` のみ残置）。
+
+---
+
 ## ワークフロー方針（2026-03-23）
 
-- **主導線**: **漫画原稿**（`comicManuscriptPost`）→ **8コマ標準ネーム（1/8〜8/8・`comicTitle` / `comic`）**→ **コマ別プロンプト**（`comicPrompt`）→ **1コマずつ画像生成用プロンプト**（`comicSinglePanelPrompts8`・**主線の画像**）→ **ツール側で2列×4行合成** → **吹き出し台本 / 配置でオーバーレイ** → **note補助**（`noteIntroAssist` / `noteClosingAssist`）。**統合画像プロンプト**（`comicUnifiedPrompt`・1枚で8コマ）は**補助導線**のまま残置（改善は打ち切り）。**旧4コマ短縮**は **`comicLegacy4`**（比較・互換用）。長文note・章メモ・Kindleは **`auxiliary-details`（その他）**で折りたたみ。**X投稿は主線から撤去**（`buildAllOutputs` に含めない。必要なら note 公開後にリンクで回す）。**`buildXPost`** は **`kindle-engine.js` の節プレビュー**が参照するため **`window.AIBusouEngine` にのみ残置**。
+- **※ 履歴メモ**: 以下の箇条書きは **8コマ主線時代の説明**を含む。**現行の主線は10コマ**（上記「現行主線」）。**legacy8** 用の記述は引き続きコードに存在する。
+- **主導線（旧8コマ時代の記述）**: **漫画原稿**（`comicManuscriptPost`）→ **8コマ標準ネーム（1/8〜8/8・`comicTitle` / `comic`）**→ **コマ別プロンプト**（`comicPrompt`）→ **1コマずつ画像生成用プロンプト**（`comicSinglePanelPrompts8`・**主線の画像**）→ **ツール側で2列×4行合成** → **吹き出し台本 / 配置でオーバーレイ** → **note補助**（`noteIntroAssist` / `noteClosingAssist`）。**統合画像プロンプト**（`comicUnifiedPrompt`・1枚で8コマ）は**補助導線**のまま残置（改善は打ち切り）。**旧4コマ短縮**は **`comicLegacy4`**（比較・互換用）。長文note・章メモ・Kindleは **`auxiliary-details`（その他）**で折りたたみ。**X投稿は主線から撤去**（`buildAllOutputs` に含めない。必要なら note 公開後にリンクで回す）。**`buildXPost`** は **`kindle-engine.js` の節プレビュー**が参照するため **`window.AIBusouEngine` にのみ残置**。
 
-### 1コマ生成→2×4合成（2026-03-29）
+### 1コマ生成→2×4合成（2026-03-29・legacy8 / 履歴）
 
 - **単一コマの役割固定（2026-03-29 追記）**: **`buildPanelPrompt`** に **`役割固定（絵だけで分かること）`** 行を追加。1/8は会話前の空気、2/8は事件（`customer_side` はお客様主役・沈黙・頷き）、7/8は「次は聞く」と決めた動き、8/8は読者への問いの締めを絵で固定。3〜6は中盤の密度を抑え、全体の起伏を揃える。
 - **`js/engine.js`**: **`buildSinglePanelImagePromptsBlock`**（`buildPanelPrompt` を各コマに「単一コマのみ」ラップ）→ **`buildAllOutputs` の `comicSinglePanelPrompts8`**
@@ -37,7 +49,7 @@
 ### customer_side・現状態（2026-03-24・ops 同期）
 
 - **記録の範囲**: **コード変更なし**。**`ops/handoff.md` / `ops/status.md`** に、直近の **customer_side** 自然化まで含めた **current state** を書き戻した（**2026-03-24**）。
-- **現状態**: 主線は **note 投稿**。投稿文＝**漫画原稿**（`comicManuscriptPost`）＝一次ソース。**標準は 8コマネーム**（旧 **4コマ** は `comicLegacy4` のみ）。**長文 note / Kindle / X** は主線外の扱い（変更なし）。
+- **現状態**: 主線は **note 投稿**。投稿文＝**漫画原稿**（`comicManuscriptPost`）＝一次ソース。**標準は 10コマネーム**（旧 **4コマ** は `comicLegacy4`、旧 **8コマ** は `comicLegacy8` 等）。**長文 note / Kindle / X** は主線外の扱い（変更なし）。
 - **直近で反映済み（実装・`ca3b90d`）**: `customer_side` の **4/8・5/8・7/8** を確定文案へ更新済み。関連コミット: **`fix: refine customer-side manuscript voice after naturalization pass`**（**`ca3b90d`**）。
 - **反映済み文案の要点**:
   - **4/8【当時の自分の認識】**（標準プリセット・`pickNoteTurnForTopicAxis`）: こちらは普通に進めているつもりで、相手が止まっていることに気づいていなかった。
