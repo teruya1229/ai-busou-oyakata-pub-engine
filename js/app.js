@@ -939,21 +939,22 @@
     return cut.trim();
   }
 
+  /** オーバーレイは2行基本・意味を残して短く（2/8・5/8・6/8は特に厳しめ） */
   function panelOverlayCharLimit(panelIdx) {
-    const lim = [88, 120, 72, 118, 118, 132, 88, 52];
-    return lim[panelIdx] != null ? lim[panelIdx] : 100;
+    const lim = [38, 30, 34, 44, 32, 32, 36, 30];
+    return lim[panelIdx] != null ? lim[panelIdx] : 36;
   }
 
   function panelOverlayMaxLines(panelIdx) {
-    const m = [3, 4, 3, 5, 5, 5, 3, 2];
-    return m[panelIdx] != null ? m[panelIdx] : 4;
+    const m = [2, 2, 2, 3, 2, 2, 2, 2];
+    return m[panelIdx] != null ? m[panelIdx] : 2;
   }
 
   function panelBubbleWidthFrac(panelIdx) {
     if (panelIdx >= 3 && panelIdx <= 5) {
-      return 0.96;
+      return 0.88;
     }
-    return 0.9;
+    return 0.82;
   }
 
   /** コマごとに台本を1塊にして短文化（長文は短文化優先） */
@@ -967,7 +968,15 @@
       .replace(/\s+/g, " ")
       .trim();
     const mx = panelOverlayCharLimit(panelIdx);
-    return shortenJapaneseTextForOverlay(j, mx);
+    let out = shortenJapaneseTextForOverlay(j, mx);
+    if (out.length > mx * 0.92 && /。/.test(out)) {
+      const parts = out.split("。");
+      const first = (parts[0] || "").trim();
+      if (first.length >= 6) {
+        out = shortenJapaneseTextForOverlay(first + "。", mx);
+      }
+    }
+    return out;
   }
 
   function wrapLinesToMaxLines(ctx, text, maxInnerWidth, maxLines, charLimit) {
@@ -987,12 +996,21 @@
     return wrapLinesForBubble(ctx, s, maxInnerWidth).slice(0, maxLines);
   }
 
-  function getFaceAvoidRect(inner) {
+  /** 2/8 はお客様側（右寄り）の顔帯を広めに避ける */
+  function getFaceAvoidRect(inner, panelIdx) {
+    if (panelIdx === 1) {
+      return {
+        x: inner.left + inner.width * 0.34,
+        y: inner.top + inner.height * 0.1,
+        w: inner.width * 0.62,
+        h: inner.height * 0.52,
+      };
+    }
     return {
-      x: inner.left + inner.width * 0.16,
-      y: inner.top + inner.height * 0.2,
-      w: inner.width * 0.68,
-      h: inner.height * 0.44,
+      x: inner.left + inner.width * 0.14,
+      y: inner.top + inner.height * 0.18,
+      w: inner.width * 0.72,
+      h: inner.height * 0.46,
     };
   }
 
@@ -1000,102 +1018,79 @@
     return !(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y);
   }
 
+  function bubbleOverlapsFace(bx, by, bw, bh, faceRect) {
+    if (!faceRect) {
+      return false;
+    }
+    return rectsOverlap({ x: bx, y: by, w: bw, h: bh }, faceRect);
+  }
+
   /**
-   * 顔の付きやすい中央を避け、コマ内に収まる位置へ（2/8 は下寄せ固定）
+   * 四隅優先で顔帯と重ならない位置を選ぶ（2/8 は左下・右下を先に試しお客様顔を避ける）
    */
-  function chooseBubblePosition(panelIdx, pos, inner, bubbleW, bubbleH, faceRect) {
-    const pad = Math.max(2, inner.width * 0.02);
+  function chooseBubblePosition(panelIdx, pos, inner, bubbleW, bubbleH, faceRect, topClearance) {
+    const pad = Math.max(2, inner.width * 0.025);
     const centerX = inner.left + inner.width / 2;
     const col = panelIdx % 4;
+    const tcPad = typeof topClearance === "number" ? topClearance : 0;
 
-    function clamp() {
-      bx = Math.max(inner.left, Math.min(bx, inner.right - bubbleW));
-      by = Math.max(inner.top, Math.min(by, inner.bottom - bubbleH));
-    }
-
-    let bx = inner.left + pad;
-    let by = inner.top + pad;
-
-    if (panelIdx === 1) {
-      bx = centerX - bubbleW / 2;
-      by = inner.bottom - bubbleH;
-      clamp();
-      return { bx: bx, by: by };
-    }
-    if (panelIdx === 7) {
-      bx = centerX - bubbleW / 2;
-      by = inner.bottom - bubbleH;
-      clamp();
-      return { bx: bx, by: by };
-    }
-    if (panelIdx === 0) {
-      bx = inner.left + inner.width * 0.06;
-      by = inner.top;
-      clamp();
-      return { bx: bx, by: by };
+    function clamp(bx, by) {
+      return {
+        bx: Math.max(inner.left, Math.min(bx, inner.right - bubbleW)),
+        by: Math.max(inner.top, Math.min(by, inner.bottom - bubbleH)),
+      };
     }
 
-    if (panelIdx === 6 || pos === "左下") {
-      bx = inner.left + pad;
-      by = inner.bottom - bubbleH;
-      clamp();
-      return { bx: bx, by: by };
+    function pack(bx, by) {
+      const p = clamp(bx, by);
+      return { bx: p.bx, by: p.by };
     }
 
-    if (pos === "下") {
-      bx = centerX - bubbleW / 2;
-      by = inner.bottom - bubbleH;
-      clamp();
-      return { bx: bx, by: by };
-    }
+    const bl = pack(inner.left + pad, inner.bottom - bubbleH);
+    const br = pack(inner.right - bubbleW - pad, inner.bottom - bubbleH);
+    const tl = pack(inner.left + pad + tcPad, inner.top + tcPad);
+    const tr = pack(inner.right - bubbleW - pad, inner.top + tcPad);
+    const bc = pack(centerX - bubbleW / 2, inner.bottom - bubbleH);
+    const tc = pack(centerX - bubbleW / 2, inner.top + tcPad);
 
-    if (pos === "右上") {
-      bx = inner.right - bubbleW - pad;
-      by = inner.top;
-      clamp();
-      return { bx: bx, by: by };
-    }
+    let order = [];
     if (pos === "左上") {
-      bx = inner.left + pad;
-      by = inner.top;
-      clamp();
-      return { bx: bx, by: by };
+      order = [tl, bl, tr, br, bc, tc];
+    } else if (pos === "右上") {
+      order = [tr, br, tl, bl, bc, tc];
+    } else if (pos === "下" || pos === "左下") {
+      order = [bl, br, bc, tl, tr, tc];
+    } else if (pos === "上" || pos === "上中央") {
+      order = col <= 1 ? [tl, tr, bl, br, bc] : [tr, tl, br, bl, bc];
+    } else if (panelIdx === 0) {
+      order = [tl, tr, bl, br, bc];
+    } else if (panelIdx === 1) {
+      order = [bl, br, tl, tr, bc, tc];
+    } else if (panelIdx === 7) {
+      order = [bc, bl, br, tc];
+    } else if (panelIdx === 6) {
+      order = [bl, bc, br, tl, tr];
+    } else if (pos === "中央" || panelIdx === 5) {
+      order = [bl, br, bc, tl, tr, tc];
+    } else if (col <= 1) {
+      order = [bl, tl, br, tr, bc, tc];
+    } else {
+      order = [br, tr, bl, tl, bc, tc];
     }
 
-    if (pos === "中央" || panelIdx === 5) {
-      bx = centerX - bubbleW / 2;
-      by = inner.bottom - bubbleH;
-      clamp();
-      return { bx: bx, by: by };
-    }
-
-    if (pos === "上" || pos === "上中央") {
-      if (col <= 1) {
-        bx = inner.left + pad;
-      } else {
-        bx = inner.right - bubbleW - pad;
+    let i;
+    for (i = 0; i < order.length; i += 1) {
+      const p = order[i];
+      if (!bubbleOverlapsFace(p.bx, p.by, bubbleW, bubbleH, faceRect)) {
+        return p;
       }
-      by = inner.top;
-      clamp();
-      return { bx: bx, by: by };
     }
-
-    bx = centerX - bubbleW / 2;
-    by = inner.bottom - bubbleH;
-    clamp();
-
-    const bubbleRect = { x: bx, y: by, w: bubbleW, h: bubbleH };
-    if (faceRect && rectsOverlap(bubbleRect, faceRect)) {
-      by = inner.bottom - bubbleH;
-      bx = centerX - bubbleW / 2;
-      clamp();
-    }
-    return { bx: bx, by: by };
+    return order[0];
   }
 
   function drawOverlayPanelGuides(ctx, w, h, cellW, cellH) {
-    ctx.strokeStyle = "rgba(0,0,0,0.16)";
-    ctx.lineWidth = Math.max(1, w / 720);
+    ctx.strokeStyle = "rgba(0,0,0,0.34)";
+    ctx.lineWidth = Math.max(1.5, w / 420);
     ctx.setLineDash([]);
     let c;
     for (c = 1; c < 4; c += 1) {
@@ -1110,6 +1105,44 @@
     ctx.moveTo(0, yMid);
     ctx.lineTo(w, yMid);
     ctx.stroke();
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = Math.max(1, w / 900);
+    ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
+  }
+
+  /** 1〜8 を吹き出しより手前（最後に描画）。白角丸＋黒枠＋黒字 */
+  function drawPanelNumberBadges(ctx, w, h, cellW, cellH, gutter, fontPx, inset, side) {
+    const r = side * 0.28;
+    ctx.save();
+    ctx.font =
+      "700 " +
+      fontPx +
+      'px "Yu Gothic UI", "Hiragino Kaku Gothic ProN", "Meiryo", system-ui, sans-serif';
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    let idx;
+    for (idx = 0; idx < 8; idx += 1) {
+      const col = idx % 4;
+      const row = Math.floor(idx / 4);
+      const bx = col * cellW + gutter + inset;
+      const by = row * cellH + gutter + inset;
+      const cx = bx + side / 2;
+      const cy = by + side / 2;
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#111111";
+      ctx.lineWidth = Math.max(1.5, w / 520);
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(bx, by, side, side, r);
+      } else {
+        ctx.rect(bx, by, side, side);
+      }
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#111111";
+      ctx.fillText(String(idx + 1), cx, cy);
+    }
+    ctx.restore();
   }
 
   function wrapLinesForBubble(ctx, text, maxInnerWidth) {
@@ -1152,7 +1185,12 @@
     const gutter = Math.max(4, Math.floor(Math.min(w, h) * 0.008));
     drawOverlayPanelGuides(ctx, w, h, cellW, cellH);
 
-    const OVERLAY_MIN_FONT = 14;
+    const badgeFontPx = Math.round(Math.max(16, Math.min(26, Math.min(w, h) * 0.034)));
+    const badgeInset = Math.max(4, gutter * 0.85);
+    const badgeSide = badgeFontPx * 1.45;
+    const bubbleTopClearance = badgeInset + badgeSide + 6;
+
+    const OVERLAY_MIN_FONT = 13;
     const OVERLAY_MAX_FONT = 22;
     const padX = 8;
     const padY = 6;
@@ -1189,7 +1227,7 @@
         right: cellX + cellW - gutter,
         bottom: cellY + cellH - gutter,
       };
-      const faceRect = getFaceAvoidRect(inner);
+      const faceRect = getFaceAvoidRect(inner, idx);
       const maxBubbleW = inner.width * panelBubbleWidthFrac(idx);
       const maxInnerW = maxBubbleW - padX * 2;
       const maxLines = panelOverlayMaxLines(idx);
@@ -1227,17 +1265,9 @@
         baseFont = nextFont;
       }
 
-      let posRes = chooseBubblePosition(idx, pos, inner, bubbleW, bubbleH, faceRect);
+      const posRes = chooseBubblePosition(idx, pos, inner, bubbleW, bubbleH, faceRect, bubbleTopClearance);
       let bx = posRes.bx;
       let by = posRes.by;
-
-      const bubbleRect = { x: bx, y: by, w: bubbleW, h: bubbleH };
-      if (faceRect && rectsOverlap(bubbleRect, faceRect) && idx !== 1 && idx !== 7) {
-        by = inner.bottom - bubbleH;
-        bx = inner.left + (inner.width - bubbleW) / 2;
-        bx = Math.max(inner.left, Math.min(bx, inner.right - bubbleW));
-        by = Math.max(inner.top, Math.min(by, inner.bottom - bubbleH));
-      }
 
       const rr = Math.min(8, bubbleW * 0.08);
       ctx.fillStyle = "rgba(255,255,255,0.94)";
@@ -1261,6 +1291,8 @@
         ty += lineHeight;
       }
     }
+
+    drawPanelNumberBadges(ctx, w, h, cellW, cellH, gutter, badgeFontPx, badgeInset, badgeSide);
   }
 
   function setBubbleOverlayStatus(message, color) {
