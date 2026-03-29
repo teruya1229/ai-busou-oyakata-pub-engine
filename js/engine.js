@@ -112,16 +112,94 @@
   }
 
   function ragSnippetHasOverlap(base, text) {
-    const b = compactSpaces(base);
-    const t = compactSpaces(text);
-    if (!b || !t) {
-      return false;
-    }
-    const probe = t.slice(0, Math.min(8, t.length));
-    return probe.length >= 4 && b.indexOf(probe) >= 0;
+    return ragTextOverlapsCorpus(base, text);
   }
 
-  function appendRagClauseIfMissing(base, clause, maxLen) {
+  /** 3/8〜6/8 追記の重複抑止：同文・ほぼ同文・先頭〜中盤の一致を見る */
+  function ragTextOverlapsCorpus(corpus, candidate) {
+    const c = compactSpaces(corpus);
+    const t = compactSpaces(candidate);
+    if (!c || !t) {
+      return false;
+    }
+    if (t.length >= 6 && c.indexOf(t) >= 0) {
+      return true;
+    }
+    const headLen = Math.min(12, t.length);
+    const head = t.slice(0, Math.max(4, headLen));
+    if (head.length >= 4 && c.indexOf(head) >= 0) {
+      return true;
+    }
+    if (t.length >= 22) {
+      const mid = t.slice(8, 20);
+      if (mid.length >= 8 && c.indexOf(mid) >= 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** 6/8 ゲート用：補完 incident に引っ張られないよう、入力意図（テーマ・芯）のみ */
+  function comicRagUserIntentBundle(normalized) {
+    return compactSpaces(
+      [
+        normalized && normalized.theme,
+        normalized && normalized.coreMain,
+        normalized && normalized.coreConclusion,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    );
+  }
+
+  /** 6/8：テーマに専門用語・見積が無いのに RAG が専門用語だけで乗る場合はスキップ */
+  function shouldSkipEssenceBetterResponse(normalized, entry, clauseRaw) {
+    const b = comicRagUserIntentBundle(normalized);
+    const c = compactSpaces(clauseRaw || "");
+    const one = firstSentenceJapanese(c) || c;
+    const clipped = compactSpaces(one);
+    if (!clipped) {
+      return false;
+    }
+    const tags = (entry && entry.tags) || [];
+    let tagHasSenmon = false;
+    for (let i = 0; i < tags.length; i += 1) {
+      if ((tags[i] || "").indexOf("専門用語") >= 0) {
+        tagHasSenmon = true;
+        break;
+      }
+    }
+    const ragPushesSenmon = tagHasSenmon || clipped.indexOf("専門用語") >= 0;
+    if (!ragPushesSenmon) {
+      return false;
+    }
+    if (b.indexOf("専門用語") >= 0 || b.indexOf("見積") >= 0) {
+      return false;
+    }
+    return (
+      b.indexOf("丁寧") >= 0 ||
+      b.indexOf("不親切") >= 0 ||
+      b.indexOf("順番") >= 0 ||
+      b.indexOf("伝わら") >= 0
+    );
+  }
+
+  /** 5/8：順番・伝わらない系なのに「黙る」一般論だけが乗る場合はスキップ（芯・テーマのみ） */
+  function shouldSkipNowKnowEmotionShift(normalized, clauseRaw) {
+    const b = comicRagUserIntentBundle(normalized);
+    const c = compactSpaces(clauseRaw || "");
+    const one = firstSentenceJapanese(c) || c;
+    const clipped = compactSpaces(one);
+    if (!clipped) {
+      return false;
+    }
+    const clauseWantsSilence = clipped.indexOf("黙る") >= 0 || clipped.indexOf("沈黙") >= 0;
+    const themeHasSilence = b.indexOf("黙") >= 0 || b.indexOf("沈黙") >= 0;
+    const themeHasOrderOrDeliver = b.indexOf("順番") >= 0 || b.indexOf("伝わら") >= 0;
+    return clauseWantsSilence && themeHasOrderOrDeliver && !themeHasSilence;
+  }
+
+  function appendRagClauseIfMissing(base, clause, maxLen, overlapCorpus) {
     const b = compactSpaces(base);
     const c = compactSpaces(clause);
     if (!c) {
@@ -129,13 +207,30 @@
     }
     const one = firstSentenceJapanese(c) || c;
     const clipped = clipComicLine(one, maxLen || 52);
-    if (!clipped || ragSnippetHasOverlap(b, clipped)) {
+    if (!clipped) {
+      return b;
+    }
+    const corpus = compactSpaces([overlapCorpus, b].filter(Boolean).join(" "));
+    if (ragTextOverlapsCorpus(corpus, clipped)) {
       return b;
     }
     return ensurePeriod(b) + " " + ensurePeriod(clipped);
   }
 
-  function applyComicRagNudgesToCustomerSideBlocks(blocks, ragRanked) {
+  function appendEssenceBetterIfOk(normalized, base, entry, overlapCorpus) {
+    if (!entry || !entry.betterResponse) {
+      return base;
+    }
+    const c = compactSpaces(entry.betterResponse);
+    const one = firstSentenceJapanese(c) || c;
+    const clipped = clipComicLine(one, 44);
+    if (normalized && shouldSkipEssenceBetterResponse(normalized, entry, clipped)) {
+      return base;
+    }
+    return appendRagClauseIfMissing(base, entry.betterResponse, 44, overlapCorpus);
+  }
+
+  function applyComicRagNudgesToCustomerSideBlocks(blocks, ragRanked, normalized) {
     if (!ragRanked || !ragRanked.length) {
       return blocks;
     }
@@ -154,20 +249,25 @@
     let essence = blocks.essence;
 
     if (e0 && e0.emotionShift) {
-      incident = appendRagClauseIfMissing(incident, e0.emotionShift, 56);
+      incident = appendRagClauseIfMissing(incident, e0.emotionShift, 56, "");
     }
     if (e0 && e0.betterResponse) {
-      punch = appendRagClauseIfMissing(punch, e0.betterResponse, 44);
+      punch = appendRagClauseIfMissing(punch, e0.betterResponse, 44, incident);
     }
+    const corpus12 = compactSpaces(incident + " " + punch);
     if (e1 && e1.emotionShift) {
-      nowKnowFinal = appendRagClauseIfMissing(nowKnowFinal, e1.emotionShift, 52);
+      const raw = e1.emotionShift;
+      if (!normalized || !shouldSkipNowKnowEmotionShift(normalized, raw)) {
+        nowKnowFinal = appendRagClauseIfMissing(nowKnowFinal, raw, 52, corpus12);
+      }
     } else if (e1 && e1.betterResponse) {
-      nowKnowFinal = appendRagClauseIfMissing(nowKnowFinal, e1.betterResponse, 48);
+      nowKnowFinal = appendRagClauseIfMissing(nowKnowFinal, e1.betterResponse, 48, corpus12);
     }
+    const corpus125 = compactSpaces(corpus12 + " " + nowKnowFinal);
     if (e2 && e2.betterResponse) {
-      essence = appendRagClauseIfMissing(essence, e2.betterResponse, 44);
+      essence = appendEssenceBetterIfOk(normalized, essence, e2, corpus125);
     } else if (e1 && e1.betterResponse) {
-      essence = appendRagClauseIfMissing(essence, e1.betterResponse, 44);
+      essence = appendEssenceBetterIfOk(normalized, essence, e1, corpus125);
     }
 
     return {
@@ -1197,7 +1297,8 @@
           nowKnowFinal: nowKnowOut,
           essence: essenceOut,
         },
-        ragRanked
+        ragRanked,
+        normalized
       );
       incidentOut = compactSpaces(nudged.incident).slice(0, 420);
       punchOut = nudged.punch;

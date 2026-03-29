@@ -12,6 +12,7 @@
 
 - **`js/rag-data.js`**: Notion「漫画RAG素材庫」相当の **ローカル仮データ**（`source` / `section` / `tags` / `scene` / `badResponse` / `betterResponse` / `emotionShift`）。**電工ツール用RAGとは分離**。
 - **`js/engine.js`**: **`selectComicRagSnippets`**（タグ・キーワード照合・同点時は **感情の流れ＞実体験＞会話パターン＞NG例**）、**`applyComicRagNudgesToCustomerSideBlocks`**（**`customer_side`** のみ **【事件】【強い一言】【今なら分かる】【本質】** に短文追記）。**`buildAllOutputs` の `comicRagDebug`**。**Notion API 直結は未実装**（差し替え前提の形）。
+- **重複・題材ズレ抑制（2026-03-29 追記）**: **`ragTextOverlapsCorpus`** と **ブロック横断コーパス**で **3/8〜6/8** の同文・近似重複を抑止。**6/8** の **`betterResponse`** は **テーマ・芯（`comicRagUserIntentBundle`）に専門用語・見積が無い**のに RAG が **専門用語**だけで乗る場合はスキップ。**5/8** の **`emotionShift`** は **テーマ・芯に順番／伝わら**があり **黙**が無いとき **黙る／沈黙**中心の追記をスキップ。
 - **UI**: 原稿カード直下 **`#comic-rag-debug-output`**（折りたたみ）。
 
 ### 8コマ吹き出し台本（2026-03-28）
