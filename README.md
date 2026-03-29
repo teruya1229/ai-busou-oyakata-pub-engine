@@ -5,6 +5,7 @@
 
 主出力（`buildAllOutputs`・主導線と対応）:
 - **漫画原稿**（`comicManuscriptPost`）、**タイトル**（`comicTitle`）、**ネーム本文**（`comic`・8コマ）、**8コマ吹き出し台本**（`comicBubbleScript8`・原稿から派生した画像載せ用の短行）、**コマ別描画プロンプト**（`comicPrompt`）、**統合画像プロンプト**（`comicUnifiedPrompt`）
+- **漫画RAGデバッグ**（`comicRagDebug`・折りたたみ表示）：`js/rag-data.js` の仮素材をタグ照合で3〜5件拾い、**`customer_side`** の原稿 **2/8・3/8・5/8・6/8** に短文を軽く足す（Notion API 直結は後段。電工ツール用RAGとは分離）
 - **旧4コマ短縮ネーム**（`comicLegacy4`・比較・互換用。主表示は `comic`）
 - **note補助**（`noteIntroAssist` / `noteClosingAssist`）
 
@@ -41,6 +42,7 @@ ai-busou-oyakata-pub-engine/
 ├─ css/style.css
 ├─ js/app.js
 ├─ js/engine.js
+├─ js/rag-data.js
 ├─ js/templates.js
 ├─ ops/status.md
 ├─ ops/handoff.md

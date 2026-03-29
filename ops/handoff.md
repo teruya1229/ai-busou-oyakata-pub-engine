@@ -8,6 +8,12 @@
 
 ## 8コマ主線の現状態と確認（2026-03-23 追記）
 
+### 漫画RAG・自然さ補強（2026-03-29）
+
+- **`js/rag-data.js`**: Notion「漫画RAG素材庫」相当の **ローカル仮データ**（`source` / `section` / `tags` / `scene` / `badResponse` / `betterResponse` / `emotionShift`）。**電工ツール用RAGとは分離**。
+- **`js/engine.js`**: **`selectComicRagSnippets`**（タグ・キーワード照合・同点時は **感情の流れ＞実体験＞会話パターン＞NG例**）、**`applyComicRagNudgesToCustomerSideBlocks`**（**`customer_side`** のみ **【事件】【強い一言】【今なら分かる】【本質】** に短文追記）。**`buildAllOutputs` の `comicRagDebug`**。**Notion API 直結は未実装**（差し替え前提の形）。
+- **UI**: 原稿カード直下 **`#comic-rag-debug-output`**（折りたたみ）。
+
 ### 8コマ吹き出し台本（2026-03-28）
 
 - **`buildAllOutputs` の `comicBubbleScript8`**: 漫画原稿8ブロックから **画像に載せる短文**（コマごと **ナレーション／モノローグ／行動ルール／問い** の種別付き）。**`buildEightPanelBubbleScript`** が `parseManuscriptSections` を再利用。**UI**: `#comic-bubble-script-8-output`・コピー。**4コマ**は従来どおり（吹き出し台本は8コマのみ）。

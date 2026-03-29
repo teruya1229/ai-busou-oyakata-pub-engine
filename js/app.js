@@ -2,6 +2,7 @@
   const form = document.getElementById("input-form");
   const outputs = {
     comicManuscriptPost: document.getElementById("comic-manuscript-post-output"),
+    comicRagDebug: document.getElementById("comic-rag-debug-output"),
     comicTitle: document.getElementById("comic-title-output"),
     comic: document.getElementById("comic-output"),
     comicBubbleScript8: document.getElementById("comic-bubble-script-8-output"),
@@ -223,6 +224,10 @@
         result.comicManuscriptPost != null && result.comicManuscriptPost !== ""
           ? result.comicManuscriptPost
           : OUTPUT_PLACEHOLDER;
+    }
+    if (outputs.comicRagDebug) {
+      outputs.comicRagDebug.textContent =
+        result.comicRagDebug != null && result.comicRagDebug !== "" ? result.comicRagDebug : "—";
     }
     if (outputs.comicTitle) {
       outputs.comicTitle.textContent =
@@ -878,6 +883,9 @@
     const placeholder = "ここに生成結果が表示されます。";
     if (outputs.comicManuscriptPost) {
       outputs.comicManuscriptPost.textContent = placeholder;
+    }
+    if (outputs.comicRagDebug) {
+      outputs.comicRagDebug.textContent = "—";
     }
     if (outputs.comicTitle) {
       outputs.comicTitle.textContent = placeholder;

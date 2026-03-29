@@ -29,6 +29,155 @@
     return (text || "").replace(/\s+/g, " ").trim();
   }
 
+  /** 漫画ツール専用・自然さ補強RAG（`js/rag-data.js`・Notion差し替え前提。電工ツールRAGとは分離） */
+  function getComicRagCorpus() {
+    try {
+      const c = typeof window !== "undefined" && window.AIBusouComicRagData;
+      return Array.isArray(c) ? c : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function buildComicRagQueryText(normalized, input) {
+    const learnRaw = trimOptional(input && input.learning);
+    return compactSpaces(
+      [
+        normalized.theme,
+        normalized.incident,
+        normalized.coreMain,
+        normalized.coreConclusion,
+        normalized.learning,
+        learnRaw,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    );
+  }
+
+  function scoreComicRagEntry(queryLower, entry) {
+    if (!entry || !queryLower) {
+      return 0;
+    }
+    let s = 0;
+    const tags = entry.tags || [];
+    for (let i = 0; i < tags.length; i += 1) {
+      const t = (tags[i] || "").trim();
+      if (t && queryLower.indexOf(t.toLowerCase()) >= 0) {
+        s += 4;
+      }
+    }
+    return s;
+  }
+
+  function selectComicRagSnippets(normalized, input, maxN) {
+    const corpus = getComicRagCorpus();
+    const q = buildComicRagQueryText(normalized, input);
+    const ql = q.toLowerCase();
+    if (!corpus.length || !compactSpaces(q)) {
+      return [];
+    }
+    const scored = [];
+    for (let i = 0; i < corpus.length; i += 1) {
+      const entry = corpus[i];
+      const score = scoreComicRagEntry(ql, entry);
+      if (score > 0) {
+        scored.push({ entry: entry, score: score });
+      }
+    }
+    const sectionPri = { 感情の流れ: 3, 実体験: 2, 会話パターン: 1, NG例: 0 };
+    scored.sort(function (a, b) {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      const pa = sectionPri[a.entry.section] || 0;
+      const pb = sectionPri[b.entry.section] || 0;
+      return pb - pa;
+    });
+    const cap = Math.min(maxN || 5, scored.length);
+    return scored.slice(0, cap);
+  }
+
+  function buildComicRagDebugText(ranked) {
+    if (!ranked || !ranked.length) {
+      return "【漫画RAG参照】該当スコア0（タグ一致なし）。";
+    }
+    const lines = ["【漫画RAG参照】スコア順（自然さ補強・デバッグ）"];
+    for (let i = 0; i < ranked.length; i += 1) {
+      const r = ranked[i];
+      const e = r.entry;
+      lines.push("・" + (e.section || "") + " score=" + r.score + " tags:" + (e.tags || []).join("、"));
+    }
+    return lines.join("\n");
+  }
+
+  function ragSnippetHasOverlap(base, text) {
+    const b = compactSpaces(base);
+    const t = compactSpaces(text);
+    if (!b || !t) {
+      return false;
+    }
+    const probe = t.slice(0, Math.min(8, t.length));
+    return probe.length >= 4 && b.indexOf(probe) >= 0;
+  }
+
+  function appendRagClauseIfMissing(base, clause, maxLen) {
+    const b = compactSpaces(base);
+    const c = compactSpaces(clause);
+    if (!c) {
+      return b;
+    }
+    const one = firstSentenceJapanese(c) || c;
+    const clipped = clipComicLine(one, maxLen || 52);
+    if (!clipped || ragSnippetHasOverlap(b, clipped)) {
+      return b;
+    }
+    return ensurePeriod(b) + " " + ensurePeriod(clipped);
+  }
+
+  function applyComicRagNudgesToCustomerSideBlocks(blocks, ragRanked) {
+    if (!ragRanked || !ragRanked.length) {
+      return blocks;
+    }
+    const minScore = 4;
+    const strong = ragRanked.filter(function (x) {
+      return x.score >= minScore;
+    });
+    const pool = strong.length ? strong : ragRanked;
+    const e0 = pool[0] && pool[0].entry;
+    const e1 = pool[1] && pool[1].entry;
+    const e2 = pool[2] && pool[2].entry;
+
+    let incident = blocks.incident;
+    let punch = blocks.punch;
+    let nowKnowFinal = blocks.nowKnowFinal;
+    let essence = blocks.essence;
+
+    if (e0 && e0.emotionShift) {
+      incident = appendRagClauseIfMissing(incident, e0.emotionShift, 56);
+    }
+    if (e0 && e0.betterResponse) {
+      punch = appendRagClauseIfMissing(punch, e0.betterResponse, 44);
+    }
+    if (e1 && e1.emotionShift) {
+      nowKnowFinal = appendRagClauseIfMissing(nowKnowFinal, e1.emotionShift, 52);
+    } else if (e1 && e1.betterResponse) {
+      nowKnowFinal = appendRagClauseIfMissing(nowKnowFinal, e1.betterResponse, 48);
+    }
+    if (e2 && e2.betterResponse) {
+      essence = appendRagClauseIfMissing(essence, e2.betterResponse, 44);
+    } else if (e1 && e1.betterResponse) {
+      essence = appendRagClauseIfMissing(essence, e1.betterResponse, 44);
+    }
+
+    return {
+      incident: incident,
+      punch: punch,
+      nowKnowFinal: nowKnowFinal,
+      essence: essence,
+    };
+  }
+
   function ensurePeriod(text) {
     if (!text) {
       return "";
@@ -1035,16 +1184,37 @@
       ruleBlock = ensurePeriod(firstSentenceJapanese(learningLine) || learningLine) + "\n" + buildNoteConclusionNextLine(normalized);
     }
     const readerQ = buildReaderQuestionForManuscript(normalized);
-    return [
+    const ragRanked = selectComicRagSnippets(normalized, input, 5);
+    let incidentOut = incident;
+    let punchOut = punch;
+    let nowKnowOut = nowKnowFinal;
+    let essenceOut = essence;
+    if ((normalized.topicAxis || "") === "customer_side" && ragRanked.length) {
+      const nudged = applyComicRagNudgesToCustomerSideBlocks(
+        {
+          incident: incidentOut,
+          punch: punchOut,
+          nowKnowFinal: nowKnowOut,
+          essence: essenceOut,
+        },
+        ragRanked
+      );
+      incidentOut = compactSpaces(nudged.incident).slice(0, 420);
+      punchOut = nudged.punch;
+      nowKnowOut = nudged.nowKnowFinal;
+      essenceOut = nudged.essence;
+    }
+    const manuscript = [
       "【導入】" + intro,
-      "【事件】" + incident,
-      "【強い一言】" + punch,
+      "【事件】" + incidentOut,
+      "【強い一言】" + punchOut,
       "【当時の自分の認識】" + thenSelf,
-      "【今なら分かる】" + nowKnowFinal,
-      "【本質】" + essence,
+      "【今なら分かる】" + nowKnowOut,
+      "【本質】" + essenceOut,
       "【以後の行動ルール】" + ruleBlock,
       "【読者への問い】" + readerQ,
     ].join("\n\n");
+    return { manuscript: manuscript, comicRagRanked: ragRanked };
   }
 
   function bubblePanelKindForIndex(n) {
@@ -1304,9 +1474,11 @@
 
   function buildComicBundle(input) {
     const normalized = normalizeInput(input);
-    const manuscript = buildComicManuscriptPost(normalized, input);
+    const manuscriptResult = buildComicManuscriptPost(normalized, input);
+    const manuscript = manuscriptResult.manuscript;
+    const comicRagRanked = manuscriptResult.comicRagRanked || [];
     const comic = formatComicFromManuscript(normalized, manuscript);
-    return { normalized, manuscript, comic };
+    return { normalized, manuscript, comic, comicRagRanked: comicRagRanked };
   }
 
   function buildComic(input) {
@@ -3013,6 +3185,7 @@
     const normalized = bundle.normalized;
     const manuscript = bundle.manuscript;
     const comicText = bundle.comic;
+    const comicRagRanked = bundle.comicRagRanked || [];
     const sec = parseManuscriptSections(manuscript);
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const noteIntroAssist = compactSpaces(sec.intro + "\n\n" + sec.incident);
@@ -3035,6 +3208,7 @@
       noteTitleSuggestions: noteTitleSuggestions,
       notePrePublishCheck: buildNotePrePublishCheck(normalized, noteBodyOnly, noteTitleSuggestions),
       comicBubbleScript8: buildEightPanelBubbleScript(manuscript),
+      comicRagDebug: buildComicRagDebugText(comicRagRanked),
     };
   }
 

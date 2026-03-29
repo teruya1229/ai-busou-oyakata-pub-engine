@@ -144,6 +144,10 @@
           <strong>8ブロック</strong>（導入〜読者への問い）。ここが唯一の起点。ネーム・画像・noteは<strong>すべてここから派生</strong>します。
         </p>
         <pre id="comic-manuscript-post-output" class="output-block">ここに生成結果が表示されます。</pre>
+        <details class="comic-rag-debug" style="margin-top: 10px">
+          <summary style="cursor: pointer; font-size: 14px; color: #6b7280">漫画RAG（自然さ補強・参照デバッグ）</summary>
+          <pre id="comic-rag-debug-output" class="output-block" style="font-size: 12px; margin-top: 8px">—</pre>
+        </details>
       </section>
 
       <section class="card comic-primary-card">
@@ -464,6 +468,7 @@
     </main>
 
     <script src="./js/templates.js"></script>
+    <script src="./js/rag-data.js"></script>
     <script src="./js/engine.js"></script>
     <script src="./js/kindle-engine.js"></script>
     <script src="./js/app.js"></script>

@@ -1206,9 +1206,17 @@
 
 - **`js/engine.js`**: **`concreteSceneBank` / `pickOneConcreteScene`**（相手の相づち・聞き返しの変化）、**`frictionFromIncident`（customer_side）`**、**`buildFallbackLearning`**（後悔と気づきを **一文**に収め `firstSentenceJapanese` で切られないよう句点を一つに）、**`buildNoteConclusionNextLine`**（自分への決め）、**`polishCustomerSideManuscriptPunch`**（体感寄りの短文）を **customer_side のみ**最小差分で調整。
 
-## 現在の状態（2026-03-28 更新）
+## 今日やったこと（2026-03-29：漫画RAG最小接続）
+
+- **`js/rag-data.js`** 新規：**漫画ツール専用**の自然さ補強用ローカル仮データ（Notion差し替え前提）。
+- **`js/engine.js`**: タグ照合で3〜5件取得、**`customer_side`** の原稿 **2/8・3/8・5/8・6/8** に最小追記。**`buildAllOutputs`** に **`comicRagDebug`**。
+- **`index.html` / `js/app.js`**: 原稿下に **RAGデバッグ**折りたたみ最小追加。
+- **`README.md`**: 主出力・ファイル構成に1行ずつ追記。
+
+## 現在の状態（2026-03-29 更新）
 
 - **`main`**: **origin/main** 先端に追従
+- **漫画RAG**: **`js/rag-data.js`** ＋ **`selectComicRagSnippets` / `applyComicRagNudgesToCustomerSideBlocks`**（**`customer_side`** の **2/8・3/8・5/8・6/8** 追記・**`comicRagDebug`**）。Notion API は未接続
 - **customer_side**: **2/8〜7/8** の全面自然化は **`8af90b9`** `fix: fully naturalize customer-side manuscript phrasing`。以前の **4/8・5/8・7/8** 単点反映は **`ca3b90d`**
 - **題材A/D**: **Node `buildAllOutputs`** で原稿・8コマ対応を確認済み。**実機は未確認**
 - **次に見るなら（任意）**: 手入力の **学び** が長いときの **5/8**（`firstSentenceJapanese`）。必要なら **実機**
