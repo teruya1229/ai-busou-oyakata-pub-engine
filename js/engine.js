@@ -1,8 +1,22 @@
 (function () {
   const templates = window.AIBusouTemplates;
 
-  /** 主線ネーム：原稿8ブロックをそのまま 1/8〜8/8 に対応（短縮・再配置はしない） */
+  /** 主線ネーム：原稿10ブロックをそのまま 1/10〜10/10 に対応（短縮・再配置はしない） */
   const COMIC_PANEL_LABELS = {
+    p1: "1コマ目（1/10・導入）",
+    p2: "2コマ目（2/10・状況・前）",
+    p3: "3コマ目（3/10・状況・後）",
+    p4: "4コマ目（4/10・強い一言）",
+    p5: "5コマ目（5/10・当時の自分の認識）",
+    p6: "6コマ目（6/10・今なら分かる）",
+    p7: "7コマ目（7/10・本質）",
+    p8: "8コマ目（8/10・以後の行動・前）",
+    p9: "9コマ目（9/10・以後の行動ルール）",
+    p10: "10コマ目（10/10・読者への問い）",
+  };
+
+  /** 旧8コマ主線（互換・`comicLegacy8` のみ） */
+  const COMIC_PANEL_LABELS_LEGACY8 = {
     p1: "1コマ目（1/8・導入）",
     p2: "2コマ目（2/8・状況）",
     p3: "3コマ目（3/8・強い一言）",
@@ -27,6 +41,40 @@
 
   function compactSpaces(text) {
     return (text || "").replace(/\s+/g, " ").trim();
+  }
+
+  function splitIncidentForTwoPanels(incident) {
+    const t = compactSpaces(incident);
+    if (!t) {
+      return ["", ""];
+    }
+    const idx = t.indexOf("。");
+    if (idx > 0 && idx < t.length - 1) {
+      return [t.slice(0, idx + 1).trim(), t.slice(idx + 1).trim()];
+    }
+    const mid = Math.max(1, Math.floor(t.length / 2));
+    const a = t.slice(0, mid).trim();
+    const b = t.slice(mid).trim();
+    return [a || t, b || a];
+  }
+
+  function splitRuleForTwoPanels(ruleBlock) {
+    const raw = compactSpaces(ruleBlock);
+    if (!raw) {
+      return ["", ""];
+    }
+    const lines = raw.split(/\n/).map(function (s) {
+      return s.trim();
+    }).filter(Boolean);
+    if (lines.length >= 2) {
+      return [lines[0], lines.slice(1).join("\n")];
+    }
+    const idx = raw.indexOf("。");
+    if (idx > 0 && idx < raw.length - 1) {
+      return [raw.slice(0, idx + 1).trim(), raw.slice(idx + 1).trim()];
+    }
+    const mid = Math.max(1, Math.floor(raw.length / 2));
+    return [raw.slice(0, mid).trim(), raw.slice(mid).trim()];
   }
 
   /** 漫画ツール専用・自然さ補強RAG（`js/rag-data.js`・Notion差し替え前提。電工ツールRAGとは分離） */
@@ -978,13 +1026,15 @@
   function getComicPanelMetaForExtraction() {
     return [
       { number: 1, start: COMIC_PANEL_LABELS.p1, next: COMIC_PANEL_LABELS.p2, name: "導入" },
-      { number: 2, start: COMIC_PANEL_LABELS.p2, next: COMIC_PANEL_LABELS.p3, name: "状況" },
-      { number: 3, start: COMIC_PANEL_LABELS.p3, next: COMIC_PANEL_LABELS.p4, name: "強い一言" },
-      { number: 4, start: COMIC_PANEL_LABELS.p4, next: COMIC_PANEL_LABELS.p5, name: "当時の自分の認識" },
-      { number: 5, start: COMIC_PANEL_LABELS.p5, next: COMIC_PANEL_LABELS.p6, name: "今なら分かる" },
-      { number: 6, start: COMIC_PANEL_LABELS.p6, next: COMIC_PANEL_LABELS.p7, name: "本質" },
-      { number: 7, start: COMIC_PANEL_LABELS.p7, next: COMIC_PANEL_LABELS.p8, name: "行動ルール" },
-      { number: 8, start: COMIC_PANEL_LABELS.p8, next: "", name: "読者への問い" },
+      { number: 2, start: COMIC_PANEL_LABELS.p2, next: COMIC_PANEL_LABELS.p3, name: "状況・前" },
+      { number: 3, start: COMIC_PANEL_LABELS.p3, next: COMIC_PANEL_LABELS.p4, name: "状況・後" },
+      { number: 4, start: COMIC_PANEL_LABELS.p4, next: COMIC_PANEL_LABELS.p5, name: "強い一言" },
+      { number: 5, start: COMIC_PANEL_LABELS.p5, next: COMIC_PANEL_LABELS.p6, name: "当時の自分の認識" },
+      { number: 6, start: COMIC_PANEL_LABELS.p6, next: COMIC_PANEL_LABELS.p7, name: "今なら分かる" },
+      { number: 7, start: COMIC_PANEL_LABELS.p7, next: COMIC_PANEL_LABELS.p8, name: "本質" },
+      { number: 8, start: COMIC_PANEL_LABELS.p8, next: COMIC_PANEL_LABELS.p9, name: "以後の行動・前" },
+      { number: 9, start: COMIC_PANEL_LABELS.p9, next: COMIC_PANEL_LABELS.p10, name: "以後の行動ルール" },
+      { number: 10, start: COMIC_PANEL_LABELS.p10, next: "", name: "読者への問い" },
     ];
   }
 
@@ -1333,14 +1383,18 @@
       nowKnowOut = nudged.nowKnowFinal;
       essenceOut = nudged.essence;
     }
+    const incidentParts = splitIncidentForTwoPanels(incidentOut);
+    const ruleParts = splitRuleForTwoPanels(ruleBlock);
     const manuscript = [
       "【導入】" + intro,
-      "【事件】" + incidentOut,
+      "【事件・前】" + incidentParts[0],
+      "【事件・後】" + incidentParts[1],
       "【強い一言】" + punchOut,
       "【当時の自分の認識】" + thenSelf,
       "【今なら分かる】" + nowKnowOut,
       "【本質】" + essenceOut,
-      "【以後の行動ルール】" + ruleBlock,
+      "【以後の行動ルール・前】" + ruleParts[0],
+      "【以後の行動ルール】" + ruleParts[1],
       "【読者への問い】" + readerQ,
     ].join("\n\n");
     return { manuscript: manuscript, comicRagRanked: ragRanked };
@@ -1350,10 +1404,10 @@
     if (n === 1) {
       return "ナレーション";
     }
-    if (n === 7) {
+    if (n === 9) {
       return "行動ルール";
     }
-    if (n === 8) {
+    if (n === 10) {
       return "問い";
     }
     return "モノローグ";
@@ -1448,37 +1502,72 @@
     if (panelNum === 1) {
       return formatIntroBubbleLines(rawText);
     }
-    if (panelNum === 8) {
+    if (panelNum === 10) {
       return splitJapaneseTextToLines(text, 2, 36);
     }
-    if (panelNum === 7) {
+    if (panelNum === 9) {
       return splitJapaneseTextToLines(text, 3, 30);
     }
-    if (panelNum >= 2 && panelNum <= 6) {
+    if (panelNum >= 2 && panelNum <= 8) {
       return splitJapaneseTextToLines(text, 4, 28);
     }
     return splitJapaneseTextToLines(text, 3, 28);
   }
 
   /**
-   * 8コマ吹き出し台本：原稿8ブロックから画像載せ用の短行に整形（4コマ非対応）
+   * 10コマ吹き出し台本：原稿10ブロックから画像載せ用の短行に整形（4コマ非対応）
    */
-  function buildEightPanelBubbleScript(manuscript) {
+  function buildTenPanelBubbleScript(manuscript) {
     const sec = parseManuscriptSections(manuscript);
     const blocks = [
       { n: 1, text: sec.intro },
-      { n: 2, text: sec.incident },
-      { n: 3, text: sec.punch },
-      { n: 4, text: sec.thenSelf },
-      { n: 5, text: sec.nowKnow },
-      { n: 6, text: sec.essence },
-      { n: 7, text: sec.rule },
-      { n: 8, text: sec.reader },
+      { n: 2, text: sec.incidentBefore },
+      { n: 3, text: sec.incidentAfter },
+      { n: 4, text: sec.punch },
+      { n: 5, text: sec.thenSelf },
+      { n: 6, text: sec.nowKnow },
+      { n: 7, text: sec.essence },
+      { n: 8, text: sec.ruleBefore },
+      { n: 9, text: sec.rule },
+      { n: 10, text: sec.reader },
     ];
     const parts = [];
     for (let i = 0; i < blocks.length; i += 1) {
       const b = blocks[i];
       const kind = bubblePanelKindForIndex(b.n);
+      const lines = formatPanelBubbleLines(b.n, b.text);
+      parts.push(String(b.n) + "/10（" + kind + "）");
+      for (let j = 0; j < lines.length; j += 1) {
+        parts.push(lines[j]);
+      }
+      if (i < blocks.length - 1) {
+        parts.push("");
+      }
+    }
+    return parts.join("\n").trim();
+  }
+
+  /**
+   * 旧8コマ吹き出し台本（互換用）。10ブロック原稿を事件・行動を結合して8件に畳む。
+   */
+  function buildEightPanelBubbleScript(manuscript) {
+    const sec = parseManuscriptSections(manuscript);
+    const incidentMerged = compactSpaces(sec.incidentBefore + " " + sec.incidentAfter) || sec.incident;
+    const ruleMerged = compactSpaces(sec.ruleBefore + " " + sec.rule) || sec.rule;
+    const blocks = [
+      { n: 1, text: sec.intro },
+      { n: 2, text: incidentMerged },
+      { n: 3, text: sec.punch },
+      { n: 4, text: sec.thenSelf },
+      { n: 5, text: sec.nowKnow },
+      { n: 6, text: sec.essence },
+      { n: 7, text: ruleMerged },
+      { n: 8, text: sec.reader },
+    ];
+    const parts = [];
+    for (let i = 0; i < blocks.length; i += 1) {
+      const b = blocks[i];
+      const kind = bubblePanelKindForIndexLegacy8(b.n);
       const lines = formatPanelBubbleLines(b.n, b.text);
       parts.push(String(b.n) + "/8（" + kind + "）");
       for (let j = 0; j < lines.length; j += 1) {
@@ -1491,8 +1580,21 @@
     return parts.join("\n").trim();
   }
 
+  function bubblePanelKindForIndexLegacy8(n) {
+    if (n === 1) {
+      return "ナレーション";
+    }
+    if (n === 7) {
+      return "行動ルール";
+    }
+    if (n === 8) {
+      return "問い";
+    }
+    return "モノローグ";
+  }
+
   /**
-   * 8コマ吹き出し配置：後工程で画像に載せるための推奨位置・サイズ・行数目安（台本と同一の行分割を利用）
+   * 10コマ吹き出し配置：後工程で画像に載せるための推奨位置・サイズ・行数目安（台本と同一の行分割を利用）
    */
   function bubblePlacementPosition(panelNum) {
     switch (panelNum) {
@@ -1511,6 +1613,10 @@
       case 7:
         return "左下";
       case 8:
+        return "下";
+      case 9:
+        return "左下";
+      case 10:
         return "下";
       default:
         return "上";
@@ -1535,9 +1641,15 @@
       return lc >= 3 ? "大" : "中";
     }
     if (panelNum === 7) {
-      return "小";
+      return lc >= 3 ? "大" : "中";
     }
     if (panelNum === 8) {
+      return "小";
+    }
+    if (panelNum === 9) {
+      return "小";
+    }
+    if (panelNum === 10) {
       return "中";
     }
     return "中";
@@ -1557,17 +1669,19 @@
     return "モノローグ";
   }
 
-  function buildEightPanelBubblePlacement(manuscript) {
+  function buildTenPanelBubblePlacement(manuscript) {
     const sec = parseManuscriptSections(manuscript);
     const blocks = [
       { n: 1, text: sec.intro },
-      { n: 2, text: sec.incident },
-      { n: 3, text: sec.punch },
-      { n: 4, text: sec.thenSelf },
-      { n: 5, text: sec.nowKnow },
-      { n: 6, text: sec.essence },
-      { n: 7, text: sec.rule },
-      { n: 8, text: sec.reader },
+      { n: 2, text: sec.incidentBefore },
+      { n: 3, text: sec.incidentAfter },
+      { n: 4, text: sec.punch },
+      { n: 5, text: sec.thenSelf },
+      { n: 6, text: sec.nowKnow },
+      { n: 7, text: sec.essence },
+      { n: 8, text: sec.ruleBefore },
+      { n: 9, text: sec.rule },
+      { n: 10, text: sec.reader },
     ];
     const parts = [];
     for (let i = 0; i < blocks.length; i += 1) {
@@ -1577,6 +1691,43 @@
       const pos = bubblePlacementPosition(b.n);
       const size = bubblePlacementSize(b.n, rawLines.length);
       const kind = bubblePlacementKindDisplay(b.n);
+      parts.push(
+        String(b.n) +
+          "/10\n種別: " +
+          kind +
+          "\n位置: " +
+          pos +
+          "\nサイズ: " +
+          size +
+          "\n行数: " +
+          lineHint
+      );
+    }
+    return parts.join("\n\n").trim();
+  }
+
+  function buildEightPanelBubblePlacement(manuscript) {
+    const sec = parseManuscriptSections(manuscript);
+    const incidentMerged = compactSpaces(sec.incidentBefore + " " + sec.incidentAfter) || sec.incident;
+    const ruleMerged = compactSpaces(sec.ruleBefore + " " + sec.rule) || sec.rule;
+    const blocks = [
+      { n: 1, text: sec.intro },
+      { n: 2, text: incidentMerged },
+      { n: 3, text: sec.punch },
+      { n: 4, text: sec.thenSelf },
+      { n: 5, text: sec.nowKnow },
+      { n: 6, text: sec.essence },
+      { n: 7, text: ruleMerged },
+      { n: 8, text: sec.reader },
+    ];
+    const parts = [];
+    for (let i = 0; i < blocks.length; i += 1) {
+      const b = blocks[i];
+      const rawLines = formatPanelBubbleLines(b.n, b.text);
+      const lineHint = Math.min(3, Math.max(1, rawLines.length || 1));
+      const pos = bubblePlacementPosition(b.n);
+      const size = bubblePlacementSize(b.n, rawLines.length);
+      const kind = bubblePlacementKindDisplayLegacy8(b.n);
       parts.push(
         String(b.n) +
           "/8\n種別: " +
@@ -1592,7 +1743,72 @@
     return parts.join("\n\n").trim();
   }
 
+  function bubblePlacementKindDisplayLegacy8(panelNum) {
+    const k = bubblePanelKindForIndexLegacy8(panelNum);
+    if (k === "行動ルール") {
+      return "行動ルール";
+    }
+    if (k === "問い") {
+      return "問い";
+    }
+    if (k === "ナレーション") {
+      return "ナレーション";
+    }
+    return "モノローグ";
+  }
+
   function parseManuscriptSections(manuscript) {
+    const m = manuscript || "";
+    if (m.indexOf("【事件・前】") >= 0) {
+      return parseManuscriptSections10(m);
+    }
+    return parseManuscriptSectionsFromLegacy8(m);
+  }
+
+  function parseManuscriptSections10(manuscript) {
+    const keys = [
+      "導入",
+      "事件・前",
+      "事件・後",
+      "強い一言",
+      "当時の自分の認識",
+      "今なら分かる",
+      "本質",
+      "以後の行動ルール・前",
+      "以後の行動ルール",
+      "読者への問い",
+    ];
+    const labels = keys.map(function (k) {
+      return "【" + k + "】";
+    });
+    const out = {};
+    for (var i = 0; i < labels.length; i++) {
+      const start = manuscript.indexOf(labels[i]);
+      if (start < 0) {
+        out[keys[i]] = "";
+        continue;
+      }
+      const from = start + labels[i].length;
+      const nextIdx = i < labels.length - 1 ? manuscript.indexOf(labels[i + 1], from) : -1;
+      const end = nextIdx >= 0 ? nextIdx : manuscript.length;
+      out[keys[i]] = manuscript.slice(from, end).trim();
+    }
+    return {
+      intro: out["導入"] || "",
+      incidentBefore: out["事件・前"] || "",
+      incidentAfter: out["事件・後"] || "",
+      incident: compactSpaces((out["事件・前"] || "") + " " + (out["事件・後"] || "")),
+      punch: out["強い一言"] || "",
+      thenSelf: out["当時の自分の認識"] || "",
+      nowKnow: out["今なら分かる"] || "",
+      essence: out["本質"] || "",
+      ruleBefore: out["以後の行動ルール・前"] || "",
+      rule: out["以後の行動ルール"] || "",
+      reader: out["読者への問い"] || "",
+    };
+  }
+
+  function parseManuscriptSectionsFromLegacy8(manuscript) {
     const keys = [
       "導入",
       "事件",
@@ -1618,31 +1834,65 @@
       const end = nextIdx >= 0 ? nextIdx : manuscript.length;
       out[keys[i]] = manuscript.slice(from, end).trim();
     }
+    const inc = out["事件"] || "";
+    const ruleBlk = out["以後の行動ルール"] || "";
+    const incParts = splitIncidentForTwoPanels(inc);
+    const ruleParts = splitRuleForTwoPanels(ruleBlk);
     return {
       intro: out["導入"] || "",
-      incident: out["事件"] || "",
+      incidentBefore: incParts[0],
+      incidentAfter: incParts[1],
+      incident: inc,
       punch: out["強い一言"] || "",
       thenSelf: out["当時の自分の認識"] || "",
       nowKnow: out["今なら分かる"] || "",
       essence: out["本質"] || "",
-      rule: out["以後の行動ルール"] || "",
+      ruleBefore: ruleParts[0],
+      rule: ruleParts[1],
       reader: out["読者への問い"] || "",
     };
   }
 
-  /** 原稿8ブロックをそのまま 1/8〜8/8 に載せる（圧縮・賢い統合はしない） */
+  /** 原稿10ブロックをそのまま 1/10〜10/10 に載せる（圧縮・賢い統合はしない） */
   function formatComicFromManuscript(normalized, manuscript) {
     const sec = parseManuscriptSections(manuscript);
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const blocks = [
       { label: COMIC_PANEL_LABELS.p1, text: sec.intro },
-      { label: COMIC_PANEL_LABELS.p2, text: sec.incident },
-      { label: COMIC_PANEL_LABELS.p3, text: sec.punch },
-      { label: COMIC_PANEL_LABELS.p4, text: sec.thenSelf },
-      { label: COMIC_PANEL_LABELS.p5, text: sec.nowKnow },
-      { label: COMIC_PANEL_LABELS.p6, text: sec.essence },
-      { label: COMIC_PANEL_LABELS.p7, text: sec.rule },
-      { label: COMIC_PANEL_LABELS.p8, text: sec.reader },
+      { label: COMIC_PANEL_LABELS.p2, text: sec.incidentBefore },
+      { label: COMIC_PANEL_LABELS.p3, text: sec.incidentAfter },
+      { label: COMIC_PANEL_LABELS.p4, text: sec.punch },
+      { label: COMIC_PANEL_LABELS.p5, text: sec.thenSelf },
+      { label: COMIC_PANEL_LABELS.p6, text: sec.nowKnow },
+      { label: COMIC_PANEL_LABELS.p7, text: sec.essence },
+      { label: COMIC_PANEL_LABELS.p8, text: sec.ruleBefore },
+      { label: COMIC_PANEL_LABELS.p9, text: sec.rule },
+      { label: COMIC_PANEL_LABELS.p10, text: sec.reader },
+    ];
+    const parts = [`【タイトル】${leadTitle}`, ""];
+    for (var i = 0; i < blocks.length; i++) {
+      const b = blocks[i];
+      const body = compactSpaces(b.text || "") || "（このブロックは空です）";
+      parts.push(b.label, body, "");
+    }
+    return parts.join("\n").trim();
+  }
+
+  /** 旧8コマネーム（互換・比較用）。事件・行動を結合して 1/8〜8/8 表示 */
+  function formatComicLegacy8FromManuscript(normalized, manuscript) {
+    const sec = parseManuscriptSections(manuscript);
+    const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
+    const incidentMerged = compactSpaces(sec.incidentBefore + " " + sec.incidentAfter) || sec.incident;
+    const ruleMerged = compactSpaces(sec.ruleBefore + " " + sec.rule) || sec.rule;
+    const blocks = [
+      { label: COMIC_PANEL_LABELS_LEGACY8.p1, text: sec.intro },
+      { label: COMIC_PANEL_LABELS_LEGACY8.p2, text: incidentMerged },
+      { label: COMIC_PANEL_LABELS_LEGACY8.p3, text: sec.punch },
+      { label: COMIC_PANEL_LABELS_LEGACY8.p4, text: sec.thenSelf },
+      { label: COMIC_PANEL_LABELS_LEGACY8.p5, text: sec.nowKnow },
+      { label: COMIC_PANEL_LABELS_LEGACY8.p6, text: sec.essence },
+      { label: COMIC_PANEL_LABELS_LEGACY8.p7, text: ruleMerged },
+      { label: COMIC_PANEL_LABELS_LEGACY8.p8, text: sec.reader },
     ];
     const parts = [`【タイトル】${leadTitle}`, ""];
     for (var i = 0; i < blocks.length; i++) {
@@ -1762,65 +2012,78 @@
     const cs = normalized.topicAxis === "customer_side";
     const roleVisualByPanel = {
       1:
-        "【1/8 導入】まだ本題の会話が始まる前の、普通の現場の空気。トラブル顔・説教・結論は描かない。穏やかな仕事の一コマ。",
+        "【1/10 導入】まだ本題の会話が始まる前の、普通の現場の空気。トラブル顔・説教・結論は描かない。穏やかな仕事の一コマ。",
       2: cs
-        ? "【2/8 事件】主役はお客様。困り顔／口を閉じて黙る／短い頷きだけ。親方は説明せず、聞き手の横にいる程度。"
-        : "【2/8 事件】相手側の引っかかり・沈黙・困りが主役。こちらの説明シーンではない。",
-      3:
-        "【3/8 強い一言】刺さる一瞬だけを大きく。台詞・情報・小道具を詰め込まず、表情か間の一つに絞る（中盤の情報過多にしない）。",
+        ? "【2/10 状況・前】主役はお客様。困り顔／口を閉じて黙る／短い頷きだけ。親方は説明せず、聞き手の横にいる程度。"
+        : "【2/10 状況・前】相手側の引っかかり・沈黙・困りが主役。こちらの説明シーンではない。",
+      3: cs
+        ? "【3/10 状況・後】事件の深まり・空気の変化。お客様の表情・距離感の変化を一段だけ。"
+        : "【3/10 状況・後】出来事の続き・引っかかりが濃くなる一コマ。説明会にしない。",
       4:
-        "【4/8 当時の認識】「自分はこう思っていた」内面・思い込みの表情。講義・図解・説明だらけにしない。",
+        "【4/10 強い一言】刺さる一瞬だけを大きく。台詞・情報・小道具を詰め込まず、表情か間の一つに絞る（中盤の情報過多にしない）。",
       5:
-        "【5/8 今なら分かる】あとから気づいた表情。6/8ほど本質をまとめず、4/8より一歩だけ踏み込む程度の情報量。",
+        "【5/10 当時の認識】「自分はこう思っていた」内面・思い込みの表情。講義・図解・説明だらけにしない。",
       6:
-        "【6/8 本質】芯は一つ。列挙・図解っぽさは避け、シンプルな納得の表情・気づきの一瞬（3〜5より派手に盛らない）。",
+        "【6/10 今なら分かる】あとから気づいた表情。7/10ほど本質をまとめず、5/10より一歩だけ踏み込む程度の情報量。",
       7:
-        "【7/8 行動ルール】「次は先に聞く」と決めた動きが絵で分かる（手を止める・耳を傾ける・一歩引く・メモを取る等）。説明の続きではない。",
+        "【7/10 本質】芯は一つ。列挙・図解っぽさは避け、シンプルな納得の表情・気づきの一瞬（4〜6より派手に盛らない）。",
       8:
-        "【8/8 読者への問い】親方が読者のほうを向いて問いかける締め。物語内の会話の続きではなく、一枚で「振り返りの問い」が伝わる構図。",
+        "【8/10 以後の行動・前】「次は先に聞く」と決める直前の静けさ・手の止まり。まだ具体ルールの列挙はしない。",
+      9:
+        "【9/10 行動ルール】決めた動きが絵で分かる（手を止める・耳を傾ける・一歩引く・メモを取る等）。説明の続きではない。",
+      10:
+        "【10/10 読者への問い】親方が読者のほうを向いて問いかける締め。物語内の会話の続きではなく、一枚で「振り返りの問い」が伝わる構図。",
     };
     const expressionByPanel = {
       1: "まだ何も起きていない日常の表情。穏やかな仕事の温度感（説教顔・深刻顔にしない）",
       2: cs ? "お客様の困り・沈黙・頷きが主役（依頼主の大人）。親方は横にいる聞き手" : "相手の引っかかり・沈黙が顔に出る",
-      3: cs && comicCopilotSilent(normalized) ? "親方の気づき・内省が伝わる表情（情報は詰めすぎない）" : "違和感・予兆が顔に出る表情（一焦点）",
-      4: "当時の思い込みが顔に出る表情・間（講義顔にしない）",
-      5: "後から気づいた振り返りの表情（本質の総括は6/8に任せる）",
-      6: "芯が一つにまとまった納得の表情（列挙・盛りすぎない）",
-      7: "「次は聞く」と決めた決意が動きで伝わる表情",
-      8: "読者の目を見て問いかける締めの表情（キャラ同士の会話続きにしない）",
+      3: cs ? "お客様の表情の変化・距離感が一段濃くなる（主役は相手側）" : "出来事の続きが顔に出る（引っかかりの深まり）",
+      4: cs && comicCopilotSilent(normalized) ? "親方の気づき・内省が伝わる表情（情報は詰めすぎない）" : "違和感・予兆が顔に出る表情（一焦点）",
+      5: "当時の思い込みが顔に出る表情・間（講義顔にしない）",
+      6: "後から気づいた振り返りの表情（本質の総括は7/10に任せる）",
+      7: "芯が一つにまとまった納得の表情（列挙・盛りすぎない）",
+      8: "次の一手を決める前の静けさ・間（まだ行動の具体は描きすぎない）",
+      9: "「次は聞く」と決めた決意が動きで伝わる表情",
+      10: "読者の目を見て問いかける締めの表情（キャラ同士の会話続きにしない）",
     };
     const compositionByPanel = {
       1: "中景、仕事の「ふつう」が伝わるカット（事件・クライマックスの盛り上げはしない）",
       2: cs ? "お客様の顔・口元・視線を大きく。親方は脇・後ろ寄りでもよい" : "やや寄り、相手の引っかかりが画面の中心",
-      3:
+      3: cs ? "お客様中心の中景〜寄り（空気の変化が伝わる）" : "出来事の続きが伝わる中景（情報を詰めすぎない）",
+      4:
         cs && comicCopilotSilent(normalized)
           ? "親方中心、独白・内省が伝わる構図（小物・背景情報は少なめ）"
           : "強い一言が一点に刺さる構図（情報を散らさない）",
-      4: "内面が読める中景〜寄り（説明板・図解風のレイアウトは避ける）",
-      5: "振り返りが読める中景（独白が主役。6/8と被らない情報量）",
-      6: "本質が一瞬で伝わるカット（派手な集合絵・列挙構図は避ける）",
-      7: "行動の決めが伝わる構図（聞く・止める・引く動き。説明会の続きにしない）",
-      8: "カメラが読者側（第四の壁）を意識した締めの構図。余白多めで問いが主役",
+      5: "内面が読める中景〜寄り（説明板・図解風のレイアウトは避ける）",
+      6: "振り返りが読める中景（独白が主役。7/10と被らない情報量）",
+      7: "本質が一瞬で伝わるカット（派手な集合絵・列挙構図は避ける）",
+      8: "決意の手前の余白多め。手・視線の止まりが伝わる中景",
+      9: "行動の決めが伝わる構図（聞く・止める・引く動き。説明会の続きにしない）",
+      10: "カメラが読者側（第四の壁）を意識した締めの構図。余白多めで問いが主役",
     };
     const emotionPhaseByPanel = {
       1: "静かな受け入れ・場の空気を見ている（感情はまだ動かない）",
       2: "違和感・距離・相手の固さが伝わる（問題が顔に出始める）",
-      3: "張り・予兆・何かがおかしいと気づく手前",
-      4: "衝撃・強い一言が刺さる瞬間",
-      5: "内省・後悔・あのとき何が起きていたか",
-      6: "理解・腑に落ちる・本質が見える",
-      7: "決意・次の一手・自分への約束",
-      8: "余韻・問い・読者へ渡す静けさ",
+      3: "緊張・空気の変化・一段深い引っかかり",
+      4: "張り・予兆・何かがおかしいと気づく手前",
+      5: "衝撃・強い一言が刺さる瞬間",
+      6: "内省・後悔・あのとき何が起きていたか",
+      7: "理解・腑に落ちる・本質が見える",
+      8: "決意の手前・次の一手を選ぶ直前の静けさ",
+      9: "決意・次の一手・自分への約束",
+      10: "余韻・問い・読者へ渡す静けさ",
     };
     const panelForbiddenByPanel = {
       1: "情報を詰めすぎない。セリフを多く入れない。",
       2: "親方の内面より相手（お客様・現場）の反応を優先。",
       3: "解決を描かない。まだ問題の中にいる。",
-      4: "流れの説明をしない。一言・一場面に絞る。",
-      5: "前を向かない。まだ振り返りの中にいる。",
-      6: "行動を描かない。気づきの静けさを優先。",
-      7: "迷いを描かない。前向きな決意のみ。",
-      8: "答えを描かない。問いで終わる。多コマにしない。1場面・1人物・余白多め。",
+      4: "解決を描かない。まだ問題の中にいる。",
+      5: "流れの説明をしない。一言・一場面に絞る。",
+      6: "前を向かない。まだ振り返りの中にいる。",
+      7: "行動を描かない。気づきの静けさを優先。",
+      8: "具体ルールの列挙を描きすぎない。決意の手前に留める。",
+      9: "迷いを描かない。前向きな決意のみ。",
+      10: "答えを描かない。問いで終わる。多コマにしない。1場面・1人物・余白多め。",
     };
     const emotionPhase = emotionPhaseByPanel[panelNumber];
     const panelForbidden = panelForbiddenByPanel[panelNumber];
@@ -1851,7 +2114,7 @@
       return buildPanelPrompt(meta.number, meta.name, lines, normalized, styleGuide);
     });
 
-    const lines = ["【コマ別・描画プロンプト（8コマネーム・1/8〜8/8）】"];
+    const lines = ["【コマ別・描画プロンプト（10コマネーム・1/10〜10/10）】"];
     if (normalized.outputStyle) {
       lines.push(`出力スタイル: ${normalized.outputStyle}`);
     }
@@ -1860,8 +2123,8 @@
   }
 
   /**
-   * 1コマずつ画像生成APIへ渡す用のプロンプト（8本）。既存の buildPanelPrompt を各コマにラップする。
-   * ツール側で2列×4行に合成する前提（ページ全体は画像モデルに描かせない）。
+   * 1コマずつ画像生成APIへ渡す用のプロンプト（10本）。既存の buildPanelPrompt を各コマにラップする。
+   * ツール側で2列×5行に合成する前提（ページ全体は画像モデルに描かせない）。
    */
   function buildSinglePanelImagePromptsBlock(input, cachedComicText) {
     const normalized = normalizeInput(input);
@@ -1879,12 +2142,12 @@
       const lines = extractComicPanelBlock(comicText, meta.start, meta.next);
       const panelPromptBody = buildPanelPrompt(meta.number, meta.name, lines, normalized, styleGuide);
       const blockLines = [
-        "【単一コマ画像生成用 " + meta.number + "/8（" + meta.name + "）】",
+        "【単一コマ画像生成用 " + meta.number + "/10（" + meta.name + "）】",
         "【入力反映】" + leadTitle,
         styleHint,
         "【必須】この画像は「" +
           meta.number +
-          "/8コマ目」だけを1枚に描く。ページ分割・複数コマ・グリッド・枠線・コマ番号・吹き出し内の文字は描かない。1シーン1コマのみ。",
+          "/10コマ目」だけを1枚に描く。ページ分割・複数コマ・グリッド・枠線・コマ番号・吹き出し内の文字は描かない。1シーン1コマのみ。",
         "白黒ゆる線の現場漫画。背景は最小。画像内に文字・吹き出し・ロゴ・コマ番号を描かない（表情・構図で伝える）。",
         castPack.lookLine,
         castPack.castLine,
@@ -1900,11 +2163,11 @@
         .join("\n");
     });
 
-    const singlePanelDelim8 = "\n\n<<<PANEL_SPLIT_8>>>\n\n";
+    const singlePanelDelim10 = "\n\n<<<PANEL_SPLIT_10>>>\n\n";
     const header =
-      "【1コマずつ個別生成する場合のプロンプト（8コマ分・1/8〜8/8）】\n" +
-      "各ブロックを「そのコマだけ」生成に使い、ツール側で2列×4行に合成する。単一コマ用の見出し付きプロンプトが8件です（本文に区切り記号を書き込まないでください）。\n\n";
-    return header + blocks.join(singlePanelDelim8);
+      "【1コマずつ個別生成する場合のプロンプト（10コマ分・1/10〜10/10）】\n" +
+      "各ブロックを「そのコマだけ」生成に使い、ツール側で2列×5行に合成する。単一コマ用の見出し付きプロンプトが10件です（本文に区切り記号を書き込まないでください）。\n\n";
+    return header + blocks.join(singlePanelDelim10);
   }
 
   function unifiedStyleHintLine(style) {
@@ -1949,7 +2212,7 @@
       };
     }
     const custHint =
-      "お客様（依頼主の大人）は、2/8（状況）のコマで表情・戸惑い・距離感がいちばん伝わるように。全コマで同一人物として描く。";
+      "お客様（依頼主の大人）は、2/10・3/10（状況）のコマで表情・戸惑い・距離感がいちばん伝わるように。全コマで同一人物として描く。";
     const lookCs = uip
       ? `見た目固定: ${protagonist}＝${uip.protagonistVisual}／お客様＝${custHint} ${partner}の見た目は${uip.partnerVisual}（この回は主役にしない）。トーン: ${uip.businessTone}。`
       : `見た目: ${protagonist}（親方）とお客様（一般の依頼主）。${custHint}`;
@@ -1963,7 +2226,7 @@
       lookLine: lookCs,
       castLine,
       footLines: [
-        "【顧客視点エピソード】主人公＋相棒の2人が常に画面を占める必要はない。2/8（状況）ではお客様の顔・視線を最優先。",
+        "【顧客視点エピソード】主人公＋相棒の2人が常に画面を占める必要はない。2/10・3/10（状況）ではお客様の顔・視線を最優先。",
       ],
     };
   }
@@ -2004,26 +2267,32 @@
           ? dlg + "。このコマの主役はお客様の表情・視線・戸惑い。"
           : "お客様の表情・戸惑い・視線を最優先。ナレーションの気配で示す。";
       }
-      if (normalized.topicAxis === "customer_side" && meta.number === 3 && comicCopilotSilent(normalized)) {
+      if (normalized.topicAxis === "customer_side" && meta.number === 3) {
+        const dlg = dialogueLines.join(" / ");
+        sceneIntent = dlg
+          ? dlg + "。状況の深まり。お客様の表情・距離感の変化を一段。"
+          : "お客様中心。空気の変化が伝わる。";
+      }
+      if (normalized.topicAxis === "customer_side" && meta.number === 4 && comicCopilotSilent(normalized)) {
         const d3 = dialogueLines.join(" / ");
         sceneIntent = d3
           ? d3.replace(/。$/, "") + "。親方の気づき・内省が伝わる（独白の気配でもよい）。"
           : "親方の気づき・内省が伝わる構図（独白の気配でもよい）。";
       }
-      return `${meta.number}/8（${meta.name}）: ${summary || "今回の入力に沿った情景。"} — ねらい: ${sceneIntent}`;
+      return `${meta.number}/10（${meta.name}）: ${summary || "今回の入力に沿った情景。"} — ねらい: ${sceneIntent}`;
     });
 
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
     const styleHint = unifiedStyleHintLine(normalized.outputStyle);
 
     return [
-      "【統合画像プロンプト（8コマネームを1枚に収める想定）】",
+      "【統合画像プロンプト（10コマネームを1枚に収める想定）】",
       `【入力反映】${leadTitle}`,
       styleHint,
-      "【レイアウト固定・必須】exactly 8 panels, exactly 2 columns × 4 rows（2列×4行の均等グリッドのみ）。各コマは同じ面積の長方形。一枚のキャンバスをこの8分割で埋める。余分なコマ・欠け・はみ出しコマを作らない。",
+      "【レイアウト固定・必須】exactly 10 panels, exactly 2 columns × 5 rows（2列×5行の均等グリッドのみ）。各コマは同じ面積の長方形。一枚のキャンバスをこの10分割で埋める。余分なコマ・欠け・はみ出しコマを作らない。",
       "コマ境界は太めの黒枠と明確なガター（白）で必ず見えるようにする。枠線やガターを省略・極細にしない。装飾目的の変形レイアウト・見た目だけの装飾段組みは禁止（no decorative layout）。",
-      "禁止: 3×3・4×2・不均等グリッド・ポスター一枚絵・コラージュ風多段・コマ内に①②などの番号や円数字・入れ子の小コマ（inset panels・no inset panels）。",
-      "優先順位: 厳密な2列×4行の均等グリッドと境界線の正確さを最優先。「8コマ漫画っぽい」雰囲気だけではなく、分割と同サイズコマを先に満たす。",
+      "禁止: 3×4・5×2・不均等グリッド・ポスター一枚絵・コラージュ風多段・コマ内に①②などの番号や円数字・入れ子の小コマ（inset panels・no inset panels）。",
+      "優先順位: 厳密な2列×5行の均等グリッドと境界線の正確さを最優先。「漫画っぽい」雰囲気だけではなく、分割と同サイズコマを先に満たす。",
       "白黒ゆる線の現場漫画。背景は最小。",
       castPack.lookLine,
       castPack.castLine,
@@ -2036,7 +2305,7 @@
     ])
       .concat(buildCoreLockUnifiedLines(normalized))
       .concat([
-        "最終: 2列×4行・8コマ均等・黒枠で区切られた漫画の見た目に必ず揃える（一枚絵・段組みブレを避ける）。",
+        "最終: 2列×5行・10コマ均等・黒枠で区切られた漫画の見た目に必ず揃える（一枚絵・段組みブレを避ける）。",
       ])
       .filter(function (line) {
         return line !== "";
@@ -2053,7 +2322,7 @@
       normalized.coreMain ? `コアメッセージ: ${normalized.coreMain}` : "",
       normalized.corePhrase ? `必須フレーズ（台詞として描かず、情景で示す）: ${normalized.corePhrase}` : "",
       normalized.coreConclusion ? `絶対にズラさない結論（終盤コマで前進・改善へ）: ${normalized.coreConclusion}` : "",
-      "ネームの流れ: 導入 → 状況 → 強い一言 → 当時の自分の認識 → 今なら分かる → 本質 → 行動ルール → 読者への問い。最終段は余韻・問いで締める。",
+      "ネームの流れ: 導入 → 状況（前後）→ 強い一言 → 当時の自分の認識 → 今なら分かる → 本質 → 行動（前と本番）→ 読者への問い。最終段は余韻・問いで締める。",
     ].filter(function (line) {
       return line !== "";
     });
@@ -3464,7 +3733,7 @@
       longText,
       "",
       "ハッシュタグ案",
-      "#AI武装親方 #現場改善 #8コマネーム #学び #建設DX",
+      "#AI武装親方 #現場改善 #10コマネーム #学び #建設DX",
     ].join("\n");
   }
 
@@ -3514,8 +3783,10 @@
     const comicRagRanked = bundle.comicRagRanked || [];
     const sec = parseManuscriptSections(manuscript);
     const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
-    const noteIntroAssist = compactSpaces(sec.intro + "\n\n" + sec.incident);
-    const noteClosingAssist = compactSpaces(sec.rule + "\n\n" + sec.reader);
+    const incidentMerged = compactSpaces(sec.incidentBefore + " " + sec.incidentAfter) || sec.incident;
+    const ruleMerged = compactSpaces(sec.ruleBefore + " " + sec.rule) || sec.rule;
+    const noteIntroAssist = compactSpaces(sec.intro + "\n\n" + incidentMerged);
+    const noteClosingAssist = compactSpaces(ruleMerged + "\n\n" + sec.reader);
     const noteBodyOnly = manuscript;
     const noteHeaded = "# " + leadTitle + "\n\n" + manuscript;
     const noteTitleSuggestions = buildNoteTitleCandidateBlock(normalized);
@@ -3524,8 +3795,9 @@
       comicTitle: extractComicTitleLine(comicText),
       comic: comicText,
       comicLegacy4: formatFourPanelLegacyFromManuscript(normalized, manuscript),
+      comicLegacy8: formatComicLegacy8FromManuscript(normalized, manuscript),
       comicPrompt: buildComicPanelPrompts(input, comicText),
-      comicSinglePanelPrompts8: buildSinglePanelImagePromptsBlock(input, comicText),
+      comicSinglePanelPrompts10: buildSinglePanelImagePromptsBlock(input, comicText),
       comicUnifiedPrompt: buildUnifiedComicImagePrompt(input, comicText),
       noteIntroAssist: noteIntroAssist,
       noteClosingAssist: noteClosingAssist,
@@ -3534,6 +3806,8 @@
       noteBodyOnly: noteBodyOnly,
       noteTitleSuggestions: noteTitleSuggestions,
       notePrePublishCheck: buildNotePrePublishCheck(normalized, noteBodyOnly, noteTitleSuggestions),
+      comicBubbleScript10: buildTenPanelBubbleScript(manuscript),
+      comicBubblePlacement10: buildTenPanelBubblePlacement(manuscript),
       comicBubbleScript8: buildEightPanelBubbleScript(manuscript),
       comicBubblePlacement8: buildEightPanelBubblePlacement(manuscript),
       comicRagDebug: buildComicRagDebugText(comicRagRanked),
@@ -3552,6 +3826,8 @@
     buildNotePrePublishCheck,
     buildXPost,
     buildAllOutputs,
+    buildTenPanelBubbleScript,
+    buildTenPanelBubblePlacement,
     buildEightPanelBubbleScript,
     buildEightPanelBubblePlacement,
   };

@@ -134,14 +134,14 @@
 
       <section class="card comic-primary-card">
         <p class="workflow-hint workflow-hint--primary">
-          <strong>主導線</strong>：入力 → <strong>漫画原稿</strong> → <strong>8コマ標準ネーム</strong>（1/8〜8/8） → コマ別プロンプト → <strong>1コマずつ画像生成用プロンプト</strong> → 2×4合成・吹き出し → <strong>note補助（導入・締め）</strong>（統合プロンプトは補助導線）
+          <strong>主導線</strong>：入力 → <strong>漫画原稿</strong> → <strong>10コマ標準ネーム</strong>（1/10〜10/10） → コマ別プロンプト → <strong>1コマずつ画像生成用プロンプト</strong> → 2×5合成・吹き出し → <strong>note補助（導入・締め）</strong>（統合プロンプトは補助導線）
         </p>
         <div class="result-head">
           <h2>漫画原稿（一次ソース）</h2>
           <button type="button" data-copy-target="comic-manuscript-post-output" class="copy-btn">原稿をコピー</button>
         </div>
         <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          <strong>8ブロック</strong>（導入〜読者への問い）。ここが唯一の起点。ネーム・画像・noteは<strong>すべてここから派生</strong>します。
+          <strong>10ブロック</strong>（導入〜読者への問い）。ここが唯一の起点。ネーム・画像・noteは<strong>すべてここから派生</strong>します。
         </p>
         <pre id="comic-manuscript-post-output" class="output-block">ここに生成結果が表示されます。</pre>
         <details class="comic-rag-debug" style="margin-top: 10px">
@@ -152,10 +152,10 @@
 
       <section class="card comic-primary-card">
         <div class="result-head">
-          <h2>8コマ標準ネーム（1/8〜8/8）</h2>
+          <h2>10コマ標準ネーム（1/10〜10/10）</h2>
         </div>
         <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          原稿の8ブロックをそのまま<strong>1コマずつ</strong>載せます（まずは圧縮せず、流れを追えることを優先）。旧4コマ短縮版は <code>buildAllOutputs</code> の <code>comicLegacy4</code> に残しています。
+          原稿の10ブロックをそのまま<strong>1コマずつ</strong>載せます（まずは圧縮せず、流れを追えることを優先）。旧4コマは <code>comicLegacy4</code>、旧8コマ畳みは <code>comicLegacy8</code> に残しています。
         </p>
         <h3 style="margin: 12px 0 6px; font-size: 1rem; font-weight: 600; color: #374151">タイトル</h3>
         <div class="result-head" style="margin-bottom: 6px">
@@ -167,22 +167,22 @@
           <button type="button" data-copy-target="comic-output" class="copy-btn">ネームをコピー</button>
         </div>
         <pre id="comic-output" class="output-block">ここに生成結果が表示されます。</pre>
-        <h3 style="margin: 16px 0 6px; font-size: 1rem; font-weight: 600; color: #374151">8コマ吹き出し台本（画像に載せる短文）</h3>
+        <h3 style="margin: 16px 0 6px; font-size: 1rem; font-weight: 600; color: #374151">10コマ吹き出し台本（画像に載せる短文）</h3>
         <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          原稿8ブロックから、吹き出し用に行を短くした版です（1コマあたり原則1〜3行）。統合プロンプトの「文字なし」と併用して、後から文字を載せる想定。
+          原稿10ブロックから、吹き出し用に行を短くした版です（1コマあたり原則1〜3行）。統合プロンプトの「文字なし」と併用して、後から文字を載せる想定。
         </p>
         <div class="result-head" style="margin-bottom: 6px">
-          <button type="button" data-copy-target="comic-bubble-script-8-output" class="copy-btn">吹き出し台本をコピー</button>
+          <button type="button" data-copy-target="comic-bubble-script-10-output" class="copy-btn">吹き出し台本をコピー</button>
         </div>
-        <pre id="comic-bubble-script-8-output" class="output-block">ここに生成結果が表示されます。</pre>
-        <h3 style="margin: 16px 0 6px; font-size: 1rem; font-weight: 600; color: #374151">8コマ吹き出し配置データ（後から載せる用）</h3>
+        <pre id="comic-bubble-script-10-output" class="output-block">ここに生成結果が表示されます。</pre>
+        <h3 style="margin: 16px 0 6px; font-size: 1rem; font-weight: 600; color: #374151">10コマ吹き出し配置データ（後から載せる用）</h3>
         <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
           各コマの種別・推奨位置・サイズ・行数目安。画像生成（無字）後のオーバーレイ作業向け。
         </p>
         <div class="result-head" style="margin-bottom: 6px">
-          <button type="button" data-copy-target="comic-bubble-placement-8-output" class="copy-btn">吹き出し配置をコピー</button>
+          <button type="button" data-copy-target="comic-bubble-placement-10-output" class="copy-btn">吹き出し配置をコピー</button>
         </div>
-        <pre id="comic-bubble-placement-8-output" class="output-block">ここに生成結果が表示されます。</pre>
+        <pre id="comic-bubble-placement-10-output" class="output-block">ここに生成結果が表示されます。</pre>
       </section>
 
       <section class="card comic-primary-card">
@@ -195,61 +195,69 @@
 
       <section class="card comic-primary-card">
         <p class="workflow-hint" style="margin: 0 0 12px; padding: 10px 12px; font-size: 14px; color: #14532d; line-height: 1.55; background: #ecfdf5; border-radius: 8px; border: 1px solid #a7f3d0">
-          <strong>主線（画像）</strong>：1コマずつ生成 → 下の8欄に貼り付け → <strong>2×4に合成</strong> → 下段の吹き出し後乗せ。従来の「1枚で8コマ」はこの下の統合プロンプトに残しています。
+          <strong>主線（画像）</strong>：1コマずつ生成 → 下の10欄に貼り付け → <strong>2×5に合成</strong> → 下段の吹き出し後乗せ。従来の「1枚に多コマ」はこの下の統合プロンプトに残しています。
         </p>
         <div class="result-head">
-          <h2>1コマずつ画像生成用プロンプト（1/8〜8/8）</h2>
-          <button type="button" data-copy-target="comic-single-panel-prompts-8-output" class="copy-btn">コピー</button>
+          <h2>1コマずつ画像生成用プロンプト（1/10〜10/10）</h2>
+          <button type="button" data-copy-target="comic-single-panel-prompts-10-output" class="copy-btn">コピー</button>
         </div>
         <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          各コマを<strong>別の1枚画像</strong>として生成するための入力です。ツール側で2列×4行に合成します（1/8が左上、左→右、次の行へ）。
+          各コマを<strong>別の1枚画像</strong>として生成するための入力です。ツール側で2列×5行に合成します（1/10が左上、左→右、次の行へ）。区切りは <code style="font-size: 12px">&lt;&lt;&lt;PANEL_SPLIT_10&gt;&gt;&gt;</code>。
         </p>
-        <pre id="comic-single-panel-prompts-8-output" class="output-block">ここに生成結果が表示されます。</pre>
+        <pre id="comic-single-panel-prompts-10-output" class="output-block">ここに生成結果が表示されます。</pre>
 
-        <h3 style="margin: 18px 0 8px; font-size: 1rem; font-weight: 600; color: #374151">8コマの画像URL（生成結果を貼る）</h3>
+        <h3 style="margin: 18px 0 8px; font-size: 1rem; font-weight: 600; color: #374151">10コマの画像URL（生成結果を貼る）</h3>
         <p class="copy-hint" style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
           失敗したコマだけ再生成して差し替えられます。
         </p>
         <div class="panel-url-grid">
           <div class="field">
-            <label for="panel-img-url-1">1/8</label>
+            <label for="panel-img-url-1">1/10</label>
             <textarea id="panel-img-url-1" rows="2" placeholder="data:image/... または https://..." autocomplete="off" spellcheck="false"></textarea>
           </div>
           <div class="field">
-            <label for="panel-img-url-2">2/8</label>
+            <label for="panel-img-url-2">2/10</label>
             <textarea id="panel-img-url-2" rows="2" placeholder="data:image/... または https://..." autocomplete="off" spellcheck="false"></textarea>
           </div>
           <div class="field">
-            <label for="panel-img-url-3">3/8</label>
+            <label for="panel-img-url-3">3/10</label>
             <textarea id="panel-img-url-3" rows="2" placeholder="data:image/... または https://..." autocomplete="off" spellcheck="false"></textarea>
           </div>
           <div class="field">
-            <label for="panel-img-url-4">4/8</label>
+            <label for="panel-img-url-4">4/10</label>
             <textarea id="panel-img-url-4" rows="2" placeholder="data:image/... または https://..." autocomplete="off" spellcheck="false"></textarea>
           </div>
           <div class="field">
-            <label for="panel-img-url-5">5/8</label>
+            <label for="panel-img-url-5">5/10</label>
             <textarea id="panel-img-url-5" rows="2" placeholder="data:image/... または https://..." autocomplete="off" spellcheck="false"></textarea>
           </div>
           <div class="field">
-            <label for="panel-img-url-6">6/8</label>
+            <label for="panel-img-url-6">6/10</label>
             <textarea id="panel-img-url-6" rows="2" placeholder="data:image/... または https://..." autocomplete="off" spellcheck="false"></textarea>
           </div>
           <div class="field">
-            <label for="panel-img-url-7">7/8</label>
+            <label for="panel-img-url-7">7/10</label>
             <textarea id="panel-img-url-7" rows="2" placeholder="data:image/... または https://..." autocomplete="off" spellcheck="false"></textarea>
           </div>
           <div class="field">
-            <label for="panel-img-url-8">8/8</label>
+            <label for="panel-img-url-8">8/10</label>
             <textarea id="panel-img-url-8" rows="2" placeholder="data:image/... または https://..." autocomplete="off" spellcheck="false"></textarea>
+          </div>
+          <div class="field">
+            <label for="panel-img-url-9">9/10</label>
+            <textarea id="panel-img-url-9" rows="2" placeholder="data:image/... または https://..." autocomplete="off" spellcheck="false"></textarea>
+          </div>
+          <div class="field">
+            <label for="panel-img-url-10">10/10</label>
+            <textarea id="panel-img-url-10" rows="2" placeholder="data:image/... または https://..." autocomplete="off" spellcheck="false"></textarea>
           </div>
         </div>
         <div class="actions" style="margin-top: 8px">
-          <button type="button" id="composite-eight-panel-btn">2×4に合成</button>
+          <button type="button" id="composite-ten-panel-btn">2×5に合成</button>
           <button type="button" id="composite-download-btn" class="subtle">合成画像を保存</button>
         </div>
         <p id="comic-composite-status" class="output-block" style="min-height: auto; margin-top: 8px; font-size: 14px; color: #6b7280">
-          各コマの生成結果（URL / data URL）を貼ってから「2×4に合成」してください。
+          各コマの生成結果（URL / data URL）を貼ってから「2×5に合成」してください。
         </p>
         <div id="comic-composite-wrap" style="display: none; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; padding: 12px; text-align: center">
           <canvas id="comic-composite-canvas" class="comic-composite-canvas"></canvas>
@@ -317,7 +325,7 @@
               <dd id="comic-review-core-conclusion">—</dd>
             </dl>
           </div>
-          <p style="margin: 12px 0 6px; font-size: 14px; font-weight: 600; color: #374151">8コマネーム（確認用・全文）</p>
+          <p style="margin: 12px 0 6px; font-size: 14px; font-weight: 600; color: #374151">10コマネーム（確認用・全文）</p>
           <pre id="comic-review-comic" class="output-block" style="min-height: 80px">先に「構成を生成」してください。</pre>
           <p style="margin: 12px 0 6px; font-size: 14px; font-weight: 600; color: #374151">APIに送る生成用プロンプト</p>
           <pre id="comic-review-api-prompt" class="output-block" style="min-height: 80px">—</pre>
@@ -375,10 +383,10 @@
 
         <h2 style="margin: 18px 0 8px">吹き出し付き完成漫画プレビュー（無字画像＋台本＋配置）</h2>
         <p style="margin: 0 0 10px; font-size: 14px; color: #6b7280">
-          <strong>主線</strong>では上の「2×4に合成」済みキャンバスに重ねます（なければ従来どおり、この下のプレビューに表示した無字8コマ1枚に重ねます）。「構成を生成」済みの<strong>8コマ吹き出し台本</strong>と<strong>配置データ</strong>を読み、白地に黒文字の吹き出しを重ねます（2列×4行の読み順）。
+          <strong>主線</strong>では上の「2×5に合成」済みキャンバスに重ねます（なければ従来どおり、この下のプレビューに表示した無字1枚に重ねます）。「構成を生成」済みの<strong>10コマ吹き出し台本</strong>と<strong>配置データ</strong>を読み、白地に黒文字の吹き出しを重ねます（2列×5行の読み順）。
         </p>
         <p class="copy-hint" style="margin: 0 0 10px; font-size: 13px; color: #6b7280">
-          各コマ左上に1〜8の番号バッジ（最前面）。2×4境界はガイド線強め。吹き出しは四隅優先・2/8はお客様顔側を避けやすく。台本はオーバーレイ側で2行基本・短文化（句読点優先）・最小フォント13px前後。
+          各コマ左上に1〜10の番号バッジ（最前面）。2×5境界はガイド線強め。吹き出しは四隅優先・2/10はお客様顔側を避けやすく。台本はオーバーレイ側で2行基本・短文化（句読点優先）・最小フォント13px前後。
         </p>
         <div class="actions">
           <button type="button" id="comic-bubble-overlay-generate-btn">吹き出し付き完成漫画プレビューを生成</button>
@@ -426,7 +434,7 @@
           <section class="card note-posting-copy-card" style="margin-top: 12px">
             <h2>note投稿用コピー（補助）</h2>
             <p class="copy-hint">
-              <strong>本文欄用の「本文のみ」は漫画原稿（8ブロック）と同一</strong>です。従来の長文連載向けの別生成は <code>buildNote</code>（Kindleプレビュー等が内部利用）で、主導線の重複生成は避けています。
+              <strong>本文欄用の「本文のみ」は漫画原稿（10ブロック）と同一</strong>です。従来の長文連載向けの別生成は <code>buildNote</code>（Kindleプレビュー等が内部利用）で、主導線の重複生成は避けています。
             </p>
             <div class="actions">
               <button type="button" data-copy-target="note-title-suggestions-output" class="copy-btn">タイトル案をコピー（タイトル欄）</button>
@@ -449,7 +457,7 @@
 
           <section class="card">
             <div class="result-head">
-              <h2>note用・原稿本文（8ブロック）</h2>
+              <h2>note用・原稿本文（10ブロック）</h2>
               <button type="button" data-copy-target="note-body-only-output" class="copy-btn">本文欄用にコピー</button>
               <button type="button" data-copy-target="note-output" class="copy-btn">Markdown用にコピー</button>
             </div>
@@ -486,8 +494,8 @@
             <div class="actions">
               <button type="button" data-copy-target="comic-title-output" class="copy-btn">タイトルをコピー</button>
               <button type="button" data-copy-target="comic-output" class="copy-btn">ネームをコピー</button>
-              <button type="button" data-copy-target="comic-bubble-script-8-output" class="copy-btn">8コマ吹き出し台本をコピー</button>
-              <button type="button" data-copy-target="comic-bubble-placement-8-output" class="copy-btn">8コマ吹き出し配置をコピー</button>
+              <button type="button" data-copy-target="comic-bubble-script-10-output" class="copy-btn">10コマ吹き出し台本をコピー</button>
+              <button type="button" data-copy-target="comic-bubble-placement-10-output" class="copy-btn">10コマ吹き出し配置をコピー</button>
               <button type="button" data-copy-target="comic-unified-prompt-output" class="copy-btn">統合プロンプトをコピー</button>
               <button type="button" id="copy-style-bundle-btn" class="subtle">スタイル向けにまとめてコピー</button>
             </div>
