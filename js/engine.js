@@ -1872,10 +1872,11 @@
         .join("\n");
     });
 
+    const singlePanelDelim8 = "\n\n<<<PANEL_SPLIT_8>>>\n\n";
     const header =
       "【1コマずつ個別生成する場合のプロンプト（8コマ分・1/8〜8/8）】\n" +
-      "各ブロックを「そのコマだけ」生成に使い、ツール側で2列×4行に合成する。ブロック間は --- で区切っています。\n\n";
-    return header + blocks.join("\n\n---\n\n");
+      "各ブロックを「そのコマだけ」生成に使い、ツール側で2列×4行に合成する。単一コマ用の見出し付きプロンプトが8件です（本文に区切り記号を書き込まないでください）。\n\n";
+    return header + blocks.join(singlePanelDelim8);
   }
 
   function unifiedStyleHintLine(style) {
