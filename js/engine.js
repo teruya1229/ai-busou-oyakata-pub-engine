@@ -720,6 +720,28 @@
     return compactSpaces(value || "");
   }
 
+  /** `index.html` の placeholder / 例文 / ラベル誤貼りを原稿・吹き出しに混ぜない */
+  const FORM_UI_NOISE_EXACT = new Set([
+    "最小入力の芯（例: 仲良くなったことと、口コミを書くことは別）",
+    "最小入力の芯（例: 満足直後の導線を設計しないと口コミは増えない）",
+    "例: 段取り確認とAI活用",
+    "例: 段取りの認識ズレ｜着手前に一言で言語化｜短い確認が強い",
+    "ラフでOK（例: 朝礼後に段取りがずれた。手戻り。）",
+    "ラフでOK（例: 確認を一言にするとズレが減る）",
+    "未入力なら無視されます",
+    "例: 照屋親方、コパイロット、若手職人（空なら既定）",
+    "この話で一番伝えたいこと",
+    "絶対にズラしたくない結論",
+  ]);
+
+  function stripFormUiNoise(value) {
+    const t = trimOptional(value);
+    if (!t) {
+      return "";
+    }
+    return FORM_UI_NOISE_EXACT.has(t) ? "" : t;
+  }
+
   function resolveOutputStyle(raw) {
     const s = compactSpaces(raw || "");
     if (s === "note" || s === "comic" || s === "kindle") {
@@ -755,36 +777,42 @@
 
   function normalizeInput(input) {
     const tone = templates.toneTemplates[input.tone] ? input.tone : "ゆるい";
-    const theme = stripDuplicateTitlePrefix(safeText(input.theme, "").trim() || "現場の小さな改善");
-    const coreMain = trimOptional(input.coreMain);
-    const corePhrase = trimOptional(input.corePhrase);
-    const coreConclusion = trimOptional(input.coreConclusion);
+    const theme = stripDuplicateTitlePrefix(
+      stripFormUiNoise(safeText(input.theme, "").trim()) || "現場の小さな改善"
+    );
+    const coreMain = stripFormUiNoise(input.coreMain);
+    const corePhrase = stripFormUiNoise(input.corePhrase);
+    const coreConclusion = stripFormUiNoise(input.coreConclusion);
     const hasCoreLocks = !!(coreMain || corePhrase || coreConclusion);
 
     let sceneGrounded = false;
-    let incident = ensureIncidentText(input.incident);
-    if (!trimOptional(input.incident) && (coreMain || coreConclusion)) {
+    const incidentRaw = stripFormUiNoise(input.incident);
+    let incident = ensureIncidentText(incidentRaw);
+    if (!trimOptional(incidentRaw) && (coreMain || coreConclusion)) {
       incident = deriveIncidentFromCore(theme, coreMain, coreConclusion);
       sceneGrounded = true;
     }
 
     let learning;
-    if (trimOptional(input.learning)) {
-      learning = ensureLearningText(input.learning, incident, theme, coreMain, coreConclusion);
+    const learningRaw = stripFormUiNoise(input.learning);
+    if (trimOptional(learningRaw)) {
+      learning = ensureLearningText(learningRaw, incident, theme, coreMain, coreConclusion);
     } else {
       learning = ensureLearningText("", incident, theme, coreMain, coreConclusion);
     }
 
-    const characters = normalizeCharacters(input.characters);
+    const characters = normalizeCharacters(stripFormUiNoise(input.characters));
     const patternSource = compactSpaces(incident + " " + coreMain + " " + corePhrase + " " + coreConclusion);
     const comicPattern = selectComicPattern(patternSource, learning);
     const topicBundle = compactSpaces(theme + " " + incident + " " + coreMain + " " + coreConclusion + " " + learning + " " + corePhrase);
     const topicAxis = inferTopicAxis(topicBundle);
+    const themeSparse = stripFormUiNoise(safeText(input.theme, "").trim());
+    const charactersSparse = stripFormUiNoise(input.characters);
     const inputSparse =
-      !compactSpaces(input.theme) ||
-      !compactSpaces(input.characters) ||
-      compactSpaces(input.incident).length < 10 ||
-      compactSpaces(input.learning).length < 6;
+      !compactSpaces(themeSparse) ||
+      !compactSpaces(charactersSparse) ||
+      compactSpaces(incidentRaw).length < 10 ||
+      compactSpaces(learningRaw).length < 6;
     const learningFocus =
       topicAxis === "alignment_comm" || comicPattern === "誤解型"
         ? "短文でも、要点を一つに絞って学びとして残す。"
