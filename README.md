@@ -5,6 +5,7 @@
 
 主出力（`buildAllOutputs`・主導線と対応）:
 - **漫画原稿**（`comicManuscriptPost`）、**タイトル**（`comicTitle`）、**ネーム本文**（`comic`・8コマ）、**8コマ吹き出し台本**（`comicBubbleScript8`・原稿から派生した画像載せ用の短行）、**8コマ吹き出し配置データ**（`comicBubblePlacement8`・種別・推奨位置・サイズ・行数目安。無字画像への後載せ用）、**コマ別描画プロンプト**（`comicPrompt`）、**1コマずつ画像生成用プロンプト**（`comicSinglePanelPrompts8`・8ブロックを `---` 区切りで1コマ1枚向けにラップ。**主線の画像生成**はこれを使い、ツール側で2列×4行合成→吹き出し）、**統合画像プロンプト**（`comicUnifiedPrompt`・従来の1枚8コマ用。補助導線）。**UI**で **2×4合成**（`comic-8panel-composed.png`）のあと **吹き出し付き完成漫画プレビュー**（Canvas 重ね・コマ番号1〜8・短文化・`comic-8panel-with-bubbles.png` 保存可・**2列×4行**）
+- **コマ別プロンプト**（`buildPanelPrompt`・上記 `comicPrompt` / `comicSinglePanelPrompts8` の本文に共通）：各コマに **役割固定（絵だけで分かること）** を付与。1/8導入・2/8事件・7/8行動ルール・8/8読者への問いを絵の役割として強く固定し、3〜6は中盤の情報過多を抑える。
 - **漫画RAGデバッグ**（`comicRagDebug`・折りたたみ表示）：`js/rag-data.js` の仮素材をタグ照合で3〜5件拾い、**`customer_side`** の原稿 **2/8・3/8・5/8・6/8** に短文を軽く足す（Notion API 直結は後段。電工ツール用RAGとは分離）
 - **旧4コマ短縮ネーム**（`comicLegacy4`・比較・互換用。主表示は `comic`）
 - **note補助**（`noteIntroAssist` / `noteClosingAssist`）
