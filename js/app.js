@@ -1125,7 +1125,7 @@
       if (comicBubbleOverlayWrap) {
         comicBubbleOverlayWrap.style.display = "block";
       }
-      setBubbleOverlayStatus("吹き出し付きプレビューを表示しています。", "#6b7280");
+      setBubbleOverlayStatus("吹き出し付き完成漫画プレビューを表示しています。", "#6b7280");
     } catch (e) {
       setBubbleOverlayStatus("描画に失敗しました。", "#b91c1c");
     }
@@ -1136,7 +1136,7 @@
       return;
     }
     if (comicBubbleOverlayWrap.style.display === "none" || comicBubbleOverlayCanvas.width < 1) {
-      window.alert("先に「吹き出し付きプレビューを生成」してください。");
+      window.alert("先に「吹き出し付き完成漫画プレビューを生成」してください。");
       return;
     }
     try {
