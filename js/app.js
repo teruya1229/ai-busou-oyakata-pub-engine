@@ -8,6 +8,7 @@
     comicBubbleScript8: document.getElementById("comic-bubble-script-8-output"),
     comicBubblePlacement8: document.getElementById("comic-bubble-placement-8-output"),
     comicPrompt: document.getElementById("comic-prompt-output"),
+    comicSinglePanelPrompts8: document.getElementById("comic-single-panel-prompts-8-output"),
     comicUnifiedPrompt: document.getElementById("comic-unified-prompt-output"),
     noteIntroAssist: document.getElementById("note-intro-assist-output"),
     noteClosingAssist: document.getElementById("note-closing-assist-output"),
@@ -41,8 +42,14 @@
   const comicBubbleOverlayStatus = document.getElementById("comic-bubble-overlay-status");
   const comicBubbleOverlayGenerateBtn = document.getElementById("comic-bubble-overlay-generate-btn");
   const comicBubbleOverlayDownloadBtn = document.getElementById("comic-bubble-overlay-download-btn");
+  const comicCompositeCanvas = document.getElementById("comic-composite-canvas");
+  const comicCompositeWrap = document.getElementById("comic-composite-wrap");
+  const comicCompositeStatus = document.getElementById("comic-composite-status");
+  const compositeEightPanelBtn = document.getElementById("composite-eight-panel-btn");
+  const compositeDownloadBtn = document.getElementById("composite-download-btn");
 
   const COMIC_IMAGE_DOWNLOAD_FILENAME = "comic-8panel.png";
+  const COMIC_COMPOSITE_DOWNLOAD_FILENAME = "comic-8panel-composed.png";
   const COMIC_BUBBLE_OVERLAY_DOWNLOAD_FILENAME = "comic-8panel-with-bubbles.png";
 
   const COMIC_PREVIEW_STATUS_IDLE =
@@ -226,6 +233,7 @@
   }
 
   function renderOutputs(result) {
+    resetCompositePreview();
     resetBubbleOverlayPreview();
     if (outputs.comicManuscriptPost) {
       outputs.comicManuscriptPost.textContent =
@@ -256,6 +264,12 @@
     }
     if (outputs.comicPrompt) {
       outputs.comicPrompt.textContent = result.comicPrompt || "コマ別描画プロンプトを生成できませんでした。";
+    }
+    if (outputs.comicSinglePanelPrompts8) {
+      outputs.comicSinglePanelPrompts8.textContent =
+        result.comicSinglePanelPrompts8 != null && result.comicSinglePanelPrompts8 !== ""
+          ? result.comicSinglePanelPrompts8
+          : OUTPUT_PLACEHOLDER;
     }
     const unifiedText = result.comicUnifiedPrompt || "統合画像プロンプトを生成できませんでした。";
     const unifiedEl = document.getElementById("comic-unified-prompt-output");
@@ -840,6 +854,135 @@
     return true;
   }
 
+  function resetCompositePreview() {
+    if (comicCompositeCanvas) {
+      const c = comicCompositeCanvas;
+      const ctx = c.getContext("2d");
+      if (ctx && c.width > 0) {
+        ctx.clearRect(0, 0, c.width, c.height);
+      }
+      c.width = 0;
+      c.height = 0;
+    }
+    if (comicCompositeWrap) {
+      comicCompositeWrap.style.display = "none";
+    }
+    if (comicCompositeStatus) {
+      comicCompositeStatus.textContent =
+        "各コマの生成結果（URL / data URL）を貼ってから「2×4に合成」してください。";
+      comicCompositeStatus.style.color = "#6b7280";
+    }
+  }
+
+  function setCompositeStatus(message, color) {
+    if (!comicCompositeStatus) {
+      return;
+    }
+    comicCompositeStatus.textContent = message || "";
+    comicCompositeStatus.style.color = color || "#6b7280";
+  }
+
+  function loadPanelImage(src) {
+    return new Promise(function (resolve, reject) {
+      const t = (src || "").trim();
+      if (!t) {
+        reject(new Error("empty"));
+        return;
+      }
+      if (!isAllowedComicImageSource(t)) {
+        reject(new Error("bad"));
+        return;
+      }
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = function () {
+        resolve(img);
+      };
+      img.onerror = function () {
+        reject(new Error("load"));
+      };
+      img.src = t;
+    });
+  }
+
+  function compositeEightPanelToCanvas() {
+    if (!comicCompositeCanvas) {
+      return;
+    }
+    const urls = [];
+    let i;
+    for (i = 1; i <= 8; i += 1) {
+      const el = document.getElementById("panel-img-url-" + i);
+      urls.push((el && el.value) || "");
+    }
+    setCompositeStatus("画像を読み込み中…", "#6b7280");
+    const loadPromises = urls.map(function (u) {
+      return loadPanelImage(u);
+    });
+    Promise.all(loadPromises)
+      .then(function (images) {
+        const baseW = 800;
+        const baseH = 1600;
+        const canvas = comicCompositeCanvas;
+        canvas.width = baseW;
+        canvas.height = baseH;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, baseW, baseH);
+        const gutter = 4;
+        const cellW = (baseW - gutter * 3) / 2;
+        const cellH = (baseH - gutter * 5) / 4;
+        let idx;
+        for (idx = 0; idx < 8; idx += 1) {
+          const col = idx % 2;
+          const row = Math.floor(idx / 2);
+          const x = gutter + col * (cellW + gutter);
+          const y = gutter + row * (cellH + gutter);
+          const img = images[idx];
+          ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, x, y, cellW, cellH);
+        }
+        if (comicCompositeWrap) {
+          comicCompositeWrap.style.display = "block";
+        }
+        resetBubbleOverlayPreview();
+        setCompositeStatus("2×4に合成しました。続けて「吹き出し付き完成漫画プレビュー」が使えます。", "#059669");
+      })
+      .catch(function (e) {
+        if (e && e.message === "empty") {
+          setCompositeStatus("8コマすべてに URL または data URL を入力してください。", "#b45309");
+          return;
+        }
+        setCompositeStatus("画像の読み込みに失敗しました。各コマの形式・URLを確認してください。", "#b91c1c");
+      });
+  }
+
+  function downloadCompositeCanvas() {
+    if (!comicCompositeCanvas || !comicCompositeWrap) {
+      return;
+    }
+    if (comicCompositeWrap.style.display === "none" || comicCompositeCanvas.width < 1) {
+      window.alert("先に「2×4に合成」で合成プレビューを作成してください。");
+      return;
+    }
+    try {
+      const url = comicCompositeCanvas.toDataURL("image/png");
+      triggerDownloadFromHref(url, COMIC_COMPOSITE_DOWNLOAD_FILENAME);
+    } catch (e) {
+      window.alert("保存できませんでした。外部画像はCORSで汚染される場合があります。");
+    }
+  }
+
+  /** 合成キャンバス（主線）優先。無ければ従来の1枚8コマプレビュー */
+  function getOverlayBaseForBubble() {
+    if (comicCompositeCanvas && comicCompositeCanvas.width > 0 && comicCompositeCanvas.height > 0) {
+      return comicCompositeCanvas;
+    }
+    if (comicImagePreview && hasVisibleComicImagePreview()) {
+      return comicImagePreview;
+    }
+    return null;
+  }
+
   function isOutputPlaceholderText(text) {
     const t = (text || "").trim();
     return !t || t === OUTPUT_PLACEHOLDER;
@@ -1031,7 +1174,7 @@
   function chooseBubblePosition(panelIdx, pos, inner, bubbleW, bubbleH, faceRect, topClearance) {
     const pad = Math.max(2, inner.width * 0.025);
     const centerX = inner.left + inner.width / 2;
-    const col = panelIdx % 4;
+    const col = panelIdx % 2;
     const tcPad = typeof topClearance === "number" ? topClearance : 0;
 
     function clamp(bx, by) {
@@ -1061,7 +1204,7 @@
     } else if (pos === "下" || pos === "左下") {
       order = [bl, br, bc, tl, tr, tc];
     } else if (pos === "上" || pos === "上中央") {
-      order = col <= 1 ? [tl, tr, bl, br, bc] : [tr, tl, br, bl, bc];
+      order = col === 0 ? [tl, tr, bl, br, bc] : [tr, tl, br, bl, bc];
     } else if (panelIdx === 0) {
       order = [tl, tr, bl, br, bc];
     } else if (panelIdx === 1) {
@@ -1072,7 +1215,7 @@
       order = [bl, bc, br, tl, tr];
     } else if (pos === "中央" || panelIdx === 5) {
       order = [bl, br, bc, tl, tr, tc];
-    } else if (col <= 1) {
+    } else if (col === 0) {
       order = [bl, tl, br, tr, bc, tc];
     } else {
       order = [br, tr, bl, tl, bc, tc];
@@ -1088,23 +1231,24 @@
     return order[0];
   }
 
+  /** 2列×4行のガイド（ツール側合成・吹き出しオーバーレイと一致） */
   function drawOverlayPanelGuides(ctx, w, h, cellW, cellH) {
     ctx.strokeStyle = "rgba(0,0,0,0.34)";
     ctx.lineWidth = Math.max(1.5, w / 420);
     ctx.setLineDash([]);
-    let c;
-    for (c = 1; c < 4; c += 1) {
-      const x = c * cellW;
+    const xMid = cellW;
+    ctx.beginPath();
+    ctx.moveTo(xMid, 0);
+    ctx.lineTo(xMid, h);
+    ctx.stroke();
+    let r;
+    for (r = 1; r < 4; r += 1) {
+      const y = r * cellH;
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, h);
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
       ctx.stroke();
     }
-    const yMid = cellH;
-    ctx.beginPath();
-    ctx.moveTo(0, yMid);
-    ctx.lineTo(w, yMid);
-    ctx.stroke();
     ctx.strokeStyle = "rgba(0,0,0,0.12)";
     ctx.lineWidth = Math.max(1, w / 900);
     ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
@@ -1122,8 +1266,8 @@
     ctx.textAlign = "center";
     let idx;
     for (idx = 0; idx < 8; idx += 1) {
-      const col = idx % 4;
-      const row = Math.floor(idx / 4);
+      const col = idx % 2;
+      const row = Math.floor(idx / 2);
       const bx = col * cellW + gutter + inset;
       const by = row * cellH + gutter + inset;
       const cx = bx + side / 2;
@@ -1169,19 +1313,22 @@
   }
 
   function drawComicBubbleOverlay(img, panels, placements) {
-    if (!comicBubbleOverlayCanvas || !img || !img.naturalWidth) {
+    if (!comicBubbleOverlayCanvas || !img) {
       return;
     }
-    const w = img.naturalWidth;
-    const h = img.naturalHeight;
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    if (!w || !h) {
+      return;
+    }
     const canvas = comicBubbleOverlayCanvas;
     const ctx = canvas.getContext("2d");
     canvas.width = w;
     canvas.height = h;
     ctx.drawImage(img, 0, 0, w, h);
-    const cols = 4;
+    const cols = 2;
     const cellW = w / cols;
-    const cellH = h / 2;
+    const cellH = h / 4;
     const gutter = Math.max(4, Math.floor(Math.min(w, h) * 0.008));
     drawOverlayPanelGuides(ctx, w, h, cellW, cellH);
 
@@ -1215,10 +1362,9 @@
         sizeMul = 1.05;
       }
 
-      const col = idx % cols;
-      const row = Math.floor(idx / cols);
+      const col = idx % 2;
       const cellX = col * cellW;
-      const cellY = row * cellH;
+      const cellY = Math.floor(idx / 2) * cellH;
       const inner = {
         left: cellX + gutter,
         top: cellY + gutter,
@@ -1331,12 +1477,12 @@
       setBubbleOverlayStatus("先に「構成を生成」で吹き出し台本・配置が出た状態にしてください。", "#b45309");
       return;
     }
-    if (!comicImagePreview || !comicImagePreview.complete || !comicImagePreview.naturalWidth) {
-      setBubbleOverlayStatus("先に無字画像をプレビューに表示してください。", "#b45309");
-      return;
-    }
-    if (!hasVisibleComicImagePreview()) {
-      setBubbleOverlayStatus("先に無字画像をプレビューに表示してください。", "#b45309");
+    const baseImg = getOverlayBaseForBubble();
+    if (!baseImg) {
+      setBubbleOverlayStatus(
+        "先に「2×4に合成」で合成画像を作るか、従来どおり無字の8コマ画像をプレビューに表示してください。",
+        "#b45309"
+      );
       return;
     }
     const panels = parseBubbleScript8(scriptText);
@@ -1346,7 +1492,7 @@
       return;
     }
     try {
-      drawComicBubbleOverlay(comicImagePreview, panels, placements);
+      drawComicBubbleOverlay(baseImg, panels, placements);
       if (comicBubbleOverlayWrap) {
         comicBubbleOverlayWrap.style.display = "block";
       }
@@ -1450,6 +1596,9 @@
     if (outputs.comicPrompt) {
       outputs.comicPrompt.textContent = placeholder;
     }
+    if (outputs.comicSinglePanelPrompts8) {
+      outputs.comicSinglePanelPrompts8.textContent = placeholder;
+    }
     const unifiedClear = document.getElementById("comic-unified-prompt-output");
     if (unifiedClear) {
       unifiedClear.textContent = placeholder;
@@ -1499,6 +1648,7 @@
     if (lastUsedClear) {
       lastUsedClear.textContent = "まだ生成していません。";
     }
+    resetCompositePreview();
     resetBubbleOverlayPreview();
     updateComicImageReviewPanel();
   }
@@ -1571,6 +1721,7 @@
         "comic-bubble-script-8-output",
         "comic-bubble-placement-8-output",
         "comic-prompt-output",
+        "comic-single-panel-prompts-8-output",
         "comic-unified-prompt-output",
         "note-intro-assist-output",
         "note-closing-assist-output",
@@ -1594,6 +1745,7 @@
         "comic-bubble-script-8-output",
         "comic-bubble-placement-8-output",
         "comic-prompt-output",
+        "comic-single-panel-prompts-8-output",
         "comic-unified-prompt-output",
         "note-intro-assist-output",
         "note-closing-assist-output",
@@ -1667,6 +1819,13 @@
     if (detailedInputEl) {
       detailedInputEl.removeAttribute("open");
     }
+    let pi;
+    for (pi = 1; pi <= 8; pi += 1) {
+      const pel = document.getElementById("panel-img-url-" + pi);
+      if (pel) {
+        pel.value = "";
+      }
+    }
     clearOutputs();
     resetComicImagePreview();
   });
@@ -1704,6 +1863,8 @@
     requestComicImage: requestComicImage,
     generateComicImageFromPrompt: generateComicImageFromPrompt,
     downloadComicImageFromPreview: downloadComicImageFromPreview,
+    compositeEightPanelToCanvas: compositeEightPanelToCanvas,
+    downloadCompositeCanvas: downloadCompositeCanvas,
     generateComicBubbleOverlayPreview: generateComicBubbleOverlayPreview,
     downloadComicBubbleOverlay: downloadComicBubbleOverlay,
   };
@@ -1723,6 +1884,18 @@
   if (comicBubbleOverlayDownloadBtn) {
     comicBubbleOverlayDownloadBtn.addEventListener("click", function () {
       downloadComicBubbleOverlay();
+    });
+  }
+
+  if (compositeEightPanelBtn) {
+    compositeEightPanelBtn.addEventListener("click", function () {
+      compositeEightPanelToCanvas();
+    });
+  }
+
+  if (compositeDownloadBtn) {
+    compositeDownloadBtn.addEventListener("click", function () {
+      downloadCompositeCanvas();
     });
   }
 

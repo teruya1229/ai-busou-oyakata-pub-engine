@@ -2,7 +2,13 @@
 
 ## ワークフロー方針（2026-03-23）
 
-- **主導線**: **漫画原稿**（`comicManuscriptPost`）→ **8コマ標準ネーム（1/8〜8/8・`comicTitle` / `comic`）**→ **コマ別プロンプト**（`comicPrompt`）→ **統合画像プロンプト**（`comicUnifiedPrompt`）→ **note補助**（`noteIntroAssist` / `noteClosingAssist`）のみ。**旧4コマ短縮**は **`comicLegacy4`**（比較・互換用）。長文note・章メモ・Kindleは **`auxiliary-details`（その他）**で折りたたみ。**X投稿は主線から撤去**（`buildAllOutputs` に含めない。必要なら note 公開後にリンクで回す）。**`buildXPost`** は **`kindle-engine.js` の節プレビュー**が参照するため **`window.AIBusouEngine` にのみ残置**。
+- **主導線**: **漫画原稿**（`comicManuscriptPost`）→ **8コマ標準ネーム（1/8〜8/8・`comicTitle` / `comic`）**→ **コマ別プロンプト**（`comicPrompt`）→ **1コマずつ画像生成用プロンプト**（`comicSinglePanelPrompts8`・**主線の画像**）→ **ツール側で2列×4行合成** → **吹き出し台本 / 配置でオーバーレイ** → **note補助**（`noteIntroAssist` / `noteClosingAssist`）。**統合画像プロンプト**（`comicUnifiedPrompt`・1枚で8コマ）は**補助導線**のまま残置（改善は打ち切り）。**旧4コマ短縮**は **`comicLegacy4`**（比較・互換用）。長文note・章メモ・Kindleは **`auxiliary-details`（その他）**で折りたたみ。**X投稿は主線から撤去**（`buildAllOutputs` に含めない。必要なら note 公開後にリンクで回す）。**`buildXPost`** は **`kindle-engine.js` の節プレビュー**が参照するため **`window.AIBusouEngine` にのみ残置**。
+
+### 1コマ生成→2×4合成（2026-03-29）
+
+- **`js/engine.js`**: **`buildSinglePanelImagePromptsBlock`**（`buildPanelPrompt` を各コマに「単一コマのみ」ラップ）→ **`buildAllOutputs` の `comicSinglePanelPrompts8`**
+- **`js/app.js`**: 8欄の URL / data URL → **800×1600** キャンバスに **2列×4行** で合成。**吹き出しオーバーレイ**は合成キャンバス優先（合成が無いときのみ従来の無字1枚 `img`）。オーバーレイのコマ分割を **2列×4行** に統一（従来の4列×2行前提を廃止）
+- **題材2（丁寧なのに不親切）・題材1（見積・専門用語）**: Node `buildAllOutputs` で **`comicSinglePanelPrompts8` 非空**を確認済み。**ブラウザ実機**は未確認
 - **Kindle**は**将来の別モード**（蓄積素材の一冊化）。**「構成を生成」では `renderKindle*` を呼ばない**（プレビューは手動ボタンまたはその他内の操作で更新）。
 - **ネーム**は原稿の切り出し／再配置**。**読者への問い**は原稿の【読者への問い】に残し、**最終コマのナレーションには混ぜない**。**コパイロット**はネーム本文に常時出さない（必須表現があるときだけ相棒行を許可）。
 

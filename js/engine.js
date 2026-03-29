@@ -1787,6 +1787,53 @@
     return lines.join("\n");
   }
 
+  /**
+   * 1コマずつ画像生成APIへ渡す用のプロンプト（8本）。既存の buildPanelPrompt を各コマにラップする。
+   * ツール側で2列×4行に合成する前提（ページ全体は画像モデルに描かせない）。
+   */
+  function buildSinglePanelImagePromptsBlock(input, cachedComicText) {
+    const normalized = normalizeInput(input);
+    const comicText = cachedComicText != null ? cachedComicText : buildComic(input);
+    const styleGuide = templates.characterProfile.comicStyle.join("、");
+    const panelMeta = getComicPanelMetaForExtraction();
+    const protagonist = templates.characterProfile.protagonist.name;
+    const partner = templates.characterProfile.partner.name;
+    const uip = templates.characterProfile.unifiedImagePrompt;
+    const castPack = buildUnifiedComicCastLines(normalized, protagonist, partner, uip, styleGuide);
+    const leadTitle = templates.characterProfile.titlePrefix + normalized.theme;
+    const styleHint = unifiedStyleHintLine(normalized.outputStyle);
+
+    const blocks = panelMeta.map(function (meta) {
+      const lines = extractComicPanelBlock(comicText, meta.start, meta.next);
+      const panelPromptBody = buildPanelPrompt(meta.number, meta.name, lines, normalized, styleGuide);
+      const blockLines = [
+        "【単一コマ画像生成用 " + meta.number + "/8（" + meta.name + "）】",
+        "【入力反映】" + leadTitle,
+        styleHint,
+        "【必須】この画像は「" +
+          meta.number +
+          "/8コマ目」だけを1枚に描く。ページ分割・複数コマ・グリッド・枠線・コマ番号・吹き出し内の文字は描かない。1シーン1コマのみ。",
+        "白黒ゆる線の現場漫画。背景は最小。画像内に文字・吹き出し・ロゴ・コマ番号を描かない（表情・構図で伝える）。",
+        castPack.lookLine,
+        castPack.castLine,
+      ];
+      if (castPack.footLines && castPack.footLines.length) {
+        Array.prototype.push.apply(blockLines, castPack.footLines);
+      }
+      blockLines.push(panelPromptBody);
+      return blockLines
+        .filter(function (line) {
+          return line !== "";
+        })
+        .join("\n");
+    });
+
+    const header =
+      "【1コマずつ個別生成する場合のプロンプト（8コマ分・1/8〜8/8）】\n" +
+      "各ブロックを「そのコマだけ」生成に使い、ツール側で2列×4行に合成する。ブロック間は --- で区切っています。\n\n";
+    return header + blocks.join("\n\n---\n\n");
+  }
+
   function unifiedStyleHintLine(style) {
     if (style === "note") {
       return "【出力スタイル】note向け: 本文優先。絵は短文の補助（情景は最小限でもよい）。";
@@ -3405,6 +3452,7 @@
       comic: comicText,
       comicLegacy4: formatFourPanelLegacyFromManuscript(normalized, manuscript),
       comicPrompt: buildComicPanelPrompts(input, comicText),
+      comicSinglePanelPrompts8: buildSinglePanelImagePromptsBlock(input, comicText),
       comicUnifiedPrompt: buildUnifiedComicImagePrompt(input, comicText),
       noteIntroAssist: noteIntroAssist,
       noteClosingAssist: noteClosingAssist,
@@ -3423,6 +3471,7 @@
     normalizeInput,
     buildComic,
     buildComicPanelPrompts,
+    buildSinglePanelImagePromptsBlock,
     buildUnifiedComicImagePrompt,
     buildNote,
     buildNoteTitleCandidateBlock,

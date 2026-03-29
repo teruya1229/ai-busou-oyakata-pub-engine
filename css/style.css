@@ -65,6 +65,24 @@ body {
   vertical-align: middle;
 }
 
+.panel-url-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .panel-url-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.comic-composite-canvas {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
 .note-assist-card {
   border-color: #e9d5ff;
   background: #faf5ff;
