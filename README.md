@@ -62,6 +62,7 @@ ai-busou-oyakata-pub-engine/
 1. `index.html` をブラウザで開く（`file://`）。画像生成APIは別起動が必要で、オリジンが異なると失敗しやすい
 
 ## 統合画像生成API（8コマネーム・推奨仕様・フロント既定）
+- **統合画像プロンプト**（`buildUnifiedComicImagePrompt`）は **2列×4行・8コマ均等・黒枠ガター**を必須とし、**3×3・4×2・ポスター・コラージュ・コマ内番号**などを禁止する文言でレイアウトを固定する（モデル出力は依然ブレうる）。
 - **生成用テキスト**（`#comic-gen-prompt-draft`）が空なら、**統合画像プロンプト（8コマネーム想定）**がそのまま API に渡る（**「生成用入力へ転記」は任意**）。有料生成の前に **最終確認ブロック**で入力・8コマネーム・実際のプロンプトを一覧し、**直近で使ったプロンプト**も画面に残る。
 - **ローカル既定**: `http://127.0.0.1:8787/api/comic-image`（`js/app.js` の **`COMIC_IMAGE_API_CONFIG.url`**）。本番では例として **`https://your-domain.com/api/comic-image`** へ差し替え。
 - **HTTP**: `POST`。**認証**: 初期はなし（将来は同じ `COMIC_IMAGE_API_CONFIG` と `fetch` の `headers` に最小で足す想定）。
