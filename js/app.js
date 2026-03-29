@@ -919,6 +919,199 @@
     return panels;
   }
 
+  /** 句読点優先で短くする（省略記号は使わない） */
+  function shortenJapaneseTextForOverlay(s, maxChars) {
+    const t = (s || "").replace(/\s+/g, " ").trim();
+    if (!t || t.length <= maxChars) {
+      return t;
+    }
+    const cut = t.slice(0, maxChars);
+    for (let i = cut.length - 1; i >= Math.floor(maxChars * 0.55); i -= 1) {
+      if (/[。！？]/.test(cut[i])) {
+        return cut.slice(0, i + 1).trim();
+      }
+    }
+    for (let i = cut.length - 1; i >= Math.floor(maxChars * 0.55); i -= 1) {
+      if (/[、，,]/.test(cut[i])) {
+        return cut.slice(0, i + 1).trim();
+      }
+    }
+    return cut.trim();
+  }
+
+  function panelOverlayCharLimit(panelIdx) {
+    const lim = [88, 120, 72, 118, 118, 132, 88, 52];
+    return lim[panelIdx] != null ? lim[panelIdx] : 100;
+  }
+
+  function panelOverlayMaxLines(panelIdx) {
+    const m = [3, 4, 3, 5, 5, 5, 3, 2];
+    return m[panelIdx] != null ? m[panelIdx] : 4;
+  }
+
+  function panelBubbleWidthFrac(panelIdx) {
+    if (panelIdx >= 3 && panelIdx <= 5) {
+      return 0.96;
+    }
+    return 0.9;
+  }
+
+  /** コマごとに台本を1塊にして短文化（長文は短文化優先） */
+  function compressOverlayPanelLines(panelIdx, rawLines) {
+    const j = rawLines
+      .map(function (l) {
+        return (l || "").trim();
+      })
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const mx = panelOverlayCharLimit(panelIdx);
+    return shortenJapaneseTextForOverlay(j, mx);
+  }
+
+  function wrapLinesToMaxLines(ctx, text, maxInnerWidth, maxLines, charLimit) {
+    let s = shortenJapaneseTextForOverlay(text, charLimit);
+    for (let round = 0; round < 10; round += 1) {
+      const wrapped = wrapLinesForBubble(ctx, s, maxInnerWidth);
+      if (wrapped.length <= maxLines) {
+        return wrapped;
+      }
+      const nextLen = Math.max(12, Math.floor(s.length * 0.88));
+      const next = shortenJapaneseTextForOverlay(s, nextLen);
+      if (next === s) {
+        return wrapped.slice(0, maxLines);
+      }
+      s = next;
+    }
+    return wrapLinesForBubble(ctx, s, maxInnerWidth).slice(0, maxLines);
+  }
+
+  function getFaceAvoidRect(inner) {
+    return {
+      x: inner.left + inner.width * 0.16,
+      y: inner.top + inner.height * 0.2,
+      w: inner.width * 0.68,
+      h: inner.height * 0.44,
+    };
+  }
+
+  function rectsOverlap(a, b) {
+    return !(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y);
+  }
+
+  /**
+   * 顔の付きやすい中央を避け、コマ内に収まる位置へ（2/8 は下寄せ固定）
+   */
+  function chooseBubblePosition(panelIdx, pos, inner, bubbleW, bubbleH, faceRect) {
+    const pad = Math.max(2, inner.width * 0.02);
+    const centerX = inner.left + inner.width / 2;
+    const col = panelIdx % 4;
+
+    function clamp() {
+      bx = Math.max(inner.left, Math.min(bx, inner.right - bubbleW));
+      by = Math.max(inner.top, Math.min(by, inner.bottom - bubbleH));
+    }
+
+    let bx = inner.left + pad;
+    let by = inner.top + pad;
+
+    if (panelIdx === 1) {
+      bx = centerX - bubbleW / 2;
+      by = inner.bottom - bubbleH;
+      clamp();
+      return { bx: bx, by: by };
+    }
+    if (panelIdx === 7) {
+      bx = centerX - bubbleW / 2;
+      by = inner.bottom - bubbleH;
+      clamp();
+      return { bx: bx, by: by };
+    }
+    if (panelIdx === 0) {
+      bx = inner.left + inner.width * 0.06;
+      by = inner.top;
+      clamp();
+      return { bx: bx, by: by };
+    }
+
+    if (panelIdx === 6 || pos === "左下") {
+      bx = inner.left + pad;
+      by = inner.bottom - bubbleH;
+      clamp();
+      return { bx: bx, by: by };
+    }
+
+    if (pos === "下") {
+      bx = centerX - bubbleW / 2;
+      by = inner.bottom - bubbleH;
+      clamp();
+      return { bx: bx, by: by };
+    }
+
+    if (pos === "右上") {
+      bx = inner.right - bubbleW - pad;
+      by = inner.top;
+      clamp();
+      return { bx: bx, by: by };
+    }
+    if (pos === "左上") {
+      bx = inner.left + pad;
+      by = inner.top;
+      clamp();
+      return { bx: bx, by: by };
+    }
+
+    if (pos === "中央" || panelIdx === 5) {
+      bx = centerX - bubbleW / 2;
+      by = inner.bottom - bubbleH;
+      clamp();
+      return { bx: bx, by: by };
+    }
+
+    if (pos === "上" || pos === "上中央") {
+      if (col <= 1) {
+        bx = inner.left + pad;
+      } else {
+        bx = inner.right - bubbleW - pad;
+      }
+      by = inner.top;
+      clamp();
+      return { bx: bx, by: by };
+    }
+
+    bx = centerX - bubbleW / 2;
+    by = inner.bottom - bubbleH;
+    clamp();
+
+    const bubbleRect = { x: bx, y: by, w: bubbleW, h: bubbleH };
+    if (faceRect && rectsOverlap(bubbleRect, faceRect)) {
+      by = inner.bottom - bubbleH;
+      bx = centerX - bubbleW / 2;
+      clamp();
+    }
+    return { bx: bx, by: by };
+  }
+
+  function drawOverlayPanelGuides(ctx, w, h, cellW, cellH) {
+    ctx.strokeStyle = "rgba(0,0,0,0.16)";
+    ctx.lineWidth = Math.max(1, w / 720);
+    ctx.setLineDash([]);
+    let c;
+    for (c = 1; c < 4; c += 1) {
+      const x = c * cellW;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
+      ctx.stroke();
+    }
+    const yMid = cellH;
+    ctx.beginPath();
+    ctx.moveTo(0, yMid);
+    ctx.lineTo(w, yMid);
+    ctx.stroke();
+  }
+
   function wrapLinesForBubble(ctx, text, maxInnerWidth) {
     const t = (text || "").trim();
     if (!t) {
@@ -956,94 +1149,94 @@
     const cols = 4;
     const cellW = w / cols;
     const cellH = h / 2;
-    const fontFromCell = cellW * 0.042;
+    const gutter = Math.max(4, Math.floor(Math.min(w, h) * 0.008));
+    drawOverlayPanelGuides(ctx, w, h, cellW, cellH);
+
+    const OVERLAY_MIN_FONT = 14;
+    const OVERLAY_MAX_FONT = 22;
+    const padX = 8;
+    const padY = 6;
 
     for (let idx = 0; idx < 8; idx += 1) {
-      const lines = panels[idx] || [];
-      if (!lines.length) {
+      const rawLines = panels[idx] || [];
+      if (!rawLines.length) {
         continue;
       }
+      const textBlock = compressOverlayPanelLines(idx, rawLines);
+      if (!textBlock) {
+        continue;
+      }
+
       const pos = (placements[idx] && placements[idx].position) || "上";
       const sizeLabel = (placements[idx] && placements[idx].size) || "中";
       let sizeMul = 1;
       if (sizeLabel === "小") {
-        sizeMul = 0.88;
+        sizeMul = 0.95;
       }
       if (sizeLabel === "大") {
-        sizeMul = 1.12;
+        sizeMul = 1.05;
       }
 
-      let baseFont = Math.max(10, Math.min(28, fontFromCell * sizeMul));
       const col = idx % cols;
       const row = Math.floor(idx / cols);
       const cellX = col * cellW;
       const cellY = row * cellH;
-      const margin = Math.max(4, cellW * 0.015);
-      const maxW = cellW - margin * 2 - 12;
-      const maxCellH = cellH * 0.88;
-      const padX = 6;
-      const padY = 5;
+      const inner = {
+        left: cellX + gutter,
+        top: cellY + gutter,
+        width: cellW - 2 * gutter,
+        height: cellH - 2 * gutter,
+        right: cellX + cellW - gutter,
+        bottom: cellY + cellH - gutter,
+      };
+      const faceRect = getFaceAvoidRect(inner);
+      const maxBubbleW = inner.width * panelBubbleWidthFrac(idx);
+      const maxInnerW = maxBubbleW - padX * 2;
+      const maxLines = panelOverlayMaxLines(idx);
+      const charLimit = panelOverlayCharLimit(idx);
 
+      let baseFont = Math.max(
+        OVERLAY_MIN_FONT,
+        Math.min(OVERLAY_MAX_FONT, inner.width * 0.052 * sizeMul)
+      );
       let drawLines = [];
       let bubbleW = 0;
       let bubbleH = 0;
-      let lineHeight = baseFont * 1.38;
+      let lineHeight = baseFont * 1.42;
 
-      for (let attempt = 0; attempt < 14; attempt += 1) {
+      for (let attempt = 0; attempt < 18; attempt += 1) {
         ctx.font =
           baseFont +
           'px "Yu Gothic UI", "Hiragino Kaku Gothic ProN", "Meiryo", system-ui, sans-serif';
-        lineHeight = baseFont * 1.38;
-        drawLines = [];
-        for (let li = 0; li < lines.length; li += 1) {
-          const wrapped = wrapLinesForBubble(ctx, lines[li], maxW - padX * 2);
-          for (let j = 0; j < wrapped.length; j += 1) {
-            drawLines.push(wrapped[j]);
-          }
-        }
+        lineHeight = baseFont * 1.42;
+        drawLines = wrapLinesToMaxLines(ctx, textBlock, maxInnerW, maxLines, charLimit);
         let maxLineW = 0;
         for (let d = 0; d < drawLines.length; d += 1) {
           maxLineW = Math.max(maxLineW, ctx.measureText(drawLines[d]).width);
         }
-        bubbleW = Math.min(cellW - margin * 2, maxLineW + padX * 2);
+        bubbleW = Math.min(maxBubbleW, maxLineW + padX * 2);
         bubbleH = drawLines.length * lineHeight + padY * 2;
-        if (bubbleH <= maxCellH) {
+        const maxH = inner.height * 0.92;
+        if (bubbleH <= maxH) {
           break;
         }
-        baseFont *= 0.92;
+        const nextFont = Math.max(OVERLAY_MIN_FONT, baseFont * 0.94);
+        if (nextFont === baseFont) {
+          break;
+        }
+        baseFont = nextFont;
       }
 
-      let bx = cellX + margin;
-      let by = cellY + margin;
-      switch (pos) {
-        case "上中央":
-        case "上":
-          bx = cellX + (cellW - bubbleW) / 2;
-          by = cellY + margin;
-          break;
-        case "右上":
-          bx = cellX + cellW - bubbleW - margin;
-          by = cellY + margin;
-          break;
-        case "左上":
-          bx = cellX + margin;
-          by = cellY + margin;
-          break;
-        case "中央":
-          bx = cellX + (cellW - bubbleW) / 2;
-          by = cellY + (cellH - bubbleH) / 2;
-          break;
-        case "左下":
-          bx = cellX + margin;
-          by = cellY + cellH - bubbleH - margin;
-          break;
-        case "下":
-          bx = cellX + (cellW - bubbleW) / 2;
-          by = cellY + cellH - bubbleH - margin;
-          break;
-        default:
-          bx = cellX + (cellW - bubbleW) / 2;
-          by = cellY + margin;
+      let posRes = chooseBubblePosition(idx, pos, inner, bubbleW, bubbleH, faceRect);
+      let bx = posRes.bx;
+      let by = posRes.by;
+
+      const bubbleRect = { x: bx, y: by, w: bubbleW, h: bubbleH };
+      if (faceRect && rectsOverlap(bubbleRect, faceRect) && idx !== 1 && idx !== 7) {
+        by = inner.bottom - bubbleH;
+        bx = inner.left + (inner.width - bubbleW) / 2;
+        bx = Math.max(inner.left, Math.min(bx, inner.right - bubbleW));
+        by = Math.max(inner.top, Math.min(by, inner.bottom - bubbleH));
       }
 
       const rr = Math.min(8, bubbleW * 0.08);
