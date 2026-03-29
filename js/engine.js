@@ -1404,8 +1404,11 @@
     if (n === 1) {
       return "ナレーション";
     }
+    if (n === 8) {
+      return "気づき・手前";
+    }
     if (n === 9) {
-      return "行動ルール";
+      return "決意";
     }
     if (n === 10) {
       return "問い";
@@ -1461,11 +1464,12 @@
     return lines;
   }
 
-  function formatIntroBubbleLines(intro) {
+  function formatIntroBubbleLines(intro, maxSplitChar) {
+    const cap = typeof maxSplitChar === "number" && maxSplitChar > 0 ? maxSplitChar : 28;
     const t = compactSpaces(intro);
     const m = /^今回は「(.+?)」の話[。]?$/.exec(t);
     if (!m) {
-      return splitJapaneseTextToLines(t, 3, 28);
+      return splitJapaneseTextToLines(t, 3, cap);
     }
     const inner = m[1];
     if (inner.length <= 16) {
@@ -1494,24 +1498,48 @@
     return ["今回は", "「" + a, b + "」の話。"];
   }
 
-  function formatPanelBubbleLines(panelNum, rawText) {
+  function formatPanelBubbleLines(panelNum, rawText, tenPanelFlow) {
     const text = normalizeBubbleSourceText(rawText);
     if (!text) {
       return ["（空）"];
     }
+    if (tenPanelFlow !== true) {
+      if (panelNum === 1) {
+        return formatIntroBubbleLines(rawText, 28);
+      }
+      if (panelNum === 10) {
+        return splitJapaneseTextToLines(text, 2, 36);
+      }
+      if (panelNum === 9) {
+        return splitJapaneseTextToLines(text, 3, 30);
+      }
+      if (panelNum >= 2 && panelNum <= 8) {
+        return splitJapaneseTextToLines(text, 4, 28);
+      }
+      return splitJapaneseTextToLines(text, 3, 28);
+    }
     if (panelNum === 1) {
-      return formatIntroBubbleLines(rawText);
+      return formatIntroBubbleLines(rawText, 26);
     }
     if (panelNum === 10) {
-      return splitJapaneseTextToLines(text, 2, 36);
+      return splitJapaneseTextToLines(text, 2, 26);
     }
     if (panelNum === 9) {
-      return splitJapaneseTextToLines(text, 3, 30);
+      return splitJapaneseTextToLines(text, 3, 26);
     }
-    if (panelNum >= 2 && panelNum <= 8) {
-      return splitJapaneseTextToLines(text, 4, 28);
+    if (panelNum === 8) {
+      return splitJapaneseTextToLines(text, 2, 24);
     }
-    return splitJapaneseTextToLines(text, 3, 28);
+    if (panelNum === 4 || panelNum === 7) {
+      return splitJapaneseTextToLines(text, 2, 24);
+    }
+    if (panelNum === 6) {
+      return splitJapaneseTextToLines(text, 2, 26);
+    }
+    if (panelNum === 2 || panelNum === 3 || panelNum === 5) {
+      return splitJapaneseTextToLines(text, 3, 26);
+    }
+    return splitJapaneseTextToLines(text, 3, 26);
   }
 
   /**
@@ -1535,7 +1563,7 @@
     for (let i = 0; i < blocks.length; i += 1) {
       const b = blocks[i];
       const kind = bubblePanelKindForIndex(b.n);
-      const lines = formatPanelBubbleLines(b.n, b.text);
+      const lines = formatPanelBubbleLines(b.n, b.text, true);
       parts.push(String(b.n) + "/10（" + kind + "）");
       for (let j = 0; j < lines.length; j += 1) {
         parts.push(lines[j]);
@@ -1568,7 +1596,7 @@
     for (let i = 0; i < blocks.length; i += 1) {
       const b = blocks[i];
       const kind = bubblePanelKindForIndexLegacy8(b.n);
-      const lines = formatPanelBubbleLines(b.n, b.text);
+      const lines = formatPanelBubbleLines(b.n, b.text, false);
       parts.push(String(b.n) + "/8（" + kind + "）");
       for (let j = 0; j < lines.length; j += 1) {
         parts.push(lines[j]);
@@ -1656,17 +1684,7 @@
   }
 
   function bubblePlacementKindDisplay(panelNum) {
-    const k = bubblePanelKindForIndex(panelNum);
-    if (k === "行動ルール") {
-      return "行動ルール";
-    }
-    if (k === "問い") {
-      return "問い";
-    }
-    if (k === "ナレーション") {
-      return "ナレーション";
-    }
-    return "モノローグ";
+    return bubblePanelKindForIndex(panelNum);
   }
 
   function buildTenPanelBubblePlacement(manuscript) {
@@ -1686,7 +1704,7 @@
     const parts = [];
     for (let i = 0; i < blocks.length; i += 1) {
       const b = blocks[i];
-      const rawLines = formatPanelBubbleLines(b.n, b.text);
+      const rawLines = formatPanelBubbleLines(b.n, b.text, true);
       const lineHint = Math.min(3, Math.max(1, rawLines.length || 1));
       const pos = bubblePlacementPosition(b.n);
       const size = bubblePlacementSize(b.n, rawLines.length);
@@ -1723,7 +1741,7 @@
     const parts = [];
     for (let i = 0; i < blocks.length; i += 1) {
       const b = blocks[i];
-      const rawLines = formatPanelBubbleLines(b.n, b.text);
+      const rawLines = formatPanelBubbleLines(b.n, b.text, false);
       const lineHint = Math.min(3, Math.max(1, rawLines.length || 1));
       const pos = bubblePlacementPosition(b.n);
       const size = bubblePlacementSize(b.n, rawLines.length);
